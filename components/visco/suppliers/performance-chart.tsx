@@ -16,8 +16,11 @@ export function SupplierPerformanceChart() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<PerformanceData[]>("/api/suppliers/performance?months=7")
-      .then(setData)
+    api.get<any>("/api/suppliers/performance?months=7")
+      .then((res) => {
+        const list: PerformanceData[] = Array.isArray(res) ? res : (res?.data ?? [])
+        setData(list)
+      })
       .catch(() => {
         // Silently fail - chart shows empty
       })

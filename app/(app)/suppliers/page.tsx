@@ -36,17 +36,16 @@ export default function SuppliersPage() {
       const params = new URLSearchParams()
       if (category !== "all") params.set("category", category)
       if (compliance !== "all") params.set("compliance", compliance)
-      const data = await api.get<Supplier[]>(`/api/suppliers?${params}`)
-      setSuppliers(data)
-      if (data.length > 0 && !selectedId) {
-        setSelectedId(data[0].id)
-      }
+      const res = await api.get<any>(`/api/suppliers?${params}`)
+      const list: Supplier[] = Array.isArray(res) ? res : (res?.data ?? [])
+      setSuppliers(list)
+      setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar proveedores")
     } finally {
       setLoading(false)
     }
-  }, [category, compliance, selectedId])
+  }, [category, compliance])
 
   useEffect(() => {
     fetchSuppliers()
