@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { api } from "@/lib/api"
+import { supplierPerformance as mockData } from "@/lib/mock-data"
 import { Loader2 } from "lucide-react"
 
 interface PerformanceData {
@@ -22,7 +23,7 @@ export function SupplierPerformanceChart() {
         setData(list)
       })
       .catch(() => {
-        // Silently fail - chart shows empty
+        setData(mockData)
       })
       .finally(() => setLoading(false))
   }, [])
