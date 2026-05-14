@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { setToken } from "@/lib/auth-client"
+import { fetchUser } from "@/lib/auth-client"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -33,13 +33,12 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
       if (!res.ok) {
-        const err = await res.json()
+        const err = await res.json().catch(() => ({ error: "Error al iniciar sesión" }))
         toast.error(err.error || "Error al iniciar sesión")
         return
       }
-      const data = await res.json()
-      setToken(data.token)
-      toast.success(`Bienvenido, ${data.user.name}`)
+      await fetchUser()
+      toast.success("Sesión iniciada")
       router.push("/dashboard")
     } catch {
       toast.error("Error de conexión con el servidor")

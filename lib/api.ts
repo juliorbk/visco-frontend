@@ -1,14 +1,8 @@
-import { getToken, removeToken } from "./auth-client"
-
 const BASE_URL = ""
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken()
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-  }
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`
   }
   if (options.headers) {
     Object.assign(headers, options.headers)
@@ -17,7 +11,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers })
 
   if (res.status === 401) {
-    removeToken()
     if (typeof window !== "undefined") {
       window.location.href = "/"
     }

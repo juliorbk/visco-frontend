@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useState } from "react"
 import { Bell, Settings, Info, Search, LogOut, User, Menu } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -13,12 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { getUser, removeToken } from "@/lib/auth-client"
+import { getCachedUser, fetchUser, clearUserCache } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
-  const user = useMemo(() => getUser(), [])
+  const [user, setUser] = useState(() => getCachedUser())
+
+  useEffect(() => {
+    if (!user) {
+      fetchUser().then(setUser)
+    }
+  }, [user])
 
   const initials = user
     ? user.name
@@ -33,9 +39,9 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     try {
       await fetch("/api/auth/logout", { method: "POST" })
     } catch {
-      // Proceed with client-side logout even if server call fails
+      // Proceed even if server call fails
     }
-    removeToken()
+    clearUserCache()
     router.push("/")
   }
 
@@ -94,6 +100,9 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="text-sm font-medium">{user?.name ?? "Usuario"}</span>
+                {user?.email && (
+                  <span className="text-xs text-muted-foreground font-normal">{user.email}</span>
+                )}
                 <span className="text-xs text-muted-foreground font-normal">
                   Rol: {user?.role ?? "—"}
                 </span>

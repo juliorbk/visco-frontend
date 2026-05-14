@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { isAuthenticated } from "@/lib/auth-client"
+import { fetchUser } from "@/lib/auth-client"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -10,11 +10,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState(false)
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.replace("/")
-    } else {
-      setChecked(true)
-    }
+    fetchUser().then((user) => {
+      if (!user) {
+        router.replace("/")
+      } else {
+        setChecked(true)
+      }
+    })
   }, [pathname, router])
 
   if (!checked) return null

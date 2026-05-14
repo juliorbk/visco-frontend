@@ -1,43 +1,37 @@
 export interface UserInfo {
-  sub: string
+  id: string
   name: string
+  email: string
   role: string
 }
 
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem("visco_jwt")
-}
+let cachedUser: UserInfo | null | undefined = undefined
 
-export function setToken(token: string): void {
-  localStorage.setItem("visco_jwt", token)
-}
-
-export function removeToken(): void {
-  localStorage.removeItem("visco_jwt")
-}
-
-export function decodeToken(token: string): UserInfo | null {
+export async function fetchUser(): Promise<UserInfo | null> {
   try {
-    const parts = token.split(".")
-    if (parts.length !== 3) return null
-    const body = parts[1]
-    const decoded = JSON.parse(atob(body.replace(/-/g, "+").replace(/_/g, "/")))
-    return { sub: decoded.sub, name: decoded.name, role: decoded.role }
+    const res = await fetch("/api/auth/me")
+    if (!res.ok) {
+      cachedUser = null
+      return null
+    }
+    const data = await res.json()
+    cachedUser = { id: data.id, name: data.name, email: data.email, role: data.role }
+    return cachedUser
   } catch {
+    cachedUser = null
     return null
   }
 }
 
-export function getUser(): UserInfo | null {
-  const token = getToken()
-  if (!token) return null
-  return decodeToken(token)
+export function getCachedUser(): UserInfo | null | undefined {
+  return cachedUser
 }
 
-export function isAuthenticated(): boolean {
-  const token = getToken()
-  if (!token) return false
-  const user = decodeToken(token)
+export function clearUserCache(): void {
+  cachedUser = undefined
+}
+
+export async function isAuthenticated(): Promise<boolean> {
+  const user = await fetchUser()
   return user !== null
 }
