@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Bell, Settings, Info, Search, LogOut, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -12,14 +13,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { getUser, removeToken } from "@/lib/auth-client"
 
 export function Topbar() {
   const router = useRouter()
+  const user = useMemo(() => getUser(), [])
 
-  const handleLogout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("visco_jwt")
+  const initials = user
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?"
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+    } catch {
+      // Proceed with client-side logout even if server call fails
     }
+    removeToken()
     router.push("/")
   }
 
@@ -59,16 +74,16 @@ export function Topbar() {
           <DropdownMenuTrigger className="ml-2 outline-none">
             <Avatar className="size-9 ring-1 ring-border">
               <AvatarFallback className="bg-[#7b1a1a] text-white text-xs font-medium">
-                AR
+                {initials}
               </AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Ana Rodríguez</span>
+                <span className="text-sm font-medium">{user?.name ?? "Usuario"}</span>
                 <span className="text-xs text-muted-foreground font-normal">
-                  ana.rodriguez@visco.com
+                  Rol: {user?.role ?? "—"}
                 </span>
               </div>
             </DropdownMenuLabel>

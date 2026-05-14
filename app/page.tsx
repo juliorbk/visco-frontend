@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { setToken } from "@/lib/auth-client"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,16 +26,26 @@ export default function LoginPage() {
       return
     }
     setLoading(true)
-    // Simulate auth — backend would normally return a JWT.
-    await new Promise((r) => setTimeout(r, 700))
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "visco_jwt",
-        btoa(JSON.stringify({ sub: "u-001", name: "Ana Rodríguez", role: "BUYER" })),
-      )
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        toast.error(err.error || "Error al iniciar sesión")
+        return
+      }
+      const data = await res.json()
+      setToken(data.token)
+      toast.success(`Bienvenido, ${data.user.name}`)
+      router.push("/dashboard")
+    } catch {
+      toast.error("Error de conexión con el servidor")
+    } finally {
+      setLoading(false)
     }
-    toast.success("Sesión iniciada")
-    router.push("/dashboard")
   }
 
   return (
