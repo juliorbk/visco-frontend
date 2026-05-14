@@ -8,8 +8,7 @@ import { InboundsKPICards } from "@/components/visco/inbounds/kpi-cards"
 import { ReceiptsTable } from "@/components/visco/inbounds/receipts-table"
 import { ReceiptDetailPanel } from "@/components/visco/inbounds/receipt-detail-panel"
 import { NuevaRecepcionModal } from "@/components/visco/inbounds/nueva-recepcion-modal"
-import { receipts, type PurchaseOrder } from "@/lib/mock-data"
-import { Receipt } from "@/lib/mock-data"
+import { receipts, type PurchaseOrder, type Receipt } from "@/lib/mock-data"
 
 // Mock purchase orders for new receipts
 const mockPurchaseOrders: PurchaseOrder[] = [
@@ -20,7 +19,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     supplierId: "s-001",
     supplierName: "TechCorp Ind.",
     total: 15000,
-    status: "ACEPTADA",
+    status: "APROBADO",
     requester: "Mario López",
     costCenter: "CC-001",
     paymentMethod: "Crédito 30 días",
@@ -37,7 +36,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     supplierId: "s-002",
     supplierName: "Global Supplies",
     total: 8500,
-    status: "ACEPTADA",
+    status: "APROBADO",
     requester: "María García",
     costCenter: "CC-002",
     paymentMethod: "Contado",
@@ -97,15 +96,15 @@ export default function InboundsPage() {
       />
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <ReceiptsTable
             receipts={receipts}
             onSelectReceipt={setSelectedReceipt}
             selectedReceiptId={selectedReceipt?.id}
           />
         </div>
-        <div className="col-span-1">
+        <div className="lg:col-span-1">
           {selectedReceipt ? (
             <ReceiptDetailPanel
               receipt={selectedReceipt}

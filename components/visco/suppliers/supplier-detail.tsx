@@ -24,14 +24,14 @@ export function SupplierDetail({
 }) {
   if (!supplier) {
     return (
-      <div className="rounded-xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground h-full grid place-items-center sticky top-20">
+      <div className="rounded-xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground h-full grid place-items-center lg:sticky lg:top-20">
         Selecciona un proveedor para ver el detalle.
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-xs sticky top-20">
+    <div className="rounded-xl border border-border bg-card shadow-xs lg:sticky lg:top-20">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h3 className="font-serif text-lg font-semibold">Detalles del Proveedor</h3>
         <DropdownMenu>

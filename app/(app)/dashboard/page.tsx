@@ -15,11 +15,11 @@ export default function DashboardPage() {
         subtitle="Vista consolidada de procurement, inventario y proveedores."
         actions={
           <>
-            <Button variant="outline" size="sm" className="bg-card">
-              <Calendar className="size-4" /> Últimos 30 días
+            <Button variant="outline" size="sm" className="bg-card max-sm:text-xs max-sm:px-2">
+              <Calendar className="size-3 md:size-4" /> Últimos 30 días
             </Button>
-            <Button variant="outline" size="sm" className="bg-card">
-              <Download className="size-4" /> Exportar
+            <Button variant="outline" size="sm" className="bg-card max-sm:text-xs max-sm:px-2">
+              <Download className="size-3 md:size-4" /> Exportar
             </Button>
           </>
         }

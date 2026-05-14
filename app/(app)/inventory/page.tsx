@@ -109,6 +109,7 @@ export default function InventoryPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
@@ -152,7 +153,8 @@ export default function InventoryPage() {
             )}
           </tbody>
         </table>
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-[#fafafa] text-xs text-muted-foreground">
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-5 py-3 border-t border-border bg-[#fafafa] text-xs text-muted-foreground">
           <span>
             Mostrando <strong className="text-foreground">{filtered.length}</strong> de{" "}
             <strong className="text-foreground">{products.length}</strong> productos

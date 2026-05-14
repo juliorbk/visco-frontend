@@ -78,7 +78,7 @@ export default function ReportsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* LEFT COLUMN */}
-        <div className="space-y-4">
+        <div className="lg:col-span-1 space-y-4">
           <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
             <h3 className="font-serif text-base font-semibold mb-3">Time Range</h3>
             <RadioGroup value={range} onValueChange={setRange} className="space-y-2">
@@ -376,7 +376,7 @@ function EfficiencyCard() {
   const offset = circumference - (score / 100) * circumference
 
   return (
-    <div className="rounded-xl bg-[#1f2937] text-white p-6 shadow-xs flex items-center justify-between gap-6">
+    <div className="rounded-xl bg-[#1f2937] text-white p-5 md:p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
       <div>
         <div className="text-xs uppercase tracking-wider text-white/70 font-medium">
           Efficiency Score
@@ -390,7 +390,7 @@ function EfficiencyCard() {
           aprobaciones automatizadas para sostener este score.
         </p>
       </div>
-      <div className="relative size-24 shrink-0">
+      <div className="relative size-20 md:size-24 shrink-0">
         <svg viewBox="0 0 100 100" className="size-full -rotate-90">
           <circle
             cx="50"

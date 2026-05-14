@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Bell, Settings, Info, Search, LogOut, User } from "lucide-react"
+import { Bell, Settings, Info, Search, LogOut, User, Menu } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
 import { getUser, removeToken } from "@/lib/auth-client"
+import { cn } from "@/lib/utils"
 
-export function Topbar() {
+export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
   const user = useMemo(() => getUser(), [])
 
@@ -39,18 +40,29 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-card px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-2 md:gap-4 border-b border-border bg-card px-3 md:px-6">
+      <button
+        onClick={onMenuClick}
+        className="md:hidden size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary shrink-0"
+        aria-label="Abrir menú"
+      >
+        <Menu className="size-5" />
+      </button>
+
       <div className="relative flex-1 max-w-xl mx-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           type="search"
           placeholder="Buscar pedidos, productos, proveedores…"
-          className="pl-9 bg-[#f5f5f7] border-transparent focus-visible:border-input"
+          className={cn(
+            "pl-9 bg-[#f5f5f7] border-transparent focus-visible:border-input",
+            "max-md:w-full max-md:placeholder:text-xs",
+          )}
           aria-label="Buscar"
         />
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 md:gap-1">
         <button
           className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
           aria-label="Notificaciones"
@@ -58,21 +70,21 @@ export function Topbar() {
           <Bell className="size-[18px]" />
         </button>
         <button
-          className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
+          className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary max-md:hidden"
           aria-label="Configuración"
         >
           <Settings className="size-[18px]" />
         </button>
         <button
-          className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
+          className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary max-md:hidden"
           aria-label="Ayuda"
         >
           <Info className="size-[18px]" />
         </button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger className="ml-2 outline-none">
-            <Avatar className="size-9 ring-1 ring-border">
+          <DropdownMenuTrigger className="ml-1 md:ml-2 outline-none">
+            <Avatar className="size-8 md:size-9 ring-1 ring-border">
               <AvatarFallback className="bg-[#7b1a1a] text-white text-xs font-medium">
                 {initials}
               </AvatarFallback>

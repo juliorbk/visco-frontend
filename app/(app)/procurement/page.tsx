@@ -54,7 +54,8 @@ export default function ProcurementPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+        <div className="lg:col-span-2">
+          <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <div>
               <h3 className="font-serif text-lg font-semibold">Pedidos Activos</h3>
@@ -112,8 +113,9 @@ export default function ProcurementPage() {
             </table>
           </div>
         </div>
+      </div>
 
-        <div>
+        <div className="lg:col-span-1">
           <OrderDetail
             order={selected}
             onApprove={(o) => {

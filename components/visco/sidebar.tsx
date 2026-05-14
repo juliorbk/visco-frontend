@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, Plus } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, Plus, X } from "lucide-react"
 import { Logo } from "./logo"
 import { cn } from "@/lib/utils"
 
@@ -15,53 +15,72 @@ const NAV = [
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ]
 
-export function Sidebar({ onNewPO }: { onNewPO?: () => void }) {
+export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-[180px] flex-col bg-[#7b1a1a] text-white z-30">
-      <div className="px-5 py-6 border-b border-[#5c1212]">
-        <Logo size="md" />
-      </div>
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onClose}
+          aria-hidden
+        />
+      )}
 
-      <nav className="flex-1 px-2 py-4 space-y-0.5">
-        {NAV.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + "/")
-          const Icon = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                active ? "bg-[#5c1212] text-white" : "text-white/85 hover:bg-[#5c1212]/60 hover:text-white",
-              )}
-            >
-              {active && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-white" aria-hidden />
-              )}
-              <Icon className="size-4 shrink-0" />
-              <span>{item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 w-[220px] flex-col bg-[#7b1a1a] text-white z-50 transition-transform duration-300",
+          "md:flex md:translate-x-0 md:z-30",
+          open ? "flex translate-x-0" : "hidden -translate-x-full",
+        )}
+      >
+        <div className="flex items-center justify-between px-5 py-6 border-b border-[#5c1212]">
+          <Logo size="md" />
+          <button
+            onClick={onClose}
+            className="md:hidden size-8 grid place-items-center rounded-md hover:bg-[#5c1212] text-white/80"
+            aria-label="Cerrar menú"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
 
-      <div className="p-3 border-t border-[#5c1212]">
-        <Link
-          href="/procurement?new=1"
-          onClick={(e) => {
-            if (onNewPO) {
-              e.preventDefault()
-              onNewPO()
-            }
-          }}
-          className="flex items-center justify-center gap-1.5 w-full rounded-md bg-[#3d0a0a] hover:bg-[#2a0707] text-white text-xs font-medium px-3 py-2.5 transition-colors"
-        >
-          <Plus className="size-3.5" />
-          New Purchase Order
-        </Link>
-      </div>
-    </aside>
+        <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
+          {NAV.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/")
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose}
+                className={cn(
+                  "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+                  active ? "bg-[#5c1212] text-white" : "text-white/85 hover:bg-[#5c1212]/60 hover:text-white",
+                )}
+              >
+                {active && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-white" aria-hidden />
+                )}
+                <Icon className="size-4 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div className="p-3 border-t border-[#5c1212]">
+          <Link
+            href="/procurement?new=1"
+            onClick={onClose}
+            className="flex items-center justify-center gap-1.5 w-full rounded-md bg-[#3d0a0a] hover:bg-[#2a0707] text-white text-xs font-medium px-3 py-2.5 transition-colors"
+          >
+            <Plus className="size-3.5" />
+            New Purchase Order
+          </Link>
+        </div>
+      </aside>
+    </>
   )
 }

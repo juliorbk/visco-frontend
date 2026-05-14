@@ -43,8 +43,8 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
   return (
     <div className="flex-1">
       {/* Filter Bar */}
-      <div className="bg-white rounded-lg border border-[#f3f4f6] p-4 mb-4 space-y-4">
-        <div className="flex gap-3">
+      <div className="bg-white rounded-lg border border-[#f3f4f6] p-3 md:p-4 mb-4 space-y-3 md:space-y-4">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <input
@@ -65,7 +65,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
               setStatusFilter(e.target.value)
               setCurrentPage(1)
             }}
-            className="px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+            className="px-3 md:px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 bg-white"
           >
             <option value="all">Todos los estados</option>
             <option value="COMPLETADA">Completada</option>
@@ -75,7 +75,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+            className="px-3 md:px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 bg-white"
           >
             <option value="week">Última semana</option>
             <option value="month">Este mes</option>
