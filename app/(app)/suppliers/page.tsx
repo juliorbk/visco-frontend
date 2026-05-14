@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,17 +14,43 @@ import { SupplierPerformanceChart } from "@/components/visco/suppliers/performan
 import { SupplierCard } from "@/components/visco/suppliers/supplier-card"
 import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
-import { suppliers as initialSuppliers, type Supplier, CATEGORIES } from "@/lib/mock-data"
-import { Filter, Plus } from "lucide-react"
+import { CATEGORIES } from "@/lib/mock-data"
+import { api } from "@/lib/api"
+import type { Supplier } from "@/lib/mock-data"
+import { Filter, Plus, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [category, setCategory] = useState("all")
   const [compliance, setCompliance] = useState("all")
-  const [selectedId, setSelectedId] = useState<string | null>(suppliers[0]?.id ?? null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Supplier | null>(null)
+
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (category !== "all") params.set("category", category)
+      if (compliance !== "all") params.set("compliance", compliance)
+      const data = await api.get<Supplier[]>(`/api/suppliers?${params}`)
+      setSuppliers(data)
+      if (data.length > 0 && !selectedId) {
+        setSelectedId(data[0].id)
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al cargar proveedores")
+    } finally {
+      setLoading(false)
+    }
+  }, [category, compliance, selectedId])
+
+  useEffect(() => {
+    fetchSuppliers()
+  }, [fetchSuppliers])
 
   const filtered = useMemo(() => {
     return suppliers.filter((s) => {
@@ -36,33 +62,36 @@ export default function SuppliersPage() {
 
   const selected = suppliers.find((s) => s.id === selectedId) ?? null
 
-  const handleSave = (data: Partial<Supplier>, id?: string) => {
-    if (id) {
-      setSuppliers((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)))
-      toast.success("Proveedor actualizado")
-    } else {
-      const newS: Supplier = {
-        id: `s-${Date.now()}`,
-        name: data.name ?? "Nuevo Proveedor",
-        category: data.category ?? CATEGORIES[0],
-        type: "Personalizado",
-        rating: 4.0,
-        contactName: "—",
-        email: data.email ?? "",
-        phone: data.phone ?? "",
-        address: data.address ?? "",
-        description: data.description ?? "",
-        currency: data.currency ?? "USD",
-        sapCode: data.sapCode ?? "",
-        compliance: "Total",
-        tier: 2,
-        since: new Date().getFullYear(),
-        certifications: [],
-        legalRepresentatives: data.legalRepresentatives ?? [],
-        recentOrders: [],
+  const handleSave = async (data: Partial<Supplier>, id?: string) => {
+    try {
+      setSaving(true)
+      if (id) {
+        const updated = await api.put<Supplier>(`/api/suppliers/${id}`, data)
+        setSuppliers((prev) => prev.map((s) => (s.id === id ? updated : s)))
+        toast.success("Proveedor actualizado")
+      } else {
+        const created = await api.post<Supplier>("/api/suppliers", data)
+        setSuppliers((prev) => [created, ...prev])
+        setSelectedId(created.id)
+        toast.success("Proveedor creado")
       }
-      setSuppliers((prev) => [newS, ...prev])
-      toast.success("Proveedor creado")
+      setModalOpen(false)
+      setEditing(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar proveedor")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeactivate = async (s: Supplier) => {
+    try {
+      await api.delete(`/api/suppliers/${s.id}`)
+      setSuppliers((prev) => prev.filter((x) => x.id !== s.id))
+      toast.success(`${s.name} desactivado`)
+      if (selectedId === s.id) setSelectedId(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al desactivar proveedor")
     }
   }
 
@@ -121,18 +150,24 @@ export default function SuppliersPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
-          {filtered.map((s) => (
-            <SupplierCard
-              key={s.id}
-              supplier={s}
-              selected={selectedId === s.id}
-              onSelect={(sup) => setSelectedId(sup.id)}
-            />
-          ))}
-          {filtered.length === 0 && (
+          {loading ? (
+            <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+              <Loader2 className="size-5 animate-spin" />
+              Cargando proveedores…
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
               No hay proveedores que coincidan con los filtros.
             </div>
+          ) : (
+            filtered.map((s) => (
+              <SupplierCard
+                key={s.id}
+                supplier={s}
+                selected={selectedId === s.id}
+                onSelect={(sup) => setSelectedId(sup.id)}
+              />
+            ))
           )}
         </div>
 
@@ -143,11 +178,7 @@ export default function SuppliersPage() {
               setEditing(s)
               setModalOpen(true)
             }}
-            onDeactivate={(s) => {
-              setSuppliers((prev) => prev.filter((x) => x.id !== s.id))
-              toast.success(`${s.name} desactivado`)
-              if (selectedId === s.id) setSelectedId(null)
-            }}
+            onDeactivate={handleDeactivate}
           />
         </div>
       </div>
@@ -160,6 +191,7 @@ export default function SuppliersPage() {
         }}
         editing={editing}
         onSave={handleSave}
+        saving={saving}
       />
     </div>
   )

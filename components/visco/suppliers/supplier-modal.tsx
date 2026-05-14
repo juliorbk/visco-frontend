@@ -21,18 +21,20 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { CATEGORIES, CURRENCIES, type Supplier } from "@/lib/mock-data"
-import { Plus, X } from "lucide-react"
+import { Loader2, Plus, X } from "lucide-react"
 
 export function SupplierModal({
   open,
   onOpenChange,
   editing,
   onSave,
+  saving,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
   editing: Supplier | null
   onSave: (data: Partial<Supplier>, id?: string) => void
+  saving?: boolean
 }) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -74,6 +76,7 @@ export function SupplierModal({
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (saving) return
     onSave(
       {
         name,
@@ -88,7 +91,6 @@ export function SupplierModal({
       },
       editing?.id,
     )
-    onOpenChange(false)
   }
 
   return (
@@ -108,7 +110,7 @@ export function SupplierModal({
         <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-1.5">
             <Label htmlFor="sname">Nombre comercial</Label>
-            <Input id="sname" required value={name} onChange={(e) => setName(e.target.value)} />
+            <Input id="sname" required value={name} onChange={(e) => setName(e.target.value)} disabled={saving} />
           </div>
 
           <div className="space-y-1.5">
@@ -119,22 +121,23 @@ export function SupplierModal({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={saving}
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="ssap">SAP Code</Label>
-            <Input id="ssap" value={sapCode} onChange={(e) => setSapCode(e.target.value)} />
+            <Input id="ssap" value={sapCode} onChange={(e) => setSapCode(e.target.value)} disabled={saving} />
           </div>
 
           <div className="sm:col-span-2 space-y-1.5">
             <Label htmlFor="saddr">Dirección</Label>
-            <Input id="saddr" value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Input id="saddr" value={address} onChange={(e) => setAddress(e.target.value)} disabled={saving} />
           </div>
 
           <div className="space-y-1.5">
             <Label>Categoría</Label>
-            <Select value={category} onValueChange={setCategory}>
+            <Select value={category} onValueChange={setCategory} disabled={saving}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -150,7 +153,7 @@ export function SupplierModal({
 
           <div className="space-y-1.5">
             <Label>Moneda</Label>
-            <Select value={currency} onValueChange={setCurrency}>
+            <Select value={currency} onValueChange={setCurrency} disabled={saving}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -171,6 +174,7 @@ export function SupplierModal({
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={saving}
             />
           </div>
 
@@ -181,6 +185,7 @@ export function SupplierModal({
             input={phoneInput}
             setInput={setPhoneInput}
             placeholder="+58 212 555 0000"
+            disabled={saving}
           />
 
           <TagList
@@ -190,14 +195,23 @@ export function SupplierModal({
             input={repInput}
             setInput={setRepInput}
             placeholder="Nombre completo"
+            disabled={saving}
           />
 
           <DialogFooter className="sm:col-span-2 mt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-              {editing ? "Guardar cambios" : "Crear proveedor"}
+            <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" /> Guardando…
+                </>
+              ) : editing ? (
+                "Guardar cambios"
+              ) : (
+                "Crear proveedor"
+              )}
             </Button>
           </DialogFooter>
         </form>
@@ -213,6 +227,7 @@ function TagList({
   input,
   setInput,
   placeholder,
+  disabled,
 }: {
   label: string
   value: string[]
@@ -220,6 +235,7 @@ function TagList({
   input: string
   setInput: (v: string) => void
   placeholder: string
+  disabled?: boolean
 }) {
   const add = () => {
     const v = input.trim()
@@ -235,6 +251,7 @@ function TagList({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
+          disabled={disabled}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault()
@@ -242,7 +259,7 @@ function TagList({
             }
           }}
         />
-        <Button type="button" size="icon" variant="outline" onClick={add}>
+        <Button type="button" size="icon" variant="outline" onClick={add} disabled={disabled}>
           <Plus className="size-4" />
         </Button>
       </div>
@@ -258,6 +275,7 @@ function TagList({
               aria-label={`Eliminar ${v}`}
               onClick={() => setValue(value.filter((_, idx) => idx !== i))}
               className="hover:text-red-600"
+              disabled={disabled}
             >
               <X className="size-3" />
             </button>

@@ -1,9 +1,29 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { supplierPerformance } from "@/lib/mock-data"
+import { api } from "@/lib/api"
+import { Loader2 } from "lucide-react"
+
+interface PerformanceData {
+  month: string
+  a: number
+  b: number
+}
 
 export function SupplierPerformanceChart() {
+  const [data, setData] = useState<PerformanceData[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.get<PerformanceData[]>("/api/suppliers/performance?months=7")
+      .then(setData)
+      .catch(() => {
+        // Silently fail - chart shows empty
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
       <div className="flex items-start justify-between mb-4">
@@ -23,34 +43,44 @@ export function SupplierPerformanceChart() {
         </div>
       </div>
       <div className="h-[220px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={supplierPerformance} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-              domain={[0, 100]}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(123,26,26,0.05)" }}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid #f3f4f6",
-                fontSize: 12,
-                padding: "8px 10px",
-              }}
-            />
-            <Bar dataKey="a" name="Tier 1" fill="#7b1a1a" radius={[4, 4, 0, 0]} maxBarSize={24} />
-            <Bar dataKey="b" name="Tier 2-3" fill="#f4c0c0" radius={[4, 4, 0, 0]} maxBarSize={24} />
-          </BarChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="h-full grid place-items-center text-muted-foreground">
+            <Loader2 className="size-5 animate-spin" />
+          </div>
+        ) : data.length === 0 ? (
+          <div className="h-full grid place-items-center text-xs text-muted-foreground">
+            No hay datos de desempeño disponibles
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+                domain={[0, 100]}
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(123,26,26,0.05)" }}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: "1px solid #f3f4f6",
+                  fontSize: 12,
+                  padding: "8px 10px",
+                }}
+              />
+              <Bar dataKey="a" name="Tier 1" fill="#7b1a1a" radius={[4, 4, 0, 0]} maxBarSize={24} />
+              <Bar dataKey="b" name="Tier 2-3" fill="#f4c0c0" radius={[4, 4, 0, 0]} maxBarSize={24} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   )
