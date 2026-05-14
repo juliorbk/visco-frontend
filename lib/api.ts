@@ -8,9 +8,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     Object.assign(headers, options.headers)
   }
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers })
+  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers, credentials: "include" })
 
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     if (typeof window !== "undefined") {
       window.location.href = "/"
     }

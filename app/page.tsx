@@ -37,7 +37,11 @@ export default function LoginPage() {
         toast.error(err.error || "Error al iniciar sesión")
         return
       }
-      await fetchUser()
+      const user = await fetchUser()
+      if (!user) {
+        toast.error("La sesión no se pudo establecer. Verifica que el backend haya configurado las cookies correctamente.")
+        return
+      }
       toast.success("Sesión iniciada")
       router.push("/dashboard")
     } catch {

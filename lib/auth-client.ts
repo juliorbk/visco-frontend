@@ -9,7 +9,7 @@ let cachedUser: UserInfo | null | undefined = undefined
 
 export async function fetchUser(): Promise<UserInfo | null> {
   try {
-    const res = await fetch("/api/auth/me")
+    const res = await fetch("/api/auth/me", { credentials: "include" })
     if (!res.ok) {
       cachedUser = null
       return null
