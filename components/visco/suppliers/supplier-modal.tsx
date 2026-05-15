@@ -20,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CATEGORIES, CURRENCIES, type Supplier } from "@/lib/mock-data"
+import type { SupplierDTO } from "@/lib/types"
 import { Loader2, Plus, X } from "lucide-react"
+
+const CURRENCIES = ["USD", "EUR", "VES", "COP", "BRL"]
 
 export function SupplierModal({
   open,
@@ -32,17 +34,16 @@ export function SupplierModal({
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
-  editing: Supplier | null
-  onSave: (data: Partial<Supplier>, id?: string) => void
+  editing: SupplierDTO | null
+  onSave: (data: Partial<SupplierDTO>, id?: number) => void
   saving?: boolean
 }) {
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [contactEmail, setContactEmail] = useState("")
   const [address, setAddress] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
   const [sapCode, setSapCode] = useState("")
-  const [category, setCategory] = useState(CATEGORIES[0])
   const [phones, setPhones] = useState<string[]>([])
   const [phoneInput, setPhoneInput] = useState("")
   const [reps, setReps] = useState<string[]>([])
@@ -51,22 +52,20 @@ export function SupplierModal({
   useEffect(() => {
     if (editing) {
       setName(editing.name)
-      setEmail(editing.email)
+      setContactEmail(editing.contactEmail)
       setAddress(editing.address)
       setDescription(editing.description)
       setCurrency(editing.currency)
       setSapCode(editing.sapCode)
-      setCategory(editing.category)
-      setPhones([editing.phone])
-      setReps(editing.legalRepresentatives)
+      setPhones(editing.phoneNumbers)
+      setReps(editing.representatives.map((r) => r.fullName))
     } else {
       setName("")
-      setEmail("")
+      setContactEmail("")
       setAddress("")
       setDescription("")
       setCurrency("USD")
       setSapCode("")
-      setCategory(CATEGORIES[0])
       setPhones([])
       setReps([])
     }
@@ -80,14 +79,14 @@ export function SupplierModal({
     onSave(
       {
         name,
-        email,
+        contactEmail,
         address,
         description,
         currency,
         sapCode,
-        category,
-        phone: phones[0] ?? "",
-        legalRepresentatives: reps,
+        phoneNumbers: phones,
+        representatives: reps.map((fullName) => ({ id: 0, fullName })),
+        active: true,
       },
       editing?.id,
     )
@@ -119,8 +118,8 @@ export function SupplierModal({
               id="semail"
               type="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
               disabled={saving}
             />
           </div>
@@ -133,22 +132,6 @@ export function SupplierModal({
           <div className="sm:col-span-2 space-y-1.5">
             <Label htmlFor="saddr">Dirección</Label>
             <Input id="saddr" value={address} onChange={(e) => setAddress(e.target.value)} disabled={saving} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Categoría</Label>
-            <Select value={category} onValueChange={setCategory} disabled={saving}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-1.5">

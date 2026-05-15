@@ -19,32 +19,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CATEGORIES, UOM_OPTIONS, suppliers, type Product } from "@/lib/mock-data"
+import { UOM_OPTIONS } from "@/lib/mock-data"
+import { createProduct, updateProduct } from "@/lib/services/inventory"
+import type { ProductDTO } from "@/lib/types"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
 interface FormState {
   name: string
   sku: string
   sapCode: string
-  category: string
-  supplierId: string
+  description: string
   uom: string
   reorderPoint: string
-  currentStock: string
   unitPrice: string
-  warehouse: string
 }
 
 const empty: FormState = {
   name: "",
   sku: "",
   sapCode: "",
-  category: CATEGORIES[0],
-  supplierId: suppliers[0].id,
+  description: "",
   uom: "UNIDAD",
   reorderPoint: "0",
-  currentStock: "0",
-  unitPrice: "0",
-  warehouse: "Almacén Central",
 }
 
 export function AddItemModal({
@@ -55,10 +52,11 @@ export function AddItemModal({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  editing: Product | null
-  onSave: (data: Omit<Product, "id" | "history">, id?: string) => void
+  editing: ProductDTO | null
+  onSave: () => void
 }) {
   const [form, setForm] = useState<FormState>(empty)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (editing) {
@@ -66,13 +64,9 @@ export function AddItemModal({
         name: editing.name,
         sku: editing.sku,
         sapCode: editing.sapCode,
-        category: editing.category,
-        supplierId: editing.supplierId,
+        description: editing.description,
         uom: editing.uom,
         reorderPoint: String(editing.reorderPoint),
-        currentStock: String(editing.currentStock),
-        unitPrice: String(editing.unitPrice),
-        warehouse: editing.warehouse,
       })
     } else {
       setForm(empty)
@@ -82,26 +76,32 @@ export function AddItemModal({
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supplier = suppliers.find((s) => s.id === form.supplierId)!
-    onSave(
-      {
+    setSaving(true)
+    try {
+      const data = {
         name: form.name,
         sku: form.sku,
         sapCode: form.sapCode,
-        category: form.category,
-        supplierId: supplier.id,
-        supplierName: supplier.name,
+        description: form.description,
         uom: form.uom,
         reorderPoint: Number(form.reorderPoint) || 0,
-        currentStock: Number(form.currentStock) || 0,
-        unitPrice: Number(form.unitPrice) || 0,
-        warehouse: form.warehouse,
-      },
-      editing?.id,
-    )
-    onOpenChange(false)
+      }
+      if (editing) {
+        await updateProduct(editing.id, data)
+        toast.success("Producto actualizado")
+      } else {
+        await createProduct(data)
+        toast.success("Producto creado")
+      }
+      onSave()
+      onOpenChange(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al guardar producto")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -126,6 +126,17 @@ export function AddItemModal({
               required
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
+              disabled={saving}
+            />
+          </div>
+
+          <div className="sm:col-span-2 space-y-1.5">
+            <Label htmlFor="desc">Descripción</Label>
+            <Input
+              id="desc"
+              value={form.description}
+              onChange={(e) => update("description", e.target.value)}
+              disabled={saving}
             />
           </div>
 
@@ -136,6 +147,7 @@ export function AddItemModal({
               required
               value={form.sku}
               onChange={(e) => update("sku", e.target.value)}
+              disabled={saving}
             />
           </div>
 
@@ -145,44 +157,13 @@ export function AddItemModal({
               id="sap"
               value={form.sapCode}
               onChange={(e) => update("sapCode", e.target.value)}
+              disabled={saving}
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Categoría</Label>
-            <Select value={form.category} onValueChange={(v) => update("category", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Proveedor</Label>
-            <Select value={form.supplierId} onValueChange={(v) => update("supplierId", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
             <Label>UOM</Label>
-            <Select value={form.uom} onValueChange={(v) => update("uom", v)}>
+            <Select value={form.uom} onValueChange={(v) => update("uom", v)} disabled={saving}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -197,51 +178,28 @@ export function AddItemModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="warehouse">Almacén</Label>
-            <Input
-              id="warehouse"
-              value={form.warehouse}
-              onChange={(e) => update("warehouse", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
             <Label htmlFor="reorder">Reorder Point</Label>
             <Input
               id="reorder"
               type="number"
               value={form.reorderPoint}
               onChange={(e) => update("reorderPoint", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="stock">Stock actual</Label>
-            <Input
-              id="stock"
-              type="number"
-              value={form.currentStock}
-              onChange={(e) => update("currentStock", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="price">Precio unitario (USD)</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              value={form.unitPrice}
-              onChange={(e) => update("unitPrice", e.target.value)}
+              disabled={saving}
             />
           </div>
 
           <DialogFooter className="sm:col-span-2 mt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-              {editing ? "Guardar cambios" : "Crear producto"}
+            <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
+              {saving ? (
+                <><Loader2 className="size-4 animate-spin" /> Guardando…</>
+              ) : editing ? (
+                "Guardar cambios"
+              ) : (
+                "Crear producto"
+              )}
             </Button>
           </DialogFooter>
         </form>

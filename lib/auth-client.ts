@@ -1,21 +1,18 @@
-export interface UserInfo {
-  id: string
-  name: string
-  email: string
-  role: string
-}
+import type { UserDTO } from "./types"
 
-let cachedUser: UserInfo | null | undefined = undefined
+export type { UserDTO as UserInfo }
 
-export async function fetchUser(): Promise<UserInfo | null> {
+let cachedUser: UserDTO | null | undefined = undefined
+
+export async function fetchUser(): Promise<UserDTO | null> {
   try {
     const res = await fetch("/api/auth/me", { credentials: "include" })
     if (!res.ok) {
       cachedUser = null
       return null
     }
-    const data = await res.json()
-    cachedUser = { id: data.id, name: data.name, email: data.email, role: data.role }
+    const data: UserDTO = await res.json()
+    cachedUser = data
     return cachedUser
   } catch {
     cachedUser = null

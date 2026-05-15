@@ -1,48 +1,68 @@
-import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react"
+"use client"
+
+import { useEffect, useState } from "react"
+import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react"
+import { fetchKpis } from "@/lib/services/dashboard"
+import type { KpiStatsDTO } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
-interface KPI {
-  icon: React.ReactNode
-  label: string
-  value: string
-  unit?: string
-  delta: number
-  trend?: "up" | "down" | "flat"
-}
-
-const items: KPI[] = [
-  {
-    icon: <Truck className="size-5" />,
-    label: "Pedidos totales",
-    value: "1,284",
-    delta: 12,
-    trend: "up",
-  },
-  {
-    icon: <Monitor className="size-5" />,
-    label: "Inventario total",
-    value: "45,910",
-    unit: "unidades",
-    delta: -3,
-    trend: "down",
-  },
-  {
-    icon: <DollarSign className="size-5" />,
-    label: "Gastos mensuales",
-    value: "$284.5k",
-    delta: 0,
-    trend: "flat",
-  },
-  {
-    icon: <CheckCircle2 className="size-5" />,
-    label: "Tasa de cumplimiento",
-    value: "98.2%",
-    delta: 2.4,
-    trend: "up",
-  },
-]
-
 export function KpiCards() {
+  const [data, setData] = useState<KpiStatsDTO | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchKpis()
+      .then(setData)
+      .catch(() => setData(null))
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-xl border border-border bg-card p-5 flex items-center justify-center h-[120px]">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (!data) return null
+
+  const items = [
+    {
+      icon: <Truck className="size-5" />,
+      label: "Pedidos totales",
+      value: data.totalOrders.toLocaleString(),
+      delta: 0,
+      trend: "flat" as const,
+    },
+    {
+      icon: <Monitor className="size-5" />,
+      label: "Inventario total",
+      value: data.totalInventoryUnits.toLocaleString(),
+      unit: "unidades",
+      delta: 0,
+      trend: "flat" as const,
+    },
+    {
+      icon: <DollarSign className="size-5" />,
+      label: "Gastos mensuales",
+      value: `$${(data.monthlySpend / 1000).toFixed(1)}k`,
+      delta: 0,
+      trend: "flat" as const,
+    },
+    {
+      icon: <CheckCircle2 className="size-5" />,
+      label: "Tasa de cumplimiento",
+      value: `${data.fulfillmentRate.toFixed(1)}%`,
+      delta: data.fulfillmentRate - 90,
+      trend: data.fulfillmentRate >= 90 ? ("up" as const) : ("down" as const),
+    },
+  ]
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {items.map((k) => (
@@ -88,7 +108,7 @@ function DeltaPill({ delta, trend }: { delta: number; trend?: "up" | "down" | "f
     >
       <Icon className="size-3" />
       {positive ? "+" : ""}
-      {delta}%
+      {delta.toFixed(1)}%
     </span>
   )
 }

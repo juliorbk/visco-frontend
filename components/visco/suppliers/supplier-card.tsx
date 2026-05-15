@@ -1,29 +1,18 @@
 "use client"
 
-import { Building2, Star, User, Mail, Factory, Cpu, Truck, Wrench, Layers } from "lucide-react"
-import { ComplianceBadge } from "@/components/visco/status-badge"
-import type { Supplier } from "@/lib/mock-data"
+import { Building2 } from "lucide-react"
+import type { SupplierDTO } from "@/lib/types"
 import { cn } from "@/lib/utils"
-
-const ICONS: Record<string, React.ElementType> = {
-  Electrónica: Cpu,
-  Óptica: Layers,
-  Eléctrica: Factory,
-  Empaques: Truck,
-  Químicos: Wrench,
-  Servicios: Building2,
-}
 
 export function SupplierCard({
   supplier,
   selected,
   onSelect,
 }: {
-  supplier: Supplier
+  supplier: SupplierDTO
   selected?: boolean
-  onSelect: (s: Supplier) => void
+  onSelect: (s: SupplierDTO) => void
 }) {
-  const Icon = ICONS[supplier.category] ?? Building2
   return (
     <button
       onClick={() => onSelect(supplier)}
@@ -36,44 +25,26 @@ export function SupplierCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="size-10 rounded-lg bg-[#fde8e8] grid place-items-center text-[#7b1a1a] shrink-0">
-          <Icon className="size-5" />
+          <Building2 className="size-5" />
         </div>
-        <ComplianceBadge status={supplier.compliance} />
       </div>
 
       <h3 className="mt-4 font-serif text-lg font-semibold text-foreground leading-tight">
         {supplier.name}
       </h3>
       <p className="text-xs text-muted-foreground mt-0.5">
-        {supplier.category} · {supplier.type}
+        {supplier.sapCode} · {supplier.currency}
       </p>
 
-      <div className="flex items-center gap-1 mt-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Star
-            key={i}
-            className={cn(
-              "size-3.5",
-              i <= Math.round(supplier.rating)
-                ? "fill-amber-400 text-amber-400"
-                : "text-border",
-            )}
-          />
-        ))}
-        <span className="ml-1 text-xs font-medium text-foreground tabular-nums">
-          {supplier.rating.toFixed(1)}
-        </span>
-      </div>
-
       <div className="mt-4 space-y-1.5 text-xs">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <User className="size-3.5" />
-          <span className="text-foreground">{supplier.contactName}</span>
-        </div>
         <div className="flex items-center gap-2 text-muted-foreground truncate">
-          <Mail className="size-3.5 shrink-0" />
-          <span className="truncate">{supplier.email}</span>
+          <span className="truncate">{supplier.contactEmail}</span>
         </div>
+        {supplier.phoneNumbers.length > 0 && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>{supplier.phoneNumbers[0]}</span>
+          </div>
+        )}
       </div>
     </button>
   )

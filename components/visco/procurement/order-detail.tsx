@@ -2,7 +2,11 @@
 
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
-import type { PurchaseOrder } from "@/lib/mock-data"
+import type { PurchaseOrderResponse } from "@/lib/types"
+
+const APPROVABLE = ["PENDING", "AWAITING_APPROVAL"]
+const CANCELLABLE = ["PENDING", "IN_TRANSIT", "AWAITING_APPROVAL"]
+const RECEIVABLE = ["IN_TRANSIT", "APPROVED"]
 
 export function OrderDetail({
   order,
@@ -10,10 +14,10 @@ export function OrderDetail({
   onCancel,
   onReceive,
 }: {
-  order: PurchaseOrder | null
-  onApprove?: (o: PurchaseOrder) => void
-  onCancel?: (o: PurchaseOrder) => void
-  onReceive?: (o: PurchaseOrder) => void
+  order: PurchaseOrderResponse | null
+  onApprove?: (o: PurchaseOrderResponse) => void
+  onCancel?: (o: PurchaseOrderResponse) => void
+  onReceive?: (o: PurchaseOrderResponse) => void
 }) {
   if (!order) {
     return (
@@ -22,6 +26,8 @@ export function OrderDetail({
       </div>
     )
   }
+
+  const total = order.items.reduce((s, i) => s + i.subtotal, 0)
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs h-full flex flex-col">
@@ -41,9 +47,9 @@ export function OrderDetail({
       </div>
 
       <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-border">
-        <Stat label="Total" value={`$${order.total.toLocaleString()}`} />
-        <Stat label="Solicitante" value={order.requester} />
-        <Stat label="Centro de Costo" value={order.costCenter} />
+        <Stat label="Total" value={`$${total.toLocaleString()}`} />
+        <Stat label="Solicitante" value={order.createdBy} />
+        <Stat label="Tipo" value={order.type} />
         <Stat label="Artículos" value={`${order.items.length}`} />
       </div>
 
@@ -64,7 +70,7 @@ export function OrderDetail({
                 </div>
               </div>
               <span className="font-medium tabular-nums">
-                ${(it.quantity * it.unitPrice).toLocaleString()}
+                ${it.subtotal.toLocaleString()}
               </span>
             </li>
           ))}
@@ -72,7 +78,7 @@ export function OrderDetail({
       </div>
 
       <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row gap-2">
-        {order.status === "PENDIENTE" && (
+        {APPROVABLE.includes(order.status) && (
           <>
             <Button
               variant="outline"
@@ -89,12 +95,7 @@ export function OrderDetail({
             </Button>
           </>
         )}
-        {order.status === "APROBADO" && (
-          <Button className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-            Proceder al Envío
-          </Button>
-        )}
-        {order.status === "EN_TRANSITO" && (
+        {RECEIVABLE.includes(order.status) && (
           <Button
             className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
             onClick={() => onReceive?.(order)}
@@ -102,7 +103,7 @@ export function OrderDetail({
             Recibir Mercancía
           </Button>
         )}
-        {(order.status === "RECIBIDO" || order.status === "CANCELADO" || order.status === "BORRADOR") && (
+        {!APPROVABLE.includes(order.status) && !RECEIVABLE.includes(order.status) && (
           <Button variant="outline" className="flex-1 bg-card" disabled>
             Sin acciones disponibles
           </Button>

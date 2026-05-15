@@ -3,41 +3,28 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { SupplierPerformanceChart } from "@/components/visco/suppliers/performance-chart"
 import { SupplierCard } from "@/components/visco/suppliers/supplier-card"
 import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
-import { CATEGORIES } from "@/lib/mock-data"
-import { api } from "@/lib/api"
-import type { Supplier } from "@/lib/mock-data"
+import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from "@/lib/services/suppliers"
+import type { SupplierDTO } from "@/lib/types"
 import { Filter, Plus, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [category, setCategory] = useState("all")
-  const [compliance, setCompliance] = useState("all")
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<Supplier | null>(null)
+  const [editing, setEditing] = useState<SupplierDTO | null>(null)
 
-  const fetchSuppliers = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams()
-      if (category !== "all") params.set("category", category)
-      if (compliance !== "all") params.set("compliance", compliance)
-      const res = await api.get<any>(`/api/suppliers?${params}`)
-      const list: Supplier[] = Array.isArray(res) ? res : (res?.data ?? [])
+      const res = await fetchSuppliers()
+      const list = res.content ?? []
       setSuppliers(list)
       setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
     } catch (err) {
@@ -45,31 +32,23 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false)
     }
-  }, [category, compliance])
+  }, [])
 
   useEffect(() => {
-    fetchSuppliers()
-  }, [fetchSuppliers])
-
-  const filtered = useMemo(() => {
-    return suppliers.filter((s) => {
-      const matchCat = category === "all" || s.category === category
-      const matchComp = compliance === "all" || s.compliance === compliance
-      return matchCat && matchComp
-    })
-  }, [suppliers, category, compliance])
+    load()
+  }, [load])
 
   const selected = suppliers.find((s) => s.id === selectedId) ?? null
 
-  const handleSave = async (data: Partial<Supplier>, id?: string) => {
+  const handleSave = async (data: Partial<SupplierDTO>, id?: number) => {
     try {
       setSaving(true)
       if (id) {
-        const updated = await api.put<Supplier>(`/api/suppliers/${id}`, data)
+        const updated = await updateSupplier(id, data)
         setSuppliers((prev) => prev.map((s) => (s.id === id ? updated : s)))
         toast.success("Proveedor actualizado")
       } else {
-        const created = await api.post<Supplier>("/api/suppliers", data)
+        const created = await createSupplier(data)
         setSuppliers((prev) => [created, ...prev])
         setSelectedId(created.id)
         toast.success("Proveedor creado")
@@ -83,9 +62,9 @@ export default function SuppliersPage() {
     }
   }
 
-  const handleDeactivate = async (s: Supplier) => {
+  const handleDeactivate = async (s: SupplierDTO) => {
     try {
-      await api.delete(`/api/suppliers/${s.id}`)
+      await deactivateSupplier(s.id)
       setSuppliers((prev) => prev.filter((x) => x.id !== s.id))
       toast.success(`${s.name} desactivado`)
       if (selectedId === s.id) setSelectedId(null)
@@ -117,36 +96,6 @@ export default function SuppliersPage() {
         <SupplierPerformanceChart />
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-full sm:w-56 bg-card">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las Categorías</SelectItem>
-            {CATEGORIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={compliance} onValueChange={setCompliance}>
-          <SelectTrigger className="w-full sm:w-72 bg-card">
-            <SelectValue placeholder="Estado de Cumplimiento" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Cumplimiento: Todos</SelectItem>
-            <SelectItem value="Total">Total</SelectItem>
-            <SelectItem value="Revision">En Revisión</SelectItem>
-            <SelectItem value="Critico">Crítico</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="default" className="bg-card sm:ml-auto">
-          <Filter className="size-4" /> Filtros Avanzados
-        </Button>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
           {loading ? (
@@ -154,12 +103,12 @@ export default function SuppliersPage() {
               <Loader2 className="size-5 animate-spin" />
               Cargando proveedores…
             </div>
-          ) : filtered.length === 0 ? (
+          ) : suppliers.length === 0 ? (
             <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-              No hay proveedores que coincidan con los filtros.
+              No hay proveedores disponibles.
             </div>
           ) : (
-            filtered.map((s) => (
+            suppliers.map((s) => (
               <SupplierCard
                 key={s.id}
                 supplier={s}

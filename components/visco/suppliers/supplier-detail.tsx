@@ -9,18 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { OrderStatusBadge } from "@/components/visco/status-badge"
-import type { Supplier } from "@/lib/mock-data"
-import { cn } from "@/lib/utils"
+import type { SupplierDTO } from "@/lib/types"
 
 export function SupplierDetail({
   supplier,
   onEdit,
   onDeactivate,
 }: {
-  supplier: Supplier | null
-  onEdit?: (s: Supplier) => void
-  onDeactivate?: (s: Supplier) => void
+  supplier: SupplierDTO | null
+  onEdit?: (s: SupplierDTO) => void
+  onDeactivate?: (s: SupplierDTO) => void
 }) {
   if (!supplier) {
     return (
@@ -58,52 +56,46 @@ export function SupplierDetail({
         </div>
         <h4 className="mt-3 font-serif text-xl font-semibold">{supplier.name}</h4>
         <p className="text-xs text-muted-foreground mt-1">
-          Proveedor Nivel {supplier.tier} · Desde {supplier.since}
+          SAP: {supplier.sapCode} · {supplier.currency}
         </p>
       </div>
 
-      <div className="px-5 py-4 border-b border-border">
-        <h5 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
-          Certificaciones Activas
-        </h5>
-        <div className="flex flex-wrap gap-1.5">
-          {supplier.certifications.map((c) => (
-            <span
-              key={c.name}
-              className={cn(
-                "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset",
-                c.status === "active"
-                  ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                  : "bg-amber-50 text-amber-700 ring-amber-200",
-              )}
-            >
-              {c.name}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="px-5 py-4 border-b border-border">
-        <div className="flex items-center justify-between mb-2">
-          <h5 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-            Historial Reciente
+      {supplier.representatives.length > 0 && (
+        <div className="px-5 py-4 border-b border-border">
+          <h5 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
+            Representantes Legales
           </h5>
-          <button className="text-xs text-[#7b1a1a] hover:underline font-medium">Ver todo</button>
+          <ul className="space-y-1">
+            {supplier.representatives.map((r) => (
+              <li key={r.id} className="text-sm text-foreground">
+                {r.fullName}
+              </li>
+            ))}
+          </ul>
         </div>
-        <ul className="space-y-1.5">
-          {supplier.recentOrders.map((o) => (
-            <li
-              key={o.id}
-              className="flex items-center justify-between text-sm border-b border-border last:border-b-0 pb-1.5 last:pb-0"
-            >
-              <div>
-                <div className="font-medium text-[#7b1a1a]">{o.id}</div>
-                <div className="text-xs text-muted-foreground">{o.date}</div>
-              </div>
-              <OrderStatusBadge status={o.status} />
-            </li>
-          ))}
-        </ul>
+      )}
+
+      <div className="px-5 py-4 space-y-3 border-b border-border text-sm">
+        <div>
+          <span className="text-xs text-muted-foreground block">Email</span>
+          <span className="text-foreground">{supplier.contactEmail}</span>
+        </div>
+        {supplier.phoneNumbers.length > 0 && (
+          <div>
+            <span className="text-xs text-muted-foreground block">Teléfono</span>
+            <span className="text-foreground">{supplier.phoneNumbers[0]}</span>
+          </div>
+        )}
+        <div>
+          <span className="text-xs text-muted-foreground block">Dirección</span>
+          <span className="text-foreground">{supplier.address}</span>
+        </div>
+        {supplier.description && (
+          <div>
+            <span className="text-xs text-muted-foreground block">Descripción</span>
+            <span className="text-foreground">{supplier.description}</span>
+          </div>
+        )}
       </div>
 
       <div className="px-5 py-4 flex flex-col sm:flex-row gap-2">
