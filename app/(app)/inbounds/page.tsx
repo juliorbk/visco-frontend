@@ -1,14 +1,15 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Download, Plus, Loader2 } from "lucide-react"
+import { Download, Plus, Loader2, Warehouse } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/visco/page-header"
 import { InboundsKPICards } from "@/components/visco/inbounds/kpi-cards"
 import { ReceiptsTable } from "@/components/visco/inbounds/receipts-table"
 import { ReceiptDetailPanel } from "@/components/visco/inbounds/receipt-detail-panel"
 import { NuevaRecepcionModal } from "@/components/visco/inbounds/nueva-recepcion-modal"
-import { fetchReceipts } from "@/lib/services/warehouse"
+import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
+import { fetchReceipts, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchOrders as fetchPOs } from "@/lib/services/procurement"
 import type { GoodReceiptResponse, PurchaseOrderResponse } from "@/lib/types"
 import { toast } from "sonner"
@@ -19,6 +20,7 @@ export default function InboundsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedReceipt, setSelectedReceipt] = useState<GoodReceiptResponse | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [warehouseModalOpen, setWarehouseModalOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -60,6 +62,9 @@ export default function InboundsPage() {
         subtitle="Registra y consulta las notas de recepción contra órdenes de compra aprobadas."
         actions={
           <>
+            <Button variant="outline" size="sm" className="bg-card" onClick={() => setWarehouseModalOpen(true)}>
+              <Warehouse className="size-4" /> Almacenes
+            </Button>
             <Button variant="outline" size="sm" className="bg-card">
               <Download className="size-4" /> Exportar
             </Button>
@@ -112,6 +117,12 @@ export default function InboundsPage() {
         onClose={() => setIsModalOpen(false)}
         purchaseOrders={purchaseOrders}
         onSubmit={handleNewReceipt}
+      />
+
+      <CreateWarehouseModal
+        open={warehouseModalOpen}
+        onOpenChange={setWarehouseModalOpen}
+        onCreated={() => {}}
       />
     </div>
   )
