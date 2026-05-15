@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/dialog"
 import { fetchUsers, updateUser, deactivateUser, activateUser } from "@/lib/services/admin"
 import { getCachedUser } from "@/lib/auth-client"
+import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import type { UserDTO, UserRole } from "@/lib/types"
-import { Loader2, Shield, ShieldCheck, ShieldX } from "lucide-react"
+import { Loader2, Shield, ShieldCheck, ShieldX, Building2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -34,13 +35,13 @@ const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
   PROCUREMENT: { label: "Compras", className: "bg-amber-100 text-amber-800 ring-amber-200" },
   WAREHOUSEMAN: { label: "Almacén", className: "bg-green-100 text-green-800 ring-green-200" },
 }
-
 export default function AdminPage() {
   const [users, setUsers] = useState<UserDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [editingUser, setEditingUser] = useState<UserDTO | null>(null)
   const [newRole, setNewRole] = useState<UserRole | null>(null)
   const [saving, setSaving] = useState(false)
+  const [areaManagerOpen, setAreaManagerOpen] = useState(false)
 
   const currentUser = getCachedUser()
 
@@ -102,9 +103,14 @@ export default function AdminPage() {
         title="Administración"
         subtitle="Gestión de usuarios, roles y permisos del sistema."
         actions={
-          <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={load}>
-            <Shield className="size-4" /> Recargar
-          </Button>
+          <>
+            <Button variant="outline" size="sm" className="bg-card" onClick={() => setAreaManagerOpen(true)}>
+              <Building2 className="size-4" /> Áreas
+            </Button>
+            <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={load}>
+              <Shield className="size-4" /> Recargar
+            </Button>
+          </>
         }
       />
 
@@ -246,6 +252,11 @@ export default function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AreaManagerModal
+        open={areaManagerOpen}
+        onOpenChange={setAreaManagerOpen}
+      />
     </div>
   )
 }
