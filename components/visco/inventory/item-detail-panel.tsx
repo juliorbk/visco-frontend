@@ -1,10 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import type { ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
-import { Image as ImageIcon, Pencil, ShoppingCart } from "lucide-react"
+import { StockActionModal } from "@/components/visco/inventory/stock-action-modal"
+import { Image as ImageIcon, Pencil, ShoppingCart, ArrowRightLeft, Equal, RefreshCw } from "lucide-react"
 
 export function ItemDetailPanel({
   product,
@@ -15,6 +17,7 @@ export function ItemDetailPanel({
   onClose: () => void
   onEdit: (p: ProductDTO) => void
 }) {
+  const [stockActionOpen, setStockActionOpen] = useState(false)
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
     if (p.totalStock < p.reorderPoint) return "Bajo stock"
@@ -68,12 +71,26 @@ export function ItemDetailPanel({
               >
                 <Pencil className="size-4" /> Edit Item
               </Button>
+              <Button
+                variant="outline"
+                className="bg-card"
+                onClick={() => setStockActionOpen(true)}
+              >
+                <RefreshCw className="size-4" /> Stock Actions
+              </Button>
               <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
                 <ShoppingCart className="size-4" /> Create PO
               </Button>
             </div>
           </div>
         )}
+
+        <StockActionModal
+          product={product}
+          open={stockActionOpen}
+          onOpenChange={setStockActionOpen}
+          onDone={onClose}
+        />
       </SheetContent>
     </Sheet>
   )
