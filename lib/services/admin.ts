@@ -14,7 +14,7 @@ export async function updateUser(id: string, data: UpdateUserRequest): Promise<U
 }
 
 export async function deactivateUser(id: string): Promise<void> {
-  await api.delete(`/api/users/${id}/deactivate`)
+  await api.patch(`/api/users/${id}/deactivate`)
 }
 
 export async function activateUser(id: string): Promise<void> {
