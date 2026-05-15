@@ -1,0 +1,22 @@
+import { api } from "@/lib/api"
+import type { UserDTO, UpdateUserRequest, Page } from "@/lib/types"
+
+export async function fetchUsers(page = 0, size = 50): Promise<Page<UserDTO>> {
+  return api.get<Page<UserDTO>>(`/api/users?page=${page}&size=${size}`)
+}
+
+export async function fetchUser(id: string): Promise<UserDTO> {
+  return api.get<UserDTO>(`/api/users/${id}`)
+}
+
+export async function updateUser(id: string, data: UpdateUserRequest): Promise<UserDTO> {
+  return api.put<UserDTO>(`/api/users/${id}`, data)
+}
+
+export async function deactivateUser(id: string): Promise<void> {
+  await api.delete(`/api/users/${id}/deactivate`)
+}
+
+export async function activateUser(id: string): Promise<void> {
+  await api.patch(`/api/users/${id}/activate`)
+}
