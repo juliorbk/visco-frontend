@@ -69,6 +69,7 @@ export function SupplierCard({
         <div className="flex items-center gap-2 text-muted-foreground">
           <User className="size-3.5" />
           <span className="text-foreground">{supplier.contactName}</span>
+          <span className="text-foreground">({supplier.phone})</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground truncate">
           <Mail className="size-3.5 shrink-0" />

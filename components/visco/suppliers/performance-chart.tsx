@@ -17,8 +17,9 @@ export function SupplierPerformanceChart() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<any>("/api/suppliers/performance?months=7")
+    api.get<any>("/api/suppliers/performance?months=6")
       .then((res) => {
+        console.log(res)
         const list: PerformanceData[] = Array.isArray(res) ? res : (res?.data ?? [])
         setData(list)
       })
