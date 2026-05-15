@@ -13,8 +13,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { receiveGoods } from "@/lib/services/warehouse"
-import type { PurchaseOrderResponse } from "@/lib/types"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { receiveGoods, fetchWarehouses } from "@/lib/services/warehouse"
+import type { PurchaseOrderResponse, WarehouseResponse } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -32,6 +39,8 @@ export function ReceiveGoodsModal({
   const [received, setReceived] = useState<Record<number, number>>({})
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
+  const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
+  const [destinationLocationId, setDestinationLocationId] = useState<number>(1)
 
   useEffect(() => {
     if (order) {
@@ -40,7 +49,10 @@ export function ReceiveGoodsModal({
       setReceived(init)
       setNotes("")
     }
-  }, [order])
+    if (open) {
+      fetchWarehouses().then(setWarehouses).catch(() => {})
+    }
+  }, [order, open])
 
   if (!order) return null
 
@@ -53,6 +65,7 @@ export function ReceiveGoodsModal({
           receivedQuantity: received[it.productId] ?? 0,
         })),
         notes,
+        destinationLocationId,
       })
       toast.success("Recepción registrada correctamente")
       onReceived()
@@ -75,6 +88,21 @@ export function ReceiveGoodsModal({
         </DialogHeader>
 
         <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Ubicación destino</Label>
+            <Select value={String(destinationLocationId)} onValueChange={(v) => setDestinationLocationId(Number(v))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar almacén…" />
+              </SelectTrigger>
+              <SelectContent>
+                {warehouses.map((w) => (
+                  <SelectItem key={w.id} value={String(w.id)}>
+                    {w.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {order.items.map((it) => (
             <div
               key={it.productId}

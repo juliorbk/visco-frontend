@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 import { fetchSpending } from "@/lib/services/dashboard"
-import { Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ExpensesBreakdown() {
   const [data, setData] = useState<{ name: string; value: number; color: string }[]>([])
@@ -36,8 +36,19 @@ export function ExpensesBreakdown() {
       </div>
 
       {loading ? (
-        <div className="flex-1 min-h-[200px] grid place-items-center">
-          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        <div className="flex-1 min-h-[200px] flex flex-col items-center justify-center gap-4 mt-2">
+          <Skeleton className="size-40 rounded-full" />
+          <div className="w-full space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="size-2.5 rounded-sm" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+                <Skeleton className="h-3 w-10" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <>

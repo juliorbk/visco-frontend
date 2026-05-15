@@ -5,7 +5,8 @@ import Link from "next/link"
 import { fetchRecentOrders } from "@/lib/services/dashboard"
 import type { RecentOrderDTO } from "@/lib/types"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
-import { ArrowUpRight, Loader2 } from "lucide-react"
+import { ArrowUpRight } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function RecentOrders() {
   const [rows, setRows] = useState<RecentOrderDTO[]>([])
@@ -33,8 +34,27 @@ export function RecentOrders() {
         </Link>
       </div>
       {loading ? (
-        <div className="p-10 text-center">
-          <Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" />
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
+                <th className="text-left font-medium px-5 py-2.5">ID Pedido</th>
+                <th className="text-left font-medium px-5 py-2.5">Fecha</th>
+                <th className="text-left font-medium px-5 py-2.5">Proveedor</th>
+                <th className="text-left font-medium px-5 py-2.5">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <tr key={i} className="border-t border-border">
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-28" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-32" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-5 w-20 rounded-full" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="overflow-x-auto">

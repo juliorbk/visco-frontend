@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { fetchSpending } from "@/lib/services/dashboard"
-import { Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export function ExpensesChart() {
   const [data, setData] = useState<{ month: string; real: number; proyectado: number }[]>([])
@@ -34,8 +34,10 @@ export function ExpensesChart() {
       </div>
       <div className="h-[280px]">
         {loading ? (
-          <div className="h-full grid place-items-center">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <div className="h-full flex items-end gap-2 px-1">
+            {[40, 55, 70, 45, 80, 65].map((h, i) => (
+              <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
+            ))}
           </div>
         ) : data.length === 0 ? (
           <div className="h-full grid place-items-center text-xs text-muted-foreground">

@@ -5,11 +5,18 @@ import type {
   ProductStockBreakdown,
   GoodReceiptResponse,
   ReceiveGoodsRequest,
+  CreateWarehouseRequest,
+  TransferStockRequest,
+  AdjustStockRequest,
   Page,
 } from "@/lib/types"
 
 export async function fetchWarehouses(): Promise<WarehouseResponse[]> {
   return api.get<WarehouseResponse[]>("/api/warehouse")
+}
+
+export async function createWarehouse(data: CreateWarehouseRequest): Promise<WarehouseResponse> {
+  return api.post<WarehouseResponse>("/api/warehouse", data)
 }
 
 export async function fetchStockSummary(): Promise<WarehouseStockSummary[]> {
@@ -22,6 +29,14 @@ export async function fetchProductStockBreakdown(productId: number): Promise<Pro
 
 export async function receiveGoods(orderId: number, data: ReceiveGoodsRequest): Promise<GoodReceiptResponse> {
   return api.post<GoodReceiptResponse>(`/api/warehouse/orders/${orderId}/receive`, data)
+}
+
+export async function transferStock(data: TransferStockRequest): Promise<void> {
+  await api.post("/api/warehouse/stock/transfer", data)
+}
+
+export async function adjustStock(data: AdjustStockRequest): Promise<void> {
+  await api.post("/api/warehouse/stock/adjust", data)
 }
 
 export async function fetchReceipts(page = 0, size = 20): Promise<Page<GoodReceiptResponse>> {

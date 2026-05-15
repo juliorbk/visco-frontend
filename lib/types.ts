@@ -49,6 +49,7 @@ export interface UserDTO {
   role: UserRole
   areaId: number | null
   areaName: string | null
+  active?: boolean
 }
 
 // ── Supplier ──
@@ -91,6 +92,17 @@ export interface ProductDTO {
   categoryName: string | null
 }
 
+export interface CreateProductRequest {
+  name: string
+  sku: string
+  description?: string
+  sapCode: string
+  uom: Uom
+  reorderPoint: number
+  supplierId?: number | null
+  categoryId?: number | null
+}
+
 // ── Purchase Order ──
 
 export interface PurchaseOrderResponse {
@@ -119,6 +131,7 @@ export interface CreatePurchaseOrderRequest {
   orderNumber: string
   description: string
   supplierId: number
+  destinationWarehouse: number
   paymentMethod: PaymentMethod
   type: PurchaseOrderType
   createdById: string
@@ -150,6 +163,7 @@ export interface GoodReceiptItemResponse {
 export interface ReceiveGoodsRequest {
   items: { productId: number; receivedQuantity: number }[]
   notes: string
+  destinationLocationId: number
 }
 
 // ── Warehouse ──
@@ -157,6 +171,14 @@ export interface ReceiveGoodsRequest {
 export interface WarehouseResponse {
   id: number
   name: string
+  sapCenterCode: string
+}
+
+export interface CreateWarehouseRequest {
+  name: string
+  physicalAddress: string
+  description: string
+  responsibleUserId: string
   sapCenterCode: string
 }
 
@@ -177,6 +199,40 @@ export interface ProductStockBreakdown {
     currentStock: number
     pendingStock: number
   }[]
+}
+
+export interface TransferStockRequest {
+  productId: number
+  fromLocationId: number
+  toLocationId: number
+  quantity: number
+  createdById: string
+}
+
+export interface AdjustStockRequest {
+  productId: number
+  locationId: number
+  newStock: number
+  reason?: string
+  createdById: string
+}
+
+// ── Category ──
+
+export interface Category {
+  id: number
+  name: string
+  parentCategory?: Category | null
+}
+
+// ── Requesting Area ──
+
+export interface RequestingArea {
+  id: number
+  name: string
+  description: string
+  costCenter: string
+  active: boolean
 }
 
 // ── Dashboard ──
@@ -218,6 +274,13 @@ export interface SupplierPerformanceMonthlyDTO {
   month: string
   a: number
   b: number
+}
+
+// ── Admin / User Management ──
+
+export interface UpdateUserRequest {
+  role: UserRole
+  areaId?: number | null
 }
 
 // ── Spring Page wrapper ──

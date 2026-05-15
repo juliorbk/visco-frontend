@@ -9,30 +9,33 @@ import { OrderDetail } from "@/components/visco/procurement/order-detail"
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { ReceiveGoodsModal } from "@/components/visco/procurement/receive-goods-modal"
 import { fetchOrders, approveOrder, cancelOrder } from "@/lib/services/procurement"
-import type { PurchaseOrderResponse } from "@/lib/types"
+import type { PurchaseOrderResponse, Page } from "@/lib/types"
 import { CheckCheck, FileClock, Plus, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function ProcurementPage() {
-  const [orders, setOrders] = useState<PurchaseOrderResponse[]>([])
+  const [pageData, setPageData] = useState<Page<PurchaseOrderResponse> | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [receiveOpen, setReceiveOpen] = useState(false)
+  const [page, setPage] = useState(0)
+
+  const orders = pageData?.content ?? []
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const list = await fetchOrders()
-      setOrders(list)
-      setSelectedId((prev) => (prev && list.find((o) => o.id === prev) ? prev : list[0]?.id ?? null))
+      const res = await fetchOrders(page, 50)
+      setPageData(res)
+      setSelectedId((prev) => (prev && res.content.find((o) => o.id === prev) ? prev : res.content[0]?.id ?? null))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar pedidos")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page])
 
   useEffect(() => {
     load()
@@ -43,7 +46,7 @@ export default function ProcurementPage() {
   const handleApprove = async (o: PurchaseOrderResponse) => {
     try {
       const updated = await approveOrder(o.id)
-      setOrders((prev) => prev.map((x) => (x.id === o.id ? updated : x)))
+      setPageData((prev) => prev ? { ...prev, content: prev.content.map((x) => (x.id === o.id ? updated : x)) } : prev)
       toast.success(`${o.orderNumber} aprobado`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al aprobar")
@@ -53,7 +56,7 @@ export default function ProcurementPage() {
   const handleCancel = async (o: PurchaseOrderResponse) => {
     try {
       const updated = await cancelOrder(o.id)
-      setOrders((prev) => prev.map((x) => (x.id === o.id ? updated : x)))
+      setPageData((prev) => prev ? { ...prev, content: prev.content.map((x) => (x.id === o.id ? updated : x)) } : prev)
       toast.success(`${o.orderNumber} cancelado`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cancelar")
@@ -100,7 +103,7 @@ export default function ProcurementPage() {
             <div>
               <h3 className="font-serif text-lg font-semibold">Pedidos Activos</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {orders.length} pedidos en el sistema
+                {pageData?.totalElements ?? 0} pedidos en el sistema
               </p>
             </div>
           </div>
@@ -149,6 +152,27 @@ export default function ProcurementPage() {
               </tbody>
             </table>
           </div>
+          {pageData && pageData.totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-border text-sm">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+              >
+                Anterior
+              </button>
+              <span className="text-xs text-muted-foreground">
+                Página {pageData.number + 1} de {pageData.totalPages}
+              </span>
+              <button
+                disabled={page >= pageData.totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

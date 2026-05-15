@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertTriangle, ShoppingCart, Loader2 } from "lucide-react"
+import { AlertTriangle, ShoppingCart } from "lucide-react"
 import { fetchCriticalInventory } from "@/lib/services/dashboard"
 import type { CriticalInventoryItemDTO } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export function CriticalInventory() {
@@ -24,9 +25,18 @@ export function CriticalInventory() {
         <h3 className="font-serif text-lg font-semibold">Inventario Crítico</h3>
       </div>
       {loading ? (
-        <div className="p-10 text-center">
-          <Loader2 className="size-5 animate-spin mx-auto text-muted-foreground" />
-        </div>
+        <ul className="p-3 space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <li key={i} className="flex items-center gap-3 rounded-lg p-3 ring-1 ring-inset ring-border">
+              <Skeleton className="size-9 rounded-md shrink-0" />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-44" />
+              </div>
+              <Skeleton className="size-8 rounded-md" />
+            </li>
+          ))}
+        </ul>
       ) : items.length === 0 ? (
         <div className="p-10 text-center text-sm text-muted-foreground">
           No hay productos con stock crítico

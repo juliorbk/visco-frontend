@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select"
 import { UOM_OPTIONS } from "@/lib/mock-data"
 import { createProduct, updateProduct } from "@/lib/services/inventory"
-import type { ProductDTO } from "@/lib/types"
+import { fetchSuppliers } from "@/lib/services/suppliers"
+import type { ProductDTO, SupplierDTO } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -32,7 +33,7 @@ interface FormState {
   description: string
   uom: string
   reorderPoint: string
-  unitPrice: string
+  supplierId: number | null
 }
 
 const empty: FormState = {
@@ -42,6 +43,7 @@ const empty: FormState = {
   description: "",
   uom: "UNIDAD",
   reorderPoint: "0",
+  supplierId: null,
 }
 
 export function AddItemModal({
@@ -57,6 +59,13 @@ export function AddItemModal({
 }) {
   const [form, setForm] = useState<FormState>(empty)
   const [saving, setSaving] = useState(false)
+  const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
+
+  useEffect(() => {
+    if (open) {
+      fetchSuppliers(0, 200).then((res) => setSuppliers(res.content ?? [])).catch(() => {})
+    }
+  }, [open])
 
   useEffect(() => {
     if (editing) {
@@ -67,6 +76,7 @@ export function AddItemModal({
         description: editing.description,
         uom: editing.uom,
         reorderPoint: String(editing.reorderPoint),
+        supplierId: editing.supplierId,
       })
     } else {
       setForm(empty)
@@ -87,6 +97,7 @@ export function AddItemModal({
         description: form.description,
         uom: form.uom,
         reorderPoint: Number(form.reorderPoint) || 0,
+        supplierId: form.supplierId,
       }
       if (editing) {
         await updateProduct(editing.id, data)
@@ -186,6 +197,26 @@ export function AddItemModal({
               onChange={(e) => update("reorderPoint", e.target.value)}
               disabled={saving}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Proveedor</Label>
+            <Select
+              value={form.supplierId ? String(form.supplierId) : ""}
+              onValueChange={(v) => update("supplierId", v ? Number(v) : null)}
+              disabled={saving}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter className="sm:col-span-2 mt-2">

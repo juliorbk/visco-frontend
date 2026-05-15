@@ -1,8 +1,8 @@
 import { api } from "@/lib/api"
-import type { PurchaseOrderResponse, CreatePurchaseOrderRequest } from "@/lib/types"
+import type { PurchaseOrderResponse, CreatePurchaseOrderRequest, Page } from "@/lib/types"
 
-export async function fetchOrders(): Promise<PurchaseOrderResponse[]> {
-  return api.get<PurchaseOrderResponse[]>("/api/procurement/orders")
+export async function fetchOrders(page = 0, size = 50): Promise<Page<PurchaseOrderResponse>> {
+  return api.get<Page<PurchaseOrderResponse>>(`/api/procurement/orders?page=${page}&size=${size}`)
 }
 
 export async function fetchOrder(id: number): Promise<PurchaseOrderResponse> {

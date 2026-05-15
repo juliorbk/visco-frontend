@@ -25,10 +25,10 @@ export default function InboundsPage() {
       setLoading(true)
       const [recRes, poRes] = await Promise.all([
         fetchReceipts(0, 50),
-        fetchPOs(),
+        fetchPOs(0, 200),
       ])
       setReceipts(recRes.content ?? [])
-      setPurchaseOrders(poRes)
+      setPurchaseOrders(poRes.content ?? [])
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar datos")
     } finally {

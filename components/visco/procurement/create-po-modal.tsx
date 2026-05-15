@@ -22,9 +22,11 @@ import {
 } from "@/components/ui/select"
 import { PAYMENT_METHODS, ORDER_TYPES } from "@/lib/mock-data"
 import { createOrder } from "@/lib/services/procurement"
-import type { CreatePurchaseOrderRequest, PurchaseOrderResponse, ProductDTO } from "@/lib/types"
+import { fetchWarehouses } from "@/lib/services/warehouse"
+import type { CreatePurchaseOrderRequest, ProductDTO } from "@/lib/types"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
+import { getCachedUser } from "@/lib/auth-client"
 import { Check, Loader2, Plus, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -58,22 +60,28 @@ export function CreatePOModal({
   const [pickProduct, setPickProduct] = useState<number | null>(null)
   const [pickQty, setPickQty] = useState("1")
   const [pickPrice, setPickPrice] = useState("0")
+  const [destinationWarehouse, setDestinationWarehouse] = useState<number | null>(null)
+  const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (open) {
-      fetchSuppliers().then((supRes) => {
+      fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
       }).catch(() => {})
-      fetchProducts().then((prodRes) => {
+      fetchProducts(0, 200).then((prodRes) => {
         const prods = prodRes.content ?? []
         setProducts(prods)
         if (prods.length > 0) {
           setPickProduct(prods[0].id)
           setPickPrice(String(0))
         }
+      }).catch(() => {})
+      fetchWarehouses().then((wh) => {
+        setWarehouses(wh)
+        if (wh.length > 0) setDestinationWarehouse(wh[0].id)
       }).catch(() => {})
     }
   }, [open])
@@ -109,8 +117,13 @@ export function CreatePOModal({
   }
 
   const submit = async () => {
-    if (!supplierId || lines.length === 0) {
+    if (!supplierId || lines.length === 0 || !destinationWarehouse) {
       toast.error("Completa todos los campos requeridos")
+      return
+    }
+    const user = getCachedUser()
+    if (!user) {
+      toast.error("Debes iniciar sesión para crear pedidos")
       return
     }
     setSaving(true)
@@ -119,9 +132,10 @@ export function CreatePOModal({
         orderNumber,
         description,
         supplierId,
+        destinationWarehouse,
         paymentMethod: paymentMethod as CreatePurchaseOrderRequest["paymentMethod"],
         type: type as CreatePurchaseOrderRequest["type"],
-        createdById: "00000000-0000-0000-0000-000000000000",
+        createdById: user.id,
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
       }
       await createOrder(body)
@@ -191,6 +205,21 @@ export function CreatePOModal({
                   {suppliers.map((s) => (
                     <SelectItem key={s.id} value={String(s.id)}>
                       {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Almacén destino</Label>
+              <Select value={String(destinationWarehouse ?? "")} onValueChange={(v) => setDestinationWarehouse(Number(v))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouses.map((w) => (
+                    <SelectItem key={w.id} value={String(w.id)}>
+                      {w.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

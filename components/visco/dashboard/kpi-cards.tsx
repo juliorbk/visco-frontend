@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus, Loader2 } from "lucide-react"
+import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { fetchKpis } from "@/lib/services/dashboard"
 import type { KpiStatsDTO } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export function KpiCards() {
@@ -21,8 +22,15 @@ export function KpiCards() {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-xl border border-border bg-card p-5 flex items-center justify-center h-[120px]">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          <div key={i} className="rounded-xl border border-border bg-card p-5 flex flex-col gap-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <Skeleton className="size-9 rounded-lg" />
+              <Skeleton className="h-5 w-14 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-8 w-28" />
+            </div>
           </div>
         ))}
       </div>
