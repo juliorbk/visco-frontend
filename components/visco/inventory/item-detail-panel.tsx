@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { computeStatus, type Product } from "@/lib/mock-data"
+import type { ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { Image as ImageIcon, Pencil, ShoppingCart } from "lucide-react"
 
@@ -11,10 +11,16 @@ export function ItemDetailPanel({
   onClose,
   onEdit,
 }: {
-  product: Product | null
+  product: ProductDTO | null
   onClose: () => void
-  onEdit: (p: Product) => void
+  onEdit: (p: ProductDTO) => void
 }) {
+  const computeStatus = (p: ProductDTO) => {
+    if (p.totalStock <= 0) return "Sin stock"
+    if (p.totalStock < p.reorderPoint) return "Bajo stock"
+    return "En stock"
+  }
+
   return (
     <Sheet open={!!product} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
@@ -32,51 +38,26 @@ export function ItemDetailPanel({
               <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
                 <span>SKU {product.sku}</span>
                 <span aria-hidden>•</span>
-                <span>{product.sapCode}</span>
+                <span>{product.internalCode}</span>
               </div>
               <h3 className="mt-1 font-serif text-xl font-semibold text-foreground">
                 {product.name}
               </h3>
+              {product.description && (
+                <p className="mt-1 text-xs text-muted-foreground">{product.description}</p>
+              )}
               <div className="mt-2">
                 <InventoryStatusBadge status={computeStatus(product)} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Stat label="Current Stock" value={`${product.currentStock} ${product.uom.toLowerCase()}`} />
+              <Stat label="Total Stock" value={`${product.totalStock} ${product.uom.toLowerCase()}`} />
+              <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
               <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
-              <Stat label="Warehouse" value={product.warehouse} />
-              <Stat label="Supplier" value={product.supplierName} />
-            </div>
-
-            <div>
-              <h4 className="text-sm font-semibold text-foreground mb-2">Recent History</h4>
-              <ul className="space-y-2">
-                {product.history.length === 0 && (
-                  <li className="text-xs text-muted-foreground">Sin movimientos registrados.</li>
-                )}
-                {product.history.map((h, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between rounded-md border border-border bg-[#fafafa] px-3 py-2 text-sm"
-                  >
-                    <div>
-                      <div className="text-xs text-muted-foreground">{h.date}</div>
-                      <div className="font-medium text-foreground">{h.description}</div>
-                    </div>
-                    <span
-                      className={
-                        h.delta < 0
-                          ? "text-red-600 font-medium tabular-nums"
-                          : "text-emerald-600 font-medium tabular-nums"
-                      }
-                    >
-                      {h.delta > 0 ? "+" : ""}
-                      {h.delta} units
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <Stat label="Supplier" value={product.supplierName ?? "-"} />
+              <Stat label="Category" value={product.categoryName ?? "-"} />
+              <Stat label="SAP Code" value={product.sapCode} />
             </div>
 
             <div className="flex flex-col gap-2 pt-2">

@@ -13,26 +13,29 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import type { PurchaseOrder } from "@/lib/mock-data"
+import { receiveGoods } from "@/lib/services/warehouse"
+import type { PurchaseOrderResponse } from "@/lib/types"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 export function ReceiveGoodsModal({
   order,
   open,
   onOpenChange,
-  onReceive,
+  onReceived,
 }: {
-  order: PurchaseOrder | null
+  order: PurchaseOrderResponse | null
   open: boolean
   onOpenChange: (o: boolean) => void
-  onReceive: (order: PurchaseOrder) => void
+  onReceived: () => void
 }) {
-  const [received, setReceived] = useState<Record<string, number>>({})
+  const [received, setReceived] = useState<Record<number, number>>({})
   const [notes, setNotes] = useState("")
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (order) {
-      const init: Record<string, number> = {}
+      const init: Record<number, number> = {}
       order.items.forEach((it) => (init[it.productId] = it.quantity))
       setReceived(init)
       setNotes("")
@@ -41,20 +44,31 @@ export function ReceiveGoodsModal({
 
   if (!order) return null
 
-  const submit = () => {
-    const allComplete = order.items.every((it) => (received[it.productId] ?? 0) >= it.quantity)
-    onReceive(order)
-    toast.success(
-      allComplete ? "Mercancía recibida completamente" : "Recepción parcial registrada",
-    )
-    onOpenChange(false)
+  const submit = async () => {
+    setSaving(true)
+    try {
+      await receiveGoods(order.id, {
+        items: order.items.map((it) => ({
+          productId: it.productId,
+          receivedQuantity: received[it.productId] ?? 0,
+        })),
+        notes,
+      })
+      toast.success("Recepción registrada correctamente")
+      onReceived()
+      onOpenChange(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al recibir mercancía")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-serif">Recibir Mercancía — {order.id}</DialogTitle>
+          <DialogTitle className="font-serif">Recibir Mercancía — {order.orderNumber}</DialogTitle>
           <DialogDescription>
             Confirma las cantidades recibidas para cada producto del pedido.
           </DialogDescription>
@@ -69,7 +83,7 @@ export function ReceiveGoodsModal({
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-foreground truncate">{it.productName}</div>
                 <div className="text-xs text-muted-foreground">
-                  Esperado: <span className="font-medium text-foreground">{it.quantity}</span>
+                  SKU: {it.productSku} · Esperado: <span className="font-medium text-foreground">{it.quantity}</span>
                 </div>
               </div>
               <div className="w-28">
@@ -85,6 +99,7 @@ export function ReceiveGoodsModal({
                       [it.productId]: Number(e.target.value) || 0,
                     }))
                   }
+                  disabled={saving}
                 />
               </div>
             </div>
@@ -98,16 +113,17 @@ export function ReceiveGoodsModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Observaciones de la recepción"
+              disabled={saving}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancelar
           </Button>
-          <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit}>
-            Confirmar Recepción
+          <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
+            {saving ? <><Loader2 className="size-4 animate-spin" /> Guardando…</> : "Confirmar Recepción"}
           </Button>
         </DialogFooter>
       </DialogContent>

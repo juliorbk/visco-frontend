@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -20,22 +20,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  PAYMENT_METHODS,
-  ORDER_TYPES,
-  suppliers,
-  products,
-  type PurchaseOrder,
-} from "@/lib/mock-data"
-import { Check, Plus, Trash2 } from "lucide-react"
+import { PAYMENT_METHODS, ORDER_TYPES } from "@/lib/mock-data"
+import { createOrder } from "@/lib/services/procurement"
+import type { CreatePurchaseOrderRequest, PurchaseOrderResponse, ProductDTO } from "@/lib/types"
+import { fetchSuppliers } from "@/lib/services/suppliers"
+import { fetchProducts } from "@/lib/services/inventory"
+import { Check, Loader2, Plus, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 interface LineItem {
-  productId: string
+  productId: number
   productName: string
   quantity: number
   unitPrice: number
+  sku: string
 }
 
 const STEPS = ["Información", "Productos", "Revisión"] as const
@@ -43,30 +42,49 @@ const STEPS = ["Información", "Productos", "Revisión"] as const
 export function CreatePOModal({
   open,
   onOpenChange,
-  onCreate,
+  onCreated,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
-  onCreate: (order: PurchaseOrder) => void
+  onCreated: () => void
 }) {
   const [step, setStep] = useState(0)
-  const [orderNumber, setOrderNumber] = useState(`PO-${4093 + Math.floor(Math.random() * 100)}`)
+  const [orderNumber, setOrderNumber] = useState(`PO-${Date.now().toString().slice(-4)}`)
   const [description, setDescription] = useState("")
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
   const [type, setType] = useState(ORDER_TYPES[1])
-  const [supplierId, setSupplierId] = useState(suppliers[0].id)
+  const [supplierId, setSupplierId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
-  const [pickProduct, setPickProduct] = useState(products[0].id)
+  const [pickProduct, setPickProduct] = useState<number | null>(null)
   const [pickQty, setPickQty] = useState("1")
-  const [pickPrice, setPickPrice] = useState(String(products[0].unitPrice))
+  const [pickPrice, setPickPrice] = useState("0")
+  const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
+  const [products, setProducts] = useState<ProductDTO[]>([])
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      fetchSuppliers().then((supRes) => {
+        setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
+      }).catch(() => {})
+      fetchProducts().then((prodRes) => {
+        const prods = prodRes.content ?? []
+        setProducts(prods)
+        if (prods.length > 0) {
+          setPickProduct(prods[0].id)
+          setPickPrice(String(0))
+        }
+      }).catch(() => {})
+    }
+  }, [open])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
-  const supplier = suppliers.find((s) => s.id === supplierId)!
 
   const reset = () => {
     setStep(0)
     setLines([])
     setDescription("")
+    setSupplierId(null)
   }
 
   const close = () => {
@@ -85,34 +103,36 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { productId: p.id, productName: p.name, quantity: qty, unitPrice: price },
+      { productId: p.id, productName: p.name, quantity: qty, unitPrice: price, sku: p.sku },
     ])
     setPickQty("1")
   }
 
-  const submit = () => {
-    if (lines.length === 0) {
-      toast.error("Agrega al menos un producto")
+  const submit = async () => {
+    if (!supplierId || lines.length === 0) {
+      toast.error("Completa todos los campos requeridos")
       return
     }
-    const newOrder: PurchaseOrder = {
-      id: orderNumber,
-      orderNumber,
-      date: new Date().toISOString().slice(0, 10),
-      supplierId: supplier.id,
-      supplierName: supplier.name,
-      total,
-      status: "PENDIENTE",
-      requester: "Ana Rodríguez",
-      costCenter: "CC-PRC-001",
-      paymentMethod,
-      type,
-      items: lines,
-      description,
+    setSaving(true)
+    try {
+      const body: CreatePurchaseOrderRequest = {
+        orderNumber,
+        description,
+        supplierId,
+        paymentMethod: paymentMethod as CreatePurchaseOrderRequest["paymentMethod"],
+        type: type as CreatePurchaseOrderRequest["type"],
+        createdById: "00000000-0000-0000-0000-000000000000",
+        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+      }
+      await createOrder(body)
+      toast.success(`Pedido ${orderNumber} creado`)
+      onCreated()
+      close()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al crear pedido")
+    } finally {
+      setSaving(false)
     }
-    onCreate(newOrder)
-    toast.success(`Pedido ${orderNumber} creado`)
-    close()
   }
 
   return (
@@ -163,13 +183,13 @@ export function CreatePOModal({
             </div>
             <div className="space-y-1.5">
               <Label>Proveedor</Label>
-              <Select value={supplierId} onValueChange={setSupplierId}>
+              <Select value={String(supplierId ?? "")} onValueChange={(v) => setSupplierId(Number(v))}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Seleccionar…" />
                 </SelectTrigger>
                 <SelectContent>
                   {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
+                    <SelectItem key={s.id} value={String(s.id)}>
                       {s.name}
                     </SelectItem>
                   ))}
@@ -225,19 +245,19 @@ export function CreatePOModal({
               <div className="col-span-6">
                 <Label className="text-xs">Producto</Label>
                 <Select
-                  value={pickProduct}
+                  value={String(pickProduct ?? "")}
                   onValueChange={(v) => {
-                    setPickProduct(v)
-                    const p = products.find((x) => x.id === v)
-                    if (p) setPickPrice(String(p.unitPrice))
+                    setPickProduct(Number(v))
+                    const p = products.find((x) => x.id === Number(v))
+                    if (p) setPickPrice(String(0))
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Seleccionar…" />
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
+                      <SelectItem key={p.id} value={String(p.id)}>
                         {p.name}
                       </SelectItem>
                     ))}
@@ -314,7 +334,7 @@ export function CreatePOModal({
         {step === 2 && (
           <div className="space-y-3 text-sm">
             <ReviewRow label="Order #" value={orderNumber} />
-            <ReviewRow label="Proveedor" value={supplier.name} />
+            <ReviewRow label="Proveedor" value={suppliers.find((s) => s.id === supplierId)?.name ?? "-"} />
             <ReviewRow label="Método de pago" value={paymentMethod} />
             <ReviewRow label="Tipo" value={type} />
             <ReviewRow label="Artículos" value={`${lines.length}`} />
@@ -342,8 +362,8 @@ export function CreatePOModal({
               Siguiente
             </Button>
           ) : (
-            <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit}>
-              Crear Pedido
+            <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
+              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Pedido"}
             </Button>
           )}
         </DialogFooter>

@@ -2,30 +2,18 @@
 
 import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { api } from "@/lib/api"
-import { supplierPerformance as mockData } from "@/lib/mock-data"
+import { fetchSupplierPerformance } from "@/lib/services/suppliers"
+import type { SupplierPerformanceMonthlyDTO } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 
-interface PerformanceData {
-  month: string
-  a: number
-  b: number
-}
-
 export function SupplierPerformanceChart() {
-  const [data, setData] = useState<PerformanceData[]>([])
+  const [data, setData] = useState<SupplierPerformanceMonthlyDTO[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get<any>("/api/suppliers/performance?months=6")
-      .then((res) => {
-        console.log(res)
-        const list: PerformanceData[] = Array.isArray(res) ? res : (res?.data ?? [])
-        setData(list)
-      })
-      .catch(() => {
-        setData(mockData)
-      })
+    fetchSupplierPerformance()
+      .then(setData)
+      .catch(() => setData([]))
       .finally(() => setLoading(false))
   }, [])
 

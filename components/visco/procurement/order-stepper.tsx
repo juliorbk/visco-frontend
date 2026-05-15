@@ -1,18 +1,22 @@
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { PurchaseOrderStatus } from "@/lib/types"
 
 const STEPS = ["Borrador", "Pendiente", "Aprobado", "Enviado", "Recibido"] as const
 
 const STATUS_TO_STEP: Record<string, number> = {
-  BORRADOR: 0,
-  PENDIENTE: 1,
-  APROBADO: 2,
-  EN_TRANSITO: 3,
-  RECIBIDO: 4,
-  CANCELADO: -1,
+  PENDING: 1,
+  AWAITING_APPROVAL: 1,
+  APPROVED: 2,
+  IN_TRANSIT: 3,
+  DELIVERED: 4,
+  COMPLETED: 4,
+  PARTIALLY_DELIVERED: 4,
+  CANCELLED: -1,
+  REJECTED: -1,
 }
 
-export function OrderStepper({ status }: { status?: string }) {
+export function OrderStepper({ status }: { status?: PurchaseOrderStatus | string }) {
   const current = status ? STATUS_TO_STEP[status] ?? 0 : 1
 
   return (
@@ -27,12 +31,9 @@ export function OrderStepper({ status }: { status?: string }) {
                 <div
                   className={cn(
                     "size-9 rounded-full grid place-items-center text-xs font-semibold ring-2 transition-colors",
-                    isDone &&
-                      "bg-[#1f1f1f] text-white ring-[#1f1f1f]",
-                    isCurrent &&
-                      "bg-[#7b1a1a] text-white ring-[#7b1a1a]",
-                    !isDone && !isCurrent &&
-                      "bg-card text-muted-foreground ring-border",
+                    isDone && "bg-[#1f1f1f] text-white ring-[#1f1f1f]",
+                    isCurrent && "bg-[#7b1a1a] text-white ring-[#7b1a1a]",
+                    !isDone && !isCurrent && "bg-card text-muted-foreground ring-border",
                   )}
                   aria-current={isCurrent ? "step" : undefined}
                 >

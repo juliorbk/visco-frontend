@@ -1,55 +1,83 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
-import { expensesData } from "@/lib/mock-data"
+import { fetchSpending } from "@/lib/services/dashboard"
+import { Loader2 } from "lucide-react"
 
 export function ExpensesChart() {
+  const [data, setData] = useState<{ month: string; real: number; proyectado: number }[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchSpending()
+      .then((res) => {
+        const mapped = (res.monthlyBreakdown ?? []).map((m) => ({
+          month: m.month,
+          real: m.actual,
+          proyectado: m.projected,
+        }))
+        setData(mapped)
+      })
+      .catch(() => setData([]))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-xs h-full">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="font-serif text-lg font-semibold">Gastos vs Proyecciones</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Últimos 6 meses · USD</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Últimos meses · USD</p>
         </div>
         <Legend />
       </div>
       <div className="h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={expensesData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-            />
-            <YAxis
-              tickFormatter={(v) => `$${v / 1000}k`}
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-              domain={[0, 300000]}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(123,26,26,0.05)" }}
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid #f3f4f6",
-                fontSize: 12,
-                padding: "8px 10px",
-              }}
-              formatter={(v: number) => [`$${v.toLocaleString()}`, undefined]}
-            />
-            <Bar dataKey="real" name="Real" fill="#7b1a1a" radius={[4, 4, 0, 0]} maxBarSize={28} />
-            <Bar
-              dataKey="proyectado"
-              name="Proyectado"
-              fill="#f4c0c0"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={28}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="h-full grid place-items-center">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : data.length === 0 ? (
+          <div className="h-full grid place-items-center text-xs text-muted-foreground">
+            Sin datos disponibles
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+              />
+              <YAxis
+                tickFormatter={(v) => `$${v / 1000}k`}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12, fill: "#6b7280" }}
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(123,26,26,0.05)" }}
+                contentStyle={{
+                  borderRadius: 8,
+                  border: "1px solid #f3f4f6",
+                  fontSize: 12,
+                  padding: "8px 10px",
+                }}
+                formatter={(v: number) => [`$${v.toLocaleString()}`, undefined]}
+              />
+              <Bar dataKey="real" name="Real" fill="#7b1a1a" radius={[4, 4, 0, 0]} maxBarSize={28} />
+              <Bar
+                dataKey="proyectado"
+                name="Proyectado"
+                fill="#f4c0c0"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={28}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   )
