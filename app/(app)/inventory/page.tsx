@@ -11,12 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Download, Filter, Plus, Search, Loader2 } from "lucide-react"
+import { Download, Filter, Plus, Search, Loader2, Tags } from "lucide-react"
 import { fetchProducts } from "@/lib/services/inventory"
 import type { ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { ItemDetailPanel } from "@/components/visco/inventory/item-detail-panel"
 import { AddItemModal } from "@/components/visco/inventory/add-item-modal"
+import { CategoryManagerModal } from "@/components/visco/inventory/category-manager-modal"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -28,6 +29,7 @@ export default function InventoryPage() {
   const [selected, setSelected] = useState<ProductDTO | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<ProductDTO | null>(null)
+  const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -74,6 +76,14 @@ export default function InventoryPage() {
             </Button>
             <Button variant="outline" size="sm" className="bg-card">
               <Download className="size-4" /> Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-card"
+              onClick={() => setCategoryManagerOpen(true)}
+            >
+              <Tags className="size-4" /> Categories
             </Button>
             <Button
               size="sm"
@@ -173,6 +183,11 @@ export default function InventoryPage() {
         }}
         editing={editing}
         onSave={() => load()}
+      />
+
+      <CategoryManagerModal
+        open={categoryManagerOpen}
+        onOpenChange={setCategoryManagerOpen}
       />
     </div>
   )
