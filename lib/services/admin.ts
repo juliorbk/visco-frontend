@@ -1,8 +1,11 @@
 import { api } from "@/lib/api"
-import type { UserDTO, UpdateUserRequest, Page } from "@/lib/types"
+import type { UserDTO, UpdateUserRequest, Page, CostCenter } from "@/lib/types"
 
 export async function fetchUsers(page = 0, size = 50): Promise<Page<UserDTO>> {
   return api.get<Page<UserDTO>>(`/api/users?page=${page}&size=${size}`)
+}
+export async function fetchAllCostCenters(page = 0, size = 50): Promise<Page<CostCenter>> {
+  return api.get<Page<CostCenter>>(`/api/cost-centers?page=${page}&size=${size}`)
 }
 
 export async function fetchUser(id: string): Promise<UserDTO> {

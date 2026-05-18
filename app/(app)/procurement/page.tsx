@@ -103,7 +103,7 @@ export default function ProcurementPage() {
             <div>
               <h3 className="font-serif text-lg font-semibold">Pedidos Activos</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {pageData?.totalElements ?? 0} pedidos en el sistema
+                {pageData?.page.totalElements ?? 0} pedidos en el sistema
               </p>
             </div>
           </div>
@@ -152,7 +152,7 @@ export default function ProcurementPage() {
               </tbody>
             </table>
           </div>
-          {pageData && pageData.totalPages > 1 && (
+          {pageData && pageData.page.totalPages > 1 && (
             <div className="flex items-center justify-between px-5 py-3 border-t border-border text-sm">
               <button
                 disabled={page === 0}
@@ -162,10 +162,10 @@ export default function ProcurementPage() {
                 Anterior
               </button>
               <span className="text-xs text-muted-foreground">
-                Página {pageData.number + 1} de {pageData.totalPages}
+                Página {pageData.page.number + 1} de {pageData.page.totalPages}
               </span>
               <button
-                disabled={page >= pageData.totalPages - 1}
+                disabled={page >= pageData.page.totalPages - 1}
                 onClick={() => setPage((p) => p + 1)}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               >

@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, Plus, X, Shield, Settings } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, FileText, Plus, X, Shield, Settings } from "lucide-react"
 import { Logo } from "./logo"
 import { getCachedUser, fetchUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ import type { UserDTO } from "@/lib/types"
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/inventory", label: "Inventory", icon: Package },
+  { href: "/requisitions", label: "Requisitions", icon: FileText },
   { href: "/procurement", label: "Procurement", icon: ShoppingCart },
   { href: "/inbounds", label: "Inbounds", icon: Truck },
   { href: "/suppliers", label: "Suppliers", icon: Building2 },
@@ -21,9 +22,11 @@ const BASE_NAV = [
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const [user, setUser] = useState<UserDTO | null | undefined>(getCachedUser())
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !fetchedRef.current) {
+      fetchedRef.current = true
       fetchUser().then(setUser)
     }
   }, [user])

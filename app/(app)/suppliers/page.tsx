@@ -24,29 +24,17 @@ export default function SuppliersPage() {
   const [totalElements, setTotalElements] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
-  const [rawResponse, setRawResponse] = useState<string>("")
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetchSuppliers(page, PAGE_SIZE)
-      console.log("Suppliers API response:", JSON.stringify(res, null, 2))
       const list = res.content ?? []
-      console.log("Suppliers list:", list.length, "items")
-      
-      // Ajuste clave: Extraer totalPages y totalElements del objeto anidado 'page' si existe
-      const extractedTotalPages = (res as any).page?.totalPages ?? res.totalPages ?? 0
-      const extractedTotalElements = (res as any).page?.totalElements ?? res.totalElements ?? 0
-
-      console.log("Total pages:", extractedTotalPages, "Total elements:", extractedTotalElements)
-      
       setSuppliers(list)
-      setTotalPages(extractedTotalPages)
-      setTotalElements(extractedTotalElements)
-      setRawResponse(JSON.stringify(res))
+      setTotalPages(res.page.totalPages)
+      setTotalElements(res.page.totalElements)
       setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
     } catch (err) {
-      console.error("Error loading suppliers:", err)
       toast.error(err instanceof Error ? err.message : "Error al cargar proveedores")
     } finally {
       setLoading(false)
@@ -114,11 +102,6 @@ export default function SuppliersPage() {
 
       <div className="mb-4">
         <SupplierPerformanceChart />
-      </div>
-
-      {/* Debug info */}
-      <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-xs font-mono">
-        DEBUG: loading={String(loading)} | suppliers={suppliers.length} | totalPages={totalPages} | totalElements={totalElements} | page={page}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

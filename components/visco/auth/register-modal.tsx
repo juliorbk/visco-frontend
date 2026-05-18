@@ -51,7 +51,7 @@ export function RegisterModal({
 
   useEffect(() => {
     if (open) {
-      fetch("/api/cost-centers", { credentials: "include" })
+      fetch("/api/cost-centers/all", { credentials: "include" })
         .then((res) => res.json())
         .then((data: CostCenter[]) => setCostCenters(data.filter((c) => c.active)))
         .catch(() => {})

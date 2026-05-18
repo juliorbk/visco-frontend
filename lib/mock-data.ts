@@ -572,15 +572,11 @@ export const categoryExpenses = [
 // ---------- ENUMS ----------
 
 export const UOM_OPTIONS = [
-  "UNIDAD",
-  "CAJA",
-  "PAQUETE",
-  "LITRO",
-  "KILOGRAMO",
-  "GALON",
-  "METRO",
-  "PULGADA",
-  "CENTIMETRO",
+  "UN", "CA", "KG", "L", "M", "CM", "G", "LB", "EA", "M2", "M3",
+  "LTS", "GL", "GLN", "PAQ", "CJ", "ROL", "KIT", "CIL", "YD",
+  "TON", "TM", "TO", "BOT", "BTO", "CTO", "PUL", "CL", "FC",
+  "PAA", "PI2", "PI3", "BOL", "CEN", "MIL", "AM", "LOT", "MTL",
+  "BL", "SB", "CTE", "PAI",
 ]
 
 export const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "CHECK", "USDT", "PAYPAL", "OTHER"]

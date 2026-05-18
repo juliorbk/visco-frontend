@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Bell, Settings, Info, Search, LogOut, User, Menu } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -19,9 +19,11 @@ import { cn } from "@/lib/utils"
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
   const [user, setUser] = useState(() => getCachedUser())
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !fetchedRef.current) {
+      fetchedRef.current = true
       fetchUser().then(setUser)
     }
   }, [user])

@@ -20,15 +20,11 @@ export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CHECK" | "USDT" | "PAYPA
 export type PurchaseOrderType = "SERVICES" | "MATERIALS" | "MRO" | "CAPITAL_EQUIPMENT"
 
 export type Uom =
-  | "UNIDAD"
-  | "CAJA"
-  | "PAQUETE"
-  | "LITRO"
-  | "KILOGRAMO"
-  | "GALON"
-  | "METRO"
-  | "PULGADA"
-  | "CENTIMETRO"
+  | "UN" | "CA" | "KG" | "L" | "M" | "CM" | "G" | "LB" | "EA" | "M2" | "M3"
+  | "LTS" | "GL" | "GLN" | "PAQ" | "CJ" | "ROL" | "KIT" | "CIL" | "YD"
+  | "TON" | "TM" | "TO" | "BOT" | "BTO" | "CTO" | "PUL" | "CL" | "FC"
+  | "PAA" | "PI2" | "PI3" | "BOL" | "CEN" | "MIL" | "AM" | "LOT" | "MTL"
+  | "BL" | "SB" | "CTE" | "PAI"
 
 // ── Auth ──
 
@@ -55,8 +51,8 @@ export interface UserDTO {
   name: string
   email: string
   role: UserRole
-  areaId: number | null
-  areaName: string | null
+  costCenterId: number | null
+  costCenterName: string | null
   active?: boolean
 }
 
@@ -123,6 +119,7 @@ export interface PurchaseOrderResponse {
   type: PurchaseOrderType
   createdBy: string
   createdAt: string
+  requisitionId: number | null
   items: PurchaseOrderItemResponse[]
 }
 
@@ -143,6 +140,7 @@ export interface CreatePurchaseOrderRequest {
   paymentMethod: PaymentMethod
   type: PurchaseOrderType
   createdById: string
+  requisitionId?: number
   items: { productId: number; quantity: number; unitPrice: number }[]
 }
 
@@ -237,19 +235,14 @@ export interface Category {
 
 // ── Requesting Area ──
 
-export interface RequestingArea {
-  id: number
-  name: string
-  description: string
-  costCenter: string
-  active: boolean
-}
 
 export interface CostCenter {
   id: number
   code: string
-  name: string
   fullDescription: string
+  divisionDescription: string | null
+  managementDescription: string | null
+  internalCc: string | null
   active: boolean
 }
 
@@ -298,18 +291,59 @@ export interface SupplierPerformanceMonthlyDTO {
 
 export interface UpdateUserRequest {
   role: UserRole
-  areaId?: number | null
+  costCenterId?: number | null
+}
+
+// ── Requisition ──
+
+export type RequisitionStatus =
+  | "DRAFT"
+  | "PENDING"
+  | "AWAITING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "CONVERTED"
+
+export interface RequisitionResponse {
+  id: number
+  requisitionNumber: string
+  description: string
+  requestedBy: string
+  costCenter: CostCenter
+  status: RequisitionStatus
+  rejectionReason: string | null
+  approvalNotes: string | null
+  approvedBy: string | null
+  approvedAt: string | null
+  createdAt: string
+  items: RequisitionItemResponse[]
+}
+
+export interface RequisitionItemResponse {
+  productId: number
+  productName: string
+  productSku: string
+  quantity: number
+  notes: string | null
+}
+
+export interface CreateRequisitionRequest {
+  requisitionNumber: string
+  description: string
+  requestedById: string
+  costCenterId: number
+  items: { productId: number; quantity: number; notes?: string }[]
 }
 
 // ── Spring Page wrapper ──
 
 export interface Page<T> {
   content: T[]
-  totalPages: number
-  totalElements: number
-  size: number
-  number: number
-  first: boolean
-  last: boolean
-  empty: boolean
+  page: {
+    size: number
+    number: number
+    totalElements: number
+    totalPages: number
+  }
 }

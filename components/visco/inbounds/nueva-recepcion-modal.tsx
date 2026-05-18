@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { X, Plus, ChevronRight } from "lucide-react"
-import type { PurchaseOrderResponse } from "@/lib/types"
-import { receiveGoods } from "@/lib/services/warehouse"
+import type { PurchaseOrderResponse, WarehouseResponse } from "@/lib/types"
+import { receiveGoods, fetchWarehouses } from "@/lib/services/warehouse"
 import { toast } from "sonner"
 
 interface NuevaRecepcionModalProps {
@@ -28,6 +28,14 @@ export function NuevaRecepcionModal({
   const [receivedQuantities, setReceivedQuantities] = useState<{ [key: number]: number }>({})
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
+  const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
+  const [destinationLocationId, setDestinationLocationId] = useState<number>(1)
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchWarehouses().then(setWarehouses).catch(() => {})
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -67,6 +75,7 @@ export function NuevaRecepcionModal({
           receivedQuantity: receivedQuantities[item.productId] ?? 0,
         })),
         notes,
+        destinationLocationId,
       })
       toast.success("Recepción registrada correctamente")
       onClose()
@@ -191,6 +200,22 @@ export function NuevaRecepcionModal({
                     </div>
                   )
                 })}
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#111827] mb-2">Ubicación destino</label>
+                <select
+                  value={destinationLocationId}
+                  onChange={(e) => setDestinationLocationId(Number(e.target.value))}
+                  className="w-full px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 bg-white"
+                  disabled={saving}
+                >
+                  {warehouses.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="mb-6">

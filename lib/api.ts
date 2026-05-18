@@ -17,6 +17,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new Error("Sesión expirada")
   }
 
+  if (res.status === 204) {
+    return undefined as T
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: `Error ${res.status}` }))
     throw new Error(err.error || `Error ${res.status}`)

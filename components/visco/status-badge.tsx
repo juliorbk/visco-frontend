@@ -73,6 +73,10 @@ const orderStatusMap: Record<string, { variant: Variant; label: string }> = {
   WAITING_PAYMENT: { variant: "waiting-payment", label: "Esperando Pago" },
   HELD_AT_CUSTOMS: { variant: "held-customs", label: "Retenido en Aduana" },
 
+  // Requisition statuses
+  DRAFT: { variant: "draft", label: "Borrador" },
+  CONVERTED: { variant: "completed", label: "Convertido a PO" },
+
   BORRADOR: { variant: "draft", label: "Borrador" },
   PENDIENTE: { variant: "pending", label: "Pendiente" },
   APROBADO: { variant: "approved", label: "Aprobado" },

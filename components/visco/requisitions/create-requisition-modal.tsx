@@ -20,14 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PAYMENT_METHODS, ORDER_TYPES } from "@/lib/mock-data"
-import { createOrder } from "@/lib/services/procurement"
-import { fetchWarehouses } from "@/lib/services/warehouse"
-import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse } from "@/lib/types"
-import { fetchSuppliers } from "@/lib/services/suppliers"
+import { createRequisition, fetchCostCenters } from "@/lib/services/requisitions"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
-import { Check, Loader2, Plus, Trash2, Search, X } from "lucide-react"
+import type { CostCenter, ProductDTO } from "@/lib/types"
+import { Check, Loader2, Plus, Search, Trash2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -35,77 +32,48 @@ interface LineItem {
   productId: number
   productName: string
   quantity: number
-  unitPrice: number
   sku: string
+  notes: string
 }
 
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
-export function CreatePOModal({
+export function CreateRequisitionModal({
   open,
   onOpenChange,
   onCreated,
-  prefillFromRequisition,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
   onCreated: () => void
-  prefillFromRequisition?: RequisitionResponse | null
 }) {
   const [step, setStep] = useState(0)
-  const [orderNumber, setOrderNumber] = useState(`PO-${Date.now().toString().slice(-4)}`)
+  const [reqNumber, setReqNumber] = useState(`REQ-${Date.now().toString().slice(-4)}`)
   const [description, setDescription] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
-  const [type, setType] = useState(ORDER_TYPES[1])
-  const [supplierId, setSupplierId] = useState<number | null>(null)
+  const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
   const [pickProduct, setPickProduct] = useState<ProductDTO | null>(null)
   const [pickQty, setPickQty] = useState("1")
-  const [pickPrice, setPickPrice] = useState("0")
-  const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
-  const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
-  const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
+  const [pickNotes, setPickNotes] = useState("")
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
 
-  // Product finder state
   const [finderOpen, setFinderOpen] = useState(false)
   const [finderQuery, setFinderQuery] = useState("")
   const finderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
-      fetchSuppliers(0, 200).then((supRes) => {
-        setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
-      }).catch(() => {})
-      fetchProducts(0, 500).then((prodRes) => {
-        setProducts(prodRes.content ?? [])
-      }).catch(() => {})
-      fetchWarehouses().then((wh) => {
-        setWarehouses(wh)
-        if (wh.length > 0 && !destinationWarehouseId) setDestinationWarehouseId(wh[0].id)
-      }).catch(() => {})
-
-      if (prefillFromRequisition) {
-        setDescription(prefillFromRequisition.description)
-        setLines(
-          prefillFromRequisition.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            unitPrice: 0,
-            sku: item.productSku,
-          })),
-        )
-      }
+      fetchCostCenters().then(setCostCenters).catch(() => {})
+      fetchProducts(0, 500).then((res) => setProducts(res.content ?? [])).catch(() => {})
     }
-  }, [open, prefillFromRequisition])
+  }, [open])
 
   useEffect(() => {
     if (!finderOpen) setFinderQuery("")
   }, [finderOpen])
 
-  // Close finder on outside click
   useEffect(() => {
     if (!finderOpen) return
     const handler = (e: MouseEvent) => {
@@ -128,16 +96,15 @@ export function CreatePOModal({
     )
   }, [products, finderQuery])
 
-  const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
-
   const reset = () => {
     setStep(0)
     setLines([])
     setDescription("")
-    setSupplierId(null)
+    setCostCenterId(null)
     setPickProduct(null)
     setFinderQuery("")
     setFinderOpen(false)
+    setPickNotes("")
   }
 
   const close = () => {
@@ -151,9 +118,8 @@ export function CreatePOModal({
       return
     }
     const qty = Number(pickQty)
-    const price = Number(pickPrice)
-    if (qty <= 0 || price <= 0) {
-      toast.error("Cantidad y precio deben ser mayores a cero")
+    if (qty <= 0) {
+      toast.error("Cantidad debe ser mayor a cero")
       return
     }
     if (lines.some((l) => l.productId === pickProduct.id)) {
@@ -162,46 +128,38 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
+      { productId: pickProduct.id, productName: pickProduct.name, quantity: qty, sku: pickProduct.sku, notes: pickNotes },
     ])
     setPickProduct(null)
     setPickQty("1")
-    setPickPrice("0")
+    setPickNotes("")
     setFinderOpen(false)
   }
 
   const submit = async () => {
-    if (!supplierId || lines.length === 0 || !destinationWarehouseId) {
+    if (!costCenterId || lines.length === 0) {
       toast.error("Completa todos los campos requeridos")
       return
     }
     const user = getCachedUser()
     if (!user) {
-      toast.error("Debes iniciar sesión para crear pedidos")
+      toast.error("Debes iniciar sesión para crear requisiciones")
       return
     }
     setSaving(true)
     try {
-      const body: CreatePurchaseOrderRequest = {
-        orderNumber,
+      await createRequisition({
+        requisitionNumber: reqNumber,
         description,
-        supplierId,
-        destinationWarehouseId,
-        paymentMethod: paymentMethod as CreatePurchaseOrderRequest["paymentMethod"],
-        type: type as CreatePurchaseOrderRequest["type"],
-        createdById: user.id,
-        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
-      }
-      if (prefillFromRequisition) {
-        body.requisitionId = prefillFromRequisition.id
-      }
-      await createOrder(body)
-
-      toast.success(`Pedido ${orderNumber} creado`)
+        requestedById: user.id,
+        costCenterId,
+        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, notes: l.notes || undefined })),
+      })
+      toast.success(`Requisición ${reqNumber} creada`)
       onCreated()
       close()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al crear pedido")
+      toast.error(err instanceof Error ? err.message : "Error al crear requisición")
     } finally {
       setSaving(false)
     }
@@ -211,13 +169,12 @@ export function CreatePOModal({
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif">Crear Pedido de Compra</DialogTitle>
+          <DialogTitle className="font-serif">Crear Requisición</DialogTitle>
           <DialogDescription>
             Completa la información, agrega productos y revisa antes de enviar.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Step indicator */}
         <div className="flex items-center justify-between mb-4">
           {STEPS.map((s, i) => (
             <div key={s} className="flex-1 flex items-center last:flex-none">
@@ -252,64 +209,22 @@ export function CreatePOModal({
         {step === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="ord">Order Number</Label>
-              <Input id="ord" value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
+              <Label htmlFor="reqNum">Requisition Number</Label>
+              <Input id="reqNum" value={reqNumber} onChange={(e) => setReqNumber(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Proveedor</Label>
-              <Select value={String(supplierId ?? "")} onValueChange={(v) => setSupplierId(Number(v))}>
+              <Label>Centro de Costo</Label>
+              <Select
+                value={String(costCenterId ?? "")}
+                onValueChange={(v) => setCostCenterId(Number(v))}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Almacén destino</Label>
-              <Select value={String(destinationWarehouseId ?? "")} onValueChange={(v) => setDestinationWarehouseId(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {warehouses.map((w) => (
-                    <SelectItem key={w.id} value={String(w.id)}>
-                      {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Método de pago</Label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_METHODS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tipo</Label>
-              <Select value={type} onValueChange={setType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ORDER_TYPES.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
+                  {costCenters.map((cc) => (
+                    <SelectItem key={cc.id} value={String(cc.id)}>
+                      {cc.fullDescription}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -322,7 +237,7 @@ export function CreatePOModal({
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Notas internas, justificación o referencia."
+                placeholder="Describe el motivo de la requisición."
               />
             </div>
           </div>
@@ -331,7 +246,6 @@ export function CreatePOModal({
         {/* Step 1: Products */}
         {step === 1 && (
           <div className="space-y-4">
-            {/* Product finder */}
             <div className="space-y-2">
               <Label className="text-xs">Buscar producto</Label>
               <div className="relative" ref={finderRef}>
@@ -370,12 +284,10 @@ export function CreatePOModal({
                     onChange={(e) => setPickQty(e.target.value)}
                   />
                   <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Precio"
+                    placeholder="Notas"
                     className="w-28"
-                    value={pickPrice}
-                    onChange={(e) => setPickPrice(e.target.value)}
+                    value={pickNotes}
+                    onChange={(e) => setPickNotes(e.target.value)}
                   />
                   <Button
                     type="button"
@@ -387,7 +299,6 @@ export function CreatePOModal({
                   </Button>
                 </div>
 
-                {/* Finder dropdown */}
                 {finderOpen && filteredProducts.length > 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
                     {filteredProducts.map((p) => (
@@ -417,7 +328,6 @@ export function CreatePOModal({
               </div>
             </div>
 
-            {/* Lines list */}
             <div className="rounded-lg border border-border bg-[#fafafa]">
               {lines.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
@@ -433,12 +343,10 @@ export function CreatePOModal({
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-foreground truncate">{l.productName}</div>
                         <div className="text-xs text-muted-foreground">
-                          {l.quantity} × ${l.unitPrice.toFixed(2)}
+                          {l.sku} · Cant: {l.quantity}
+                          {l.notes && <> · {l.notes}</>}
                         </div>
                       </div>
-                      <span className="tabular-nums font-medium">
-                        ${(l.quantity * l.unitPrice).toLocaleString()}
-                      </span>
                       <button
                         onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
                         className="text-muted-foreground hover:text-red-600 shrink-0"
@@ -451,10 +359,8 @@ export function CreatePOModal({
                 </ul>
               )}
               <div className="flex items-center justify-between px-3 py-3 border-t border-border bg-card rounded-b-lg">
-                <span className="text-sm font-medium text-foreground">Total</span>
-                <span className="font-serif text-lg font-semibold tabular-nums">
-                  ${total.toLocaleString()}
-                </span>
+                <span className="text-sm font-medium text-foreground">Total productos</span>
+                <span className="font-serif text-lg font-semibold">{lines.length}</span>
               </div>
             </div>
           </div>
@@ -463,19 +369,17 @@ export function CreatePOModal({
         {/* Step 2: Review */}
         {step === 2 && (
           <div className="space-y-3 text-sm">
-            <ReviewRow label="Order #" value={orderNumber} />
-            <ReviewRow label="Proveedor" value={suppliers.find((s) => s.id === supplierId)?.name ?? "-"} />
-            <ReviewRow label="Almacén destino" value={warehouses.find((w) => w.id === destinationWarehouseId)?.name ?? "-"} />
-            <ReviewRow label="Método de pago" value={paymentMethod} />
-            <ReviewRow label="Tipo" value={type} />
-            <ReviewRow label="Artículos" value={`${lines.length}`} />
-            <ReviewRow label="Total" value={`$${total.toLocaleString()}`} bold />
-            <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
-                Descripción
+            <ReviewRow label="Requisition #" value={reqNumber} />
+            <ReviewRow label="Centro de Costo" value={costCenters.find((c) => c.id === costCenterId)?.fullDescription ?? "-"} />
+            <ReviewRow label="Productos" value={`${lines.length}`} />
+            {description && (
+              <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+                  Descripción
+                </div>
+                {description}
               </div>
-              {description}
-            </div>
+            )}
           </div>
         )}
 
@@ -492,7 +396,7 @@ export function CreatePOModal({
             </Button>
           ) : (
             <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Pedido"}
+              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Requisición"}
             </Button>
           )}
         </DialogFooter>
@@ -501,13 +405,11 @@ export function CreatePOModal({
   )
 }
 
-function ReviewRow({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-border pb-2 last:border-b-0">
+    <div className="flex items-center justify-between border-b border-border pb-2">
       <span className="text-muted-foreground">{label}</span>
-      <span className={cn("text-foreground", bold && "font-semibold font-serif text-lg")}>
-        {value}
-      </span>
+      <span className="text-foreground font-medium">{value}</span>
     </div>
   )
 }

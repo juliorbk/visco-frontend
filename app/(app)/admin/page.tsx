@@ -169,7 +169,7 @@ export default function AdminPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">{u.areaName ?? "-"}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{u.costCenterName ?? u.costCenterId ? String(u.costCenterId) : "-"}</td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1">
                           <Button
