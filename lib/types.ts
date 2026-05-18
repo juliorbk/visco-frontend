@@ -239,14 +239,6 @@ export interface Category {
   parentCategory?: Category | null
 }
 
-// ── Requesting Area ──
-
-export interface RequestingArea {
-  id: number
-  name: string
-  active: boolean
-}
-
 export interface CostCenter {
   id: number
   code: string
