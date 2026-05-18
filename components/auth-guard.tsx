@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { fetchUser } from "@/lib/auth-client"
 
@@ -8,12 +8,14 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [checked, setChecked] = useState(false)
+  const redirectingRef = useRef(false)
 
   useEffect(() => {
     fetchUser().then((user) => {
-      if (!user) {
+      if (!user && !redirectingRef.current) {
+        redirectingRef.current = true
         router.replace("/")
-      } else {
+      } else if (user) {
         setChecked(true)
       }
     })

@@ -64,6 +64,10 @@ export function StockActionModal({
 
   const close = () => {
     onOpenChange(false)
+    setMode("transfer")
+    setQuantity("1")
+    setNewStock("0")
+    setReason("")
     setUnitCost("")
   }
 

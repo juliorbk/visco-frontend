@@ -10,18 +10,12 @@ interface NuevaRecepcionModalProps {
   isOpen: boolean
   onClose: () => void
   purchaseOrders: PurchaseOrderResponse[]
-  onSubmit: (data: {
-    purchaseOrderId: string
-    items: { productId: string; receivedQuantity: number }[]
-    notes: string
-  }) => void
 }
 
 export function NuevaRecepcionModal({
   isOpen,
   onClose,
   purchaseOrders,
-  onSubmit,
 }: NuevaRecepcionModalProps) {
   const [step, setStep] = useState(1)
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderResponse | null>(null)
@@ -31,8 +25,17 @@ export function NuevaRecepcionModal({
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [destinationLocationId, setDestinationLocationId] = useState<number>(1)
 
+  const reset = () => {
+    setStep(1)
+    setSelectedPO(null)
+    setReceivedQuantities({})
+    setNotes("")
+    setDestinationLocationId(1)
+  }
+
   useEffect(() => {
     if (isOpen) {
+      reset()
       fetchWarehouses().then(setWarehouses).catch(() => {})
     }
   }, [isOpen])

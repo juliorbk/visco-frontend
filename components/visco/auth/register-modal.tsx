@@ -51,10 +51,9 @@ export function RegisterModal({
 
   useEffect(() => {
     if (open) {
-      fetch("/api/cost-centers/all", { credentials: "include" })
-        .then((res) => res.json())
-        .then((data: CostCenter[]) => setCostCenters(data.filter((c) => c.active)))
-        .catch(() => {})
+      api.get<CostCenter[]>("/api/cost-centers/all")
+        .then((data) => setCostCenters(data.filter((c) => c.active)))
+        .catch(() => toast.error("Error al cargar centros de costo"))
     }
   }, [open])
 
