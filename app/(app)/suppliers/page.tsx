@@ -33,11 +33,16 @@ export default function SuppliersPage() {
       console.log("Suppliers API response:", JSON.stringify(res, null, 2))
       const list = res.content ?? []
       console.log("Suppliers list:", list.length, "items")
-      console.log("Total pages:", res.totalPages, "Total elements:", res.totalElements)
-      console.log("Response keys:", Object.keys(res))
+      
+      // Ajuste clave: Extraer totalPages y totalElements del objeto anidado 'page' si existe
+      const extractedTotalPages = (res as any).page?.totalPages ?? res.totalPages ?? 0
+      const extractedTotalElements = (res as any).page?.totalElements ?? res.totalElements ?? 0
+
+      console.log("Total pages:", extractedTotalPages, "Total elements:", extractedTotalElements)
+      
       setSuppliers(list)
-      setTotalPages(res.totalPages ?? 0)
-      setTotalElements(res.totalElements ?? 0)
+      setTotalPages(extractedTotalPages)
+      setTotalElements(extractedTotalElements)
       setRawResponse(JSON.stringify(res))
       setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
     } catch (err) {
@@ -102,7 +107,7 @@ export default function SuppliersPage() {
               setModalOpen(true)
             }}
           >
-            <Plus className="size-4" /> Nuevo Proveedor
+            <Plus className="size-4 mr-2" /> Nuevo Proveedor
           </Button>
         }
       />
@@ -145,8 +150,8 @@ export default function SuppliersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0 || loading}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
                 className={page === 0 ? "opacity-50 cursor-not-allowed" : ""}
               >
                 <ChevronLeft className="size-4 mr-1" />
@@ -160,7 +165,7 @@ export default function SuppliersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= totalPages - 1}
+                disabled={page >= totalPages - 1 || loading}
                 onClick={() => setPage((p) => p + 1)}
                 className={page >= totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""}
               >
