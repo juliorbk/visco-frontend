@@ -13,10 +13,10 @@ export async function createOrder(data: CreatePurchaseOrderRequest): Promise<Pur
   return api.post<PurchaseOrderResponse>("/api/procurement/orders", data)
 }
 
-export async function approveOrder(id: number): Promise<PurchaseOrderResponse> {
-  return api.patch<PurchaseOrderResponse>(`/api/procurement/orders/${id}/approve`)
+export async function approveOrder(id: number, userId: string, notes?: string): Promise<PurchaseOrderResponse> {
+  return api.patch<PurchaseOrderResponse>(`/api/procurement/orders/${id}/approve`, { userId, notes })
 }
 
-export async function cancelOrder(id: number): Promise<PurchaseOrderResponse> {
-  return api.patch<PurchaseOrderResponse>(`/api/procurement/orders/${id}/cancel`)
+export async function cancelOrder(id: number, reason?: string): Promise<PurchaseOrderResponse> {
+  return api.patch<PurchaseOrderResponse>(`/api/procurement/orders/${id}/cancel`, { reason })
 }

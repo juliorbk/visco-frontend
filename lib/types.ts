@@ -22,7 +22,7 @@ export type PurchaseOrderType = "SERVICES" | "MATERIALS" | "MRO" | "CAPITAL_EQUI
 export type Uom =
   | "UN" | "CA" | "KG" | "L" | "M" | "CM" | "G" | "LB" | "EA" | "M2" | "M3"
   | "LTS" | "GL" | "GLN" | "PAQ" | "CJ" | "ROL" | "KIT" | "CIL" | "YD"
-  | "TON" | "TM" | "TO" | "BOT" | "BTO" | "CTO" | "PUL" | "CL" | "FC"
+  | "TON" | "TM" | "TO" | "BOT" | "BTO" | "CTO" | "PUL" | "CL" | "FC" | "TF"
   | "PAA" | "PI2" | "PI3" | "BOL" | "CEN" | "MIL" | "AM" | "LOT" | "MTL"
   | "BL" | "SB" | "CTE" | "PAI"
 
@@ -53,7 +53,6 @@ export interface UserDTO {
   role: UserRole
   costCenterId: number | null
   costCenterName: string | null
-  active?: boolean
 }
 
 // ── Supplier ──
@@ -119,7 +118,12 @@ export interface PurchaseOrderResponse {
   type: PurchaseOrderType
   createdBy: string
   createdAt: string
+  approvalNotes: string | null
+  rejectionReason: string | null
+  approvedBy: string | null
+  approvedAt: string | null
   requisitionId: number | null
+  leadTime: number | null
   items: PurchaseOrderItemResponse[]
 }
 
@@ -141,6 +145,7 @@ export interface CreatePurchaseOrderRequest {
   type: PurchaseOrderType
   createdById: string
   requisitionId?: number
+  leadTime?: number | null
   items: { productId: number; quantity: number; unitPrice: number }[]
 }
 
@@ -151,7 +156,7 @@ export interface GoodReceiptResponse {
   receiptNumber: string
   purchaseOrderId: number
   orderNumber: string
-  updatedStatus: "DELIVERED" | "PARTIALLY_DELIVERED"
+  updatedStatus: PurchaseOrderStatus
   receivedAt: string
   notes: string
   items: GoodReceiptItemResponse[]
@@ -214,6 +219,7 @@ export interface TransferStockRequest {
   quantity: number
   createdById: string
   unitCost?: number | null
+  reason?: string | null
 }
 
 export interface AdjustStockRequest {
@@ -235,6 +241,11 @@ export interface Category {
 
 // ── Requesting Area ──
 
+export interface RequestingArea {
+  id: number
+  name: string
+  active: boolean
+}
 
 export interface CostCenter {
   id: number
@@ -310,7 +321,7 @@ export interface RequisitionResponse {
   requisitionNumber: string
   description: string
   requestedBy: string
-  costCenter: CostCenter
+  areaName: string
   status: RequisitionStatus
   rejectionReason: string | null
   approvalNotes: string | null
