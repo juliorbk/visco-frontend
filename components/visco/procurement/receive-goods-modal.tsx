@@ -48,6 +48,7 @@ export function ReceiveGoodsModal({
       order.items.forEach((it) => (init[it.productId] = it.quantity))
       setReceived(init)
       setNotes("")
+      setDestinationLocationId(1)
     }
     if (open) {
       fetchWarehouses().then(setWarehouses).catch(() => {})
