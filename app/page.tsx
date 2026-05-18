@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { RegisterModal } from "@/components/visco/auth/register-modal"
 import { toast } from "sonner"
 import { fetchUser } from "@/lib/auth-client"
 
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [showPwd, setShowPwd] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [registerOpen, setRegisterOpen] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -171,13 +173,19 @@ export default function LoginPage() {
 
             <p className="text-center text-sm text-muted-foreground pt-2">
               ¿No tienes cuenta?{" "}
-              <a href="#" className="text-[#7b1a1a] hover:underline font-medium">
+              <button
+                type="button"
+                onClick={() => setRegisterOpen(true)}
+                className="text-[#7b1a1a] hover:underline font-medium"
+              >
                 Solicitar acceso
-              </a>
+              </button>
             </p>
           </form>
         </div>
       </section>
+
+      <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} />
     </div>
   )
 }

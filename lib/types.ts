@@ -37,6 +37,14 @@ export interface LoginRequest {
   password: string
 }
 
+export interface RegisterRequest {
+  name: string
+  email: string
+  password: string
+  role: UserRole
+  costCenterId?: number | null
+}
+
 export interface AuthResponse {
   user: UserDTO
   token: string | null
@@ -131,7 +139,7 @@ export interface CreatePurchaseOrderRequest {
   orderNumber: string
   description: string
   supplierId: number
-  destinationWarehouse: number
+  destinationWarehouseId: number
   paymentMethod: PaymentMethod
   type: PurchaseOrderType
   createdById: string
@@ -207,6 +215,7 @@ export interface TransferStockRequest {
   toLocationId: number
   quantity: number
   createdById: string
+  unitCost?: number | null
 }
 
 export interface AdjustStockRequest {
@@ -215,6 +224,7 @@ export interface AdjustStockRequest {
   newStock: number
   reason?: string
   createdById: string
+  unitCost?: number | null
 }
 
 // ── Category ──
@@ -232,6 +242,14 @@ export interface RequestingArea {
   name: string
   description: string
   costCenter: string
+  active: boolean
+}
+
+export interface CostCenter {
+  id: number
+  code: string
+  name: string
+  fullDescription: string
   active: boolean
 }
 

@@ -3,71 +3,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
 import { SupplierPerformanceChart } from "@/components/visco/suppliers/performance-chart"
 import { SupplierCard } from "@/components/visco/suppliers/supplier-card"
 import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from "@/lib/services/suppliers"
 import type { SupplierDTO } from "@/lib/types"
-import { Plus, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 12
-
-function renderPageNumbers(
-  current: number,
-  total: number,
-  onPage: (p: number) => void,
-) {
-  const items: React.ReactNode[] = []
-  const maxVisible = 5
-  let start = Math.max(0, current - Math.floor(maxVisible / 2))
-  let end = Math.min(total, start + maxVisible)
-  if (end - start < maxVisible) start = Math.max(0, end - maxVisible)
-
-  if (start > 0) {
-    items.push(
-      <PaginationItem key="first">
-        <PaginationLink href="#" onClick={(e) => { e.preventDefault(); onPage(0); }}>1</PaginationLink>
-      </PaginationItem>,
-    )
-    if (start > 1) items.push(<PaginationItem key="els"><PaginationEllipsis /></PaginationItem>)
-  }
-
-  for (let i = start; i < end; i++) {
-    items.push(
-      <PaginationItem key={i}>
-        <PaginationLink
-          href="#"
-          isActive={current === i}
-          onClick={(e) => { e.preventDefault(); onPage(i); }}
-        >
-          {i + 1}
-        </PaginationLink>
-      </PaginationItem>,
-    )
-  }
-
-  if (end < total) {
-    if (end < total - 1) items.push(<PaginationItem key="ele"><PaginationEllipsis /></PaginationItem>)
-    items.push(
-      <PaginationItem key="last">
-        <PaginationLink href="#" onClick={(e) => { e.preventDefault(); onPage(total - 1); }}>{total}</PaginationLink>
-      </PaginationItem>,
-    )
-  }
-
-  return items
-}
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
@@ -79,17 +24,24 @@ export default function SuppliersPage() {
   const [totalElements, setTotalElements] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
+  const [rawResponse, setRawResponse] = useState<string>("")
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetchSuppliers(page, PAGE_SIZE)
+      console.log("Suppliers API response:", JSON.stringify(res, null, 2))
       const list = res.content ?? []
+      console.log("Suppliers list:", list.length, "items")
+      console.log("Total pages:", res.totalPages, "Total elements:", res.totalElements)
+      console.log("Response keys:", Object.keys(res))
       setSuppliers(list)
-      setTotalPages(res.totalPages)
-      setTotalElements(res.totalElements)
+      setTotalPages(res.totalPages ?? 0)
+      setTotalElements(res.totalElements ?? 0)
+      setRawResponse(JSON.stringify(res))
       setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
     } catch (err) {
+      console.error("Error loading suppliers:", err)
       toast.error(err instanceof Error ? err.message : "Error al cargar proveedores")
     } finally {
       setLoading(false)
@@ -159,56 +111,63 @@ export default function SuppliersPage() {
         <SupplierPerformanceChart />
       </div>
 
+      {/* Debug info */}
+      <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-xs font-mono">
+        DEBUG: loading={String(loading)} | suppliers={suppliers.length} | totalPages={totalPages} | totalElements={totalElements} | page={page}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
-          {loading ? (
-            <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-              <Loader2 className="size-5 animate-spin" />
-              Cargando proveedores…
-            </div>
-          ) : suppliers.length === 0 ? (
-            <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-              No hay proveedores disponibles.
-            </div>
-          ) : (
-            <>
-              {suppliers.map((s) => (
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {loading ? (
+              <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                <Loader2 className="size-5 animate-spin" />
+                Cargando proveedores…
+              </div>
+            ) : suppliers.length === 0 ? (
+              <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
+                No hay proveedores disponibles.
+              </div>
+            ) : (
+              suppliers.map((s) => (
                 <SupplierCard
                   key={s.id}
                   supplier={s}
                   selected={selectedId === s.id}
                   onSelect={(sup) => setSelectedId(sup.id)}
                 />
-              ))}
-              {totalPages > 0 && (
-                <div className="md:col-span-2 flex flex-col items-center gap-2 pt-2">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(0, p - 1)); }}
-                          aria-disabled={page === 0}
-                          className={page === 0 ? "pointer-events-none opacity-50" : ""}
-                        />
-                      </PaginationItem>
-                      {renderPageNumbers(page, totalPages, setPage)}
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => { e.preventDefault(); setPage((p) => Math.min(totalPages - 1, p + 1)); }}
-                          aria-disabled={page === totalPages - 1}
-                          className={page === totalPages - 1 ? "pointer-events-none opacity-50" : ""}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
-                  <p className="text-xs text-muted-foreground">
-                    Página {page + 1} de {totalPages} · {totalElements} proveedores
-                  </p>
-                </div>
-              )}
-            </>
+              ))
+            )}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 px-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                className={page === 0 ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                <ChevronLeft className="size-4 mr-1" />
+                Anterior
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Página {page + 1} de {totalPages} · {totalElements} proveedores
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                className={page >= totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                Siguiente
+                <ChevronRight className="size-4 ml-1" />
+              </Button>
+            </div>
           )}
         </div>
 

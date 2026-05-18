@@ -47,6 +47,7 @@ export function StockActionModal({
   const [quantity, setQuantity] = useState("1")
   const [newStock, setNewStock] = useState("0")
   const [reason, setReason] = useState("")
+  const [unitCost, setUnitCost] = useState("")
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export function StockActionModal({
 
   const close = () => {
     onOpenChange(false)
+    setUnitCost("")
   }
 
   const handleTransfer = async () => {
@@ -79,6 +81,7 @@ export function StockActionModal({
         toLocationId,
         quantity: qty,
         createdById: user.id,
+        unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`${qty} unidades transferidas`)
       onDone()
@@ -103,6 +106,7 @@ export function StockActionModal({
         newStock: ns,
         reason,
         createdById: user.id,
+        unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`Stock ajustado a ${ns}`)
       onDone()
@@ -173,6 +177,10 @@ export function StockActionModal({
               <Label>Cantidad</Label>
               <Input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
             </div>
+            <div className="space-y-1.5">
+              <Label>Costo unitario (opcional)</Label>
+              <Input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" />
+            </div>
             <DialogFooter>
               <Button variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
               <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={handleTransfer} disabled={saving}>
@@ -200,6 +208,10 @@ export function StockActionModal({
             <div className="space-y-1.5">
               <Label>Motivo</Label>
               <Textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Razón del ajuste…" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Costo unitario (opcional)</Label>
+              <Input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" />
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={close} disabled={saving}>Cancelar</Button>

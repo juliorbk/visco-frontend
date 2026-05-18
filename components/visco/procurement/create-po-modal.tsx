@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import type { CreatePurchaseOrderRequest, ProductDTO } from "@/lib/types"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
-import { Check, Loader2, Plus, Trash2 } from "lucide-react"
+import { Check, Loader2, Plus, Trash2, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -57,34 +57,61 @@ export function CreatePOModal({
   const [type, setType] = useState(ORDER_TYPES[1])
   const [supplierId, setSupplierId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
-  const [pickProduct, setPickProduct] = useState<number | null>(null)
+  const [pickProduct, setPickProduct] = useState<ProductDTO | null>(null)
   const [pickQty, setPickQty] = useState("1")
   const [pickPrice, setPickPrice] = useState("0")
-  const [destinationWarehouse, setDestinationWarehouse] = useState<number | null>(null)
+  const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
   const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
+
+  // Product finder state
+  const [finderOpen, setFinderOpen] = useState(false)
+  const [finderQuery, setFinderQuery] = useState("")
+  const finderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
       }).catch(() => {})
-      fetchProducts(0, 200).then((prodRes) => {
-        const prods = prodRes.content ?? []
-        setProducts(prods)
-        if (prods.length > 0) {
-          setPickProduct(prods[0].id)
-          setPickPrice(String(0))
-        }
+      fetchProducts(0, 500).then((prodRes) => {
+        setProducts(prodRes.content ?? [])
       }).catch(() => {})
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
-        if (wh.length > 0) setDestinationWarehouse(wh[0].id)
+        if (wh.length > 0) setDestinationWarehouseId(wh[0].id)
       }).catch(() => {})
     }
   }, [open])
+
+  useEffect(() => {
+    if (!finderOpen) setFinderQuery("")
+  }, [finderOpen])
+
+  // Close finder on outside click
+  useEffect(() => {
+    if (!finderOpen) return
+    const handler = (e: MouseEvent) => {
+      if (finderRef.current && !finderRef.current.contains(e.target as Node)) {
+        setFinderOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [finderOpen])
+
+  const filteredProducts = useMemo(() => {
+    if (!finderQuery) return products
+    const q = finderQuery.toLowerCase()
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        p.internalCode.toLowerCase().includes(q),
+    )
+  }, [products, finderQuery])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
 
@@ -93,6 +120,9 @@ export function CreatePOModal({
     setLines([])
     setDescription("")
     setSupplierId(null)
+    setPickProduct(null)
+    setFinderQuery("")
+    setFinderOpen(false)
   }
 
   const close = () => {
@@ -101,23 +131,32 @@ export function CreatePOModal({
   }
 
   const addLine = () => {
-    const p = products.find((x) => x.id === pickProduct)
-    if (!p) return
+    if (!pickProduct) {
+      toast.error("Selecciona un producto")
+      return
+    }
     const qty = Number(pickQty)
     const price = Number(pickPrice)
     if (qty <= 0 || price <= 0) {
       toast.error("Cantidad y precio deben ser mayores a cero")
       return
     }
+    if (lines.some((l) => l.productId === pickProduct.id)) {
+      toast.error("Este producto ya está en la lista")
+      return
+    }
     setLines((prev) => [
       ...prev,
-      { productId: p.id, productName: p.name, quantity: qty, unitPrice: price, sku: p.sku },
+      { productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
     ])
+    setPickProduct(null)
     setPickQty("1")
+    setPickPrice("0")
+    setFinderOpen(false)
   }
 
   const submit = async () => {
-    if (!supplierId || lines.length === 0 || !destinationWarehouse) {
+    if (!supplierId || lines.length === 0 || !destinationWarehouseId) {
       toast.error("Completa todos los campos requeridos")
       return
     }
@@ -132,7 +171,7 @@ export function CreatePOModal({
         orderNumber,
         description,
         supplierId,
-        destinationWarehouse,
+        destinationWarehouseId,
         paymentMethod: paymentMethod as CreatePurchaseOrderRequest["paymentMethod"],
         type: type as CreatePurchaseOrderRequest["type"],
         createdById: user.id,
@@ -151,7 +190,7 @@ export function CreatePOModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">Crear Pedido de Compra</DialogTitle>
           <DialogDescription>
@@ -159,6 +198,7 @@ export function CreatePOModal({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Step indicator */}
         <div className="flex items-center justify-between mb-4">
           {STEPS.map((s, i) => (
             <div key={s} className="flex-1 flex items-center last:flex-none">
@@ -189,6 +229,7 @@ export function CreatePOModal({
           ))}
         </div>
 
+        {/* Step 0: Info */}
         {step === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -212,7 +253,7 @@ export function CreatePOModal({
             </div>
             <div className="space-y-1.5">
               <Label>Almacén destino</Label>
-              <Select value={String(destinationWarehouse ?? "")} onValueChange={(v) => setDestinationWarehouse(Number(v))}>
+              <Select value={String(destinationWarehouseId ?? "")} onValueChange={(v) => setDestinationWarehouseId(Number(v))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar…" />
                 </SelectTrigger>
@@ -268,56 +309,96 @@ export function CreatePOModal({
           </div>
         )}
 
+        {/* Step 1: Products */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-12 gap-2">
-              <div className="col-span-6">
-                <Label className="text-xs">Producto</Label>
-                <Select
-                  value={String(pickProduct ?? "")}
-                  onValueChange={(v) => {
-                    setPickProduct(Number(v))
-                    const p = products.find((x) => x.id === Number(v))
-                    if (p) setPickPrice(String(0))
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.name}
-                      </SelectItem>
+            {/* Product finder */}
+            <div className="space-y-2">
+              <Label className="text-xs">Buscar producto</Label>
+              <div className="relative" ref={finderRef}>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="Escribe nombre, SKU o código…"
+                      value={pickProduct ? `${pickProduct.name} (${pickProduct.sku})` : finderQuery}
+                      onChange={(e) => {
+                        setFinderQuery(e.target.value)
+                        setPickProduct(null)
+                        setFinderOpen(true)
+                      }}
+                      onFocus={() => setFinderOpen(true)}
+                    />
+                    {pickProduct && (
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setPickProduct(null)
+                          setFinderQuery("")
+                        }}
+                      >
+                        <X className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    type="number"
+                    placeholder="Cant"
+                    className="w-20"
+                    value={pickQty}
+                    onChange={(e) => setPickQty(e.target.value)}
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Precio"
+                    className="w-28"
+                    value={pickPrice}
+                    onChange={(e) => setPickPrice(e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white shrink-0"
+                    onClick={addLine}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </div>
+
+                {/* Finder dropdown */}
+                {finderOpen && filteredProducts.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
+                    {filteredProducts.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50"
+                        onClick={() => {
+                          setPickProduct(p)
+                          setFinderQuery("")
+                          setFinderOpen(false)
+                        }}
+                      >
+                        <div className="font-medium text-foreground">{p.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {p.sku} · {p.internalCode}
+                        </div>
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs">Cantidad</Label>
-                <Input type="number" value={pickQty} onChange={(e) => setPickQty(e.target.value)} />
-              </div>
-              <div className="col-span-3">
-                <Label className="text-xs">Precio Unit.</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={pickPrice}
-                  onChange={(e) => setPickPrice(e.target.value)}
-                />
-              </div>
-              <div className="col-span-1 flex items-end">
-                <Button
-                  type="button"
-                  size="icon"
-                  className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
-                  onClick={addLine}
-                >
-                  <Plus className="size-4" />
-                </Button>
+                  </div>
+                )}
+                {finderOpen && finderQuery && filteredProducts.length === 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
+                    No se encontraron productos
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* Lines list */}
             <div className="rounded-lg border border-border bg-[#fafafa]">
               {lines.length === 0 ? (
                 <div className="p-6 text-center text-sm text-muted-foreground">
@@ -341,7 +422,7 @@ export function CreatePOModal({
                       </span>
                       <button
                         onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
-                        className="text-muted-foreground hover:text-red-600"
+                        className="text-muted-foreground hover:text-red-600 shrink-0"
                         aria-label="Eliminar línea"
                       >
                         <Trash2 className="size-4" />
@@ -360,6 +441,7 @@ export function CreatePOModal({
           </div>
         )}
 
+        {/* Step 2: Review */}
         {step === 2 && (
           <div className="space-y-3 text-sm">
             <ReviewRow label="Order #" value={orderNumber} />
