@@ -26,6 +26,7 @@ import { fetchWarehouses } from "@/lib/services/warehouse"
 import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse } from "@/lib/types"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
+import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
 import { Check, Loader2, Plus, Trash2, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -63,10 +64,13 @@ export function CreatePOModal({
   const [pickQty, setPickQty] = useState("1")
   const [pickPrice, setPickPrice] = useState("0")
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
+  const [leadTime, setLeadTime] = useState("")
   const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
+  const [requisitions, setRequisitions] = useState<RequisitionResponse[]>([])
+  const [selectedRequisitionId, setSelectedRequisitionId] = useState<number | null>(null)
 
   // Product finder state
   const [finderOpen, setFinderOpen] = useState(false)
@@ -85,8 +89,12 @@ export function CreatePOModal({
         setWarehouses(wh)
         if (wh.length > 0 && !destinationWarehouseId) setDestinationWarehouseId(wh[0].id)
       }).catch(() => {})
+      fetchRequisitions(0, 200, "APPROVED").then((reqRes) => {
+        setRequisitions(reqRes.content ?? [])
+      }).catch(() => {})
 
       if (prefillFromRequisition) {
+        setSelectedRequisitionId(prefillFromRequisition.id)
         setDescription(prefillFromRequisition.description)
         setLines(
           prefillFromRequisition.items.map((item) => ({
@@ -138,11 +146,32 @@ export function CreatePOModal({
     setPickProduct(null)
     setFinderQuery("")
     setFinderOpen(false)
+    setSelectedRequisitionId(null)
   }
 
   const close = () => {
     onOpenChange(false)
     setTimeout(reset, 200)
+  }
+
+  const handleRequisitionChange = (idStr: string) => {
+    const id = idStr ? Number(idStr) : null
+    setSelectedRequisitionId(id)
+    if (id) {
+      const req = requisitions.find((r) => r.id === id)
+      if (req) {
+        setDescription(req.description)
+        setLines(
+          req.items.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: 0,
+            sku: item.productSku,
+          })),
+        )
+      }
+    }
   }
 
   const addLine = () => {
@@ -171,8 +200,24 @@ export function CreatePOModal({
   }
 
   const submit = async () => {
-    if (!supplierId || lines.length === 0 || !destinationWarehouseId) {
-      toast.error("Completa todos los campos requeridos")
+    if (!orderNumber.trim()) {
+      toast.error("El número de orden es requerido")
+      return
+    }
+    if (!description.trim()) {
+      toast.error("La descripción es requerida")
+      return
+    }
+    if (!supplierId) {
+      toast.error("El proveedor es requerido")
+      return
+    }
+    if (!destinationWarehouseId) {
+      toast.error("El almacén destino es requerido")
+      return
+    }
+    if (lines.length === 0) {
+      toast.error("Agrega al menos un producto")
       return
     }
     const user = getCachedUser()
@@ -192,8 +237,11 @@ export function CreatePOModal({
         createdById: user.id,
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
       }
+      if (leadTime) body.leadTime = Number(leadTime)
       if (prefillFromRequisition) {
         body.requisitionId = prefillFromRequisition.id
+      } else if (selectedRequisitionId) {
+        body.requisitionId = selectedRequisitionId
       }
       await createOrder(body)
 
@@ -310,6 +358,29 @@ export function CreatePOModal({
                   {ORDER_TYPES.map((p) => (
                     <SelectItem key={p} value={p}>
                       {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="lt">Lead Time (días)</Label>
+              <Input id="lt" type="number" min="0" placeholder="Opcional" value={leadTime} onChange={(e) => setLeadTime(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label>Requisición (opcional)</Label>
+              <Select
+                value={String(selectedRequisitionId ?? "")}
+                onValueChange={handleRequisitionChange}
+                disabled={!!prefillFromRequisition}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar requisición aprobada…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {requisitions.map((r) => (
+                    <SelectItem key={r.id} value={String(r.id)}>
+                      {r.requisitionNumber} — {r.description}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -465,9 +536,18 @@ export function CreatePOModal({
           <div className="space-y-3 text-sm">
             <ReviewRow label="Order #" value={orderNumber} />
             <ReviewRow label="Proveedor" value={suppliers.find((s) => s.id === supplierId)?.name ?? "-"} />
+            <ReviewRow
+              label="Requisición"
+              value={
+                selectedRequisitionId
+                  ? requisitions.find((r) => r.id === selectedRequisitionId)?.requisitionNumber ?? "-"
+                  : "-"
+              }
+            />
             <ReviewRow label="Almacén destino" value={warehouses.find((w) => w.id === destinationWarehouseId)?.name ?? "-"} />
             <ReviewRow label="Método de pago" value={paymentMethod} />
             <ReviewRow label="Tipo" value={type} />
+            <ReviewRow label="Lead Time" value={leadTime ? `${leadTime} días` : "-"} />
             <ReviewRow label="Artículos" value={`${lines.length}`} />
             <ReviewRow label="Total" value={`$${total.toLocaleString()}`} bold />
             <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">

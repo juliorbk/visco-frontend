@@ -23,7 +23,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: `Error ${res.status}` }))
-    throw new Error(err.error || `Error ${res.status}`)
+    const messages: string[] = []
+    if (err.errors?.length) {
+      for (const e of err.errors) {
+        messages.push(e.defaultMessage ?? e.message ?? e.field)
+      }
+    }
+    if (err.detail) messages.push(err.detail)
+    if (err.error) messages.push(err.error)
+    throw new Error(messages.join("; ") || `Error ${res.status}`)
   }
 
   return res.json()

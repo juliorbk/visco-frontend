@@ -14,6 +14,7 @@ import {
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { CreateRequisitionModal } from "@/components/visco/requisitions/create-requisition-modal"
 import { RequisitionDetail } from "@/components/visco/requisitions/requisition-detail"
+import { RequisitionStepper } from "@/components/visco/requisitions/requisition-stepper"
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import type { RequisitionResponse, Page } from "@/lib/types"
@@ -127,6 +128,10 @@ export default function RequisitionsPage() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="mb-4">
+        <RequisitionStepper status={selected?.status} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

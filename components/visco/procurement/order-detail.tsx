@@ -4,19 +4,25 @@ import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
 import type { PurchaseOrderResponse } from "@/lib/types"
 
-const APPROVABLE = ["PENDING", "AWAITING_APPROVAL"]
-const CANCELLABLE = ["PENDING", "IN_TRANSIT", "AWAITING_APPROVAL"]
-const RECEIVABLE = ["IN_TRANSIT", "APPROVED"]
+// PENDING      → can only be submitted for approval
+// AWAITING_APPROVAL → can be approved or rejected
+// IN_TRANSIT / APPROVED → can receive goods
+const SUBMITTABLE  = ["PENDING"]
+const APPROVABLE   = ["AWAITING_APPROVAL"]
+const CANCELLABLE  = ["PENDING", "IN_TRANSIT", "AWAITING_APPROVAL"]
+const RECEIVABLE   = ["IN_TRANSIT", "APPROVED"]
 
 export function OrderDetail({
   order,
+  onSubmit,
   onApprove,
   onCancel,
   onReceive,
 }: {
   order: PurchaseOrderResponse | null
+  onSubmit?:  (o: PurchaseOrderResponse) => void
   onApprove?: (o: PurchaseOrderResponse) => void
-  onCancel?: (o: PurchaseOrderResponse) => void
+  onCancel?:  (o: PurchaseOrderResponse) => void
   onReceive?: (o: PurchaseOrderResponse) => void
 }) {
   if (!order) {
@@ -29,8 +35,15 @@ export function OrderDetail({
 
   const total = order.items.reduce((s, i) => s + i.subtotal, 0)
 
+  const isSubmittable = SUBMITTABLE.includes(order.status)
+  const isApprovable  = APPROVABLE.includes(order.status)
+  const isCancellable = CANCELLABLE.includes(order.status)
+  const isReceivable  = RECEIVABLE.includes(order.status)
+  const hasActions    = isSubmittable || isApprovable || isReceivable
+
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs h-full flex flex-col">
+      {/* ── Header ── */}
       <div className="px-5 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <span className="inline-flex items-center rounded-full bg-amber-100 text-amber-800 ring-1 ring-amber-200 px-3 py-1 text-xs font-semibold">
@@ -46,13 +59,16 @@ export function OrderDetail({
         )}
       </div>
 
-      <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-border">
-        <Stat label="Total" value={`$${total.toLocaleString()}`} />
+      {/* ── Stats ── */}
+      <div className="px-5 py-4 grid grid-cols-3 gap-3 border-b border-border">
+        <Stat label="Total"       value={`$${total.toLocaleString()}`} />
         <Stat label="Solicitante" value={order.createdBy} />
-        <Stat label="Tipo" value={order.type} />
-        <Stat label="Artículos" value={`${order.items.length}`} />
+        <Stat label="Tipo"        value={order.type} />
+        <Stat label="Artículos"   value={`${order.items.length}`} />
+        <Stat label="Almacén destino" value={order.destinationWarehouseName ?? "-"} />
       </div>
 
+      {/* ── Items ── */}
       <div className="px-5 py-4 flex-1 overflow-y-auto">
         <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
           Líneas del pedido
@@ -77,8 +93,32 @@ export function OrderDetail({
         </ul>
       </div>
 
+      {/* ── Actions ── */}
       <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row gap-2">
-        {APPROVABLE.includes(order.status) && (
+
+        {/* PENDING: submit for approval + cancel */}
+        {isSubmittable && (
+          <>
+            {isCancellable && (
+              <Button
+                variant="outline"
+                className="flex-1 bg-card"
+                onClick={() => onCancel?.(order)}
+              >
+                Cancelar
+              </Button>
+            )}
+            <Button
+              className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
+              onClick={() => onSubmit?.(order)}
+            >
+              Enviar a aprobación
+            </Button>
+          </>
+        )}
+
+        {/* AWAITING_APPROVAL: reject + approve */}
+        {isApprovable && (
           <>
             <Button
               variant="outline"
@@ -95,7 +135,9 @@ export function OrderDetail({
             </Button>
           </>
         )}
-        {RECEIVABLE.includes(order.status) && (
+
+        {/* APPROVED / IN_TRANSIT: receive goods */}
+        {isReceivable && (
           <Button
             className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
             onClick={() => onReceive?.(order)}
@@ -103,7 +145,9 @@ export function OrderDetail({
             Recibir Mercancía
           </Button>
         )}
-        {!APPROVABLE.includes(order.status) && !RECEIVABLE.includes(order.status) && (
+
+        {/* No actions available */}
+        {!hasActions && (
           <Button variant="outline" className="flex-1 bg-card" disabled>
             Sin acciones disponibles
           </Button>

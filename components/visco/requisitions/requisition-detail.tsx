@@ -73,7 +73,7 @@ export function RequisitionDetail({
     }
   }
 
-  const canSubmit = requisition.status === "DRAFT"
+  const canSubmit = requisition.status === "DRAFT" || requisition.status === "PENDING"
   const canApprove = requisition.status === "AWAITING_APPROVAL" && isApprover
   const canReject = requisition.status === "AWAITING_APPROVAL" && isApprover
   const canConvertToPO = requisition.status === "APPROVED"

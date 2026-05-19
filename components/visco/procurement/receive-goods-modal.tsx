@@ -40,7 +40,7 @@ export function ReceiveGoodsModal({
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [destinationLocationId, setDestinationLocationId] = useState<number>(1)
+  const [destinationLocationId, setDestinationLocationId] = useState<number | null>(null)
 
   useEffect(() => {
     if (order) {
@@ -48,16 +48,32 @@ export function ReceiveGoodsModal({
       order.items.forEach((it) => (init[it.productId] = it.quantity))
       setReceived(init)
       setNotes("")
-      setDestinationLocationId(1)
+      setDestinationLocationId(null)
     }
+  }, [order])
+
+  useEffect(() => {
     if (open) {
-      fetchWarehouses().then(setWarehouses).catch(() => {})
+      fetchWarehouses()
+        .then((wh) => {
+          setWarehouses(wh)
+          if (wh.length > 0 && !destinationLocationId) setDestinationLocationId(wh[0].id)
+        })
+        .catch(() => {})
     }
-  }, [order, open])
+  }, [open])
 
   if (!order) return null
 
   const submit = async () => {
+    if (!destinationLocationId) {
+      toast.error("Selecciona un almacén destino")
+      return
+    }
+    if (order.items.every((it) => (received[it.productId] ?? 0) === 0)) {
+      toast.error("Debes ingresar al menos una cantidad recibida")
+      return
+    }
     setSaving(true)
     try {
       await receiveGoods(order.id, {
@@ -80,7 +96,7 @@ export function ReceiveGoodsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="font-serif">Recibir Mercancía — {order.orderNumber}</DialogTitle>
           <DialogDescription>
@@ -88,10 +104,10 @@ export function ReceiveGoodsModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-3 overflow-y-auto pr-1">
           <div className="space-y-1.5">
             <Label>Ubicación destino</Label>
-            <Select value={String(destinationLocationId)} onValueChange={(v) => setDestinationLocationId(Number(v))}>
+            <Select value={String(destinationLocationId ?? "")} onValueChange={(v) => setDestinationLocationId(Number(v))}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar almacén…" />
               </SelectTrigger>
@@ -107,15 +123,15 @@ export function ReceiveGoodsModal({
           {order.items.map((it) => (
             <div
               key={it.productId}
-              className="rounded-md border border-border bg-[#fafafa] p-3 flex items-center justify-between gap-3"
+              className="rounded-md border border-border bg-[#fafafa] p-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center"
             >
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0">
                 <div className="font-medium text-foreground truncate">{it.productName}</div>
                 <div className="text-xs text-muted-foreground">
                   SKU: {it.productSku} · Esperado: <span className="font-medium text-foreground">{it.quantity}</span>
                 </div>
               </div>
-              <div className="w-28">
+              <div className="w-24 sm:w-28">
                 <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   Recibido
                 </Label>

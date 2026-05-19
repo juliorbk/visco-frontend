@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/visco/page-header"
 import { InboundsKPICards } from "@/components/visco/inbounds/kpi-cards"
 import { ReceiptsTable } from "@/components/visco/inbounds/receipts-table"
 import { ReceiptDetailPanel } from "@/components/visco/inbounds/receipt-detail-panel"
+import { ReceiptStepper } from "@/components/visco/inbounds/receipt-stepper"
 import { NuevaRecepcionModal } from "@/components/visco/inbounds/nueva-recepcion-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
 import { fetchReceipts, fetchWarehouses } from "@/lib/services/warehouse"
@@ -87,7 +88,11 @@ export default function InboundsPage() {
           <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <>
+          <div className="mb-4">
+            <ReceiptStepper status={selectedReceipt?.updatedStatus} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <ReceiptsTable
               receipts={receipts}
@@ -110,6 +115,7 @@ export default function InboundsPage() {
             )}
           </div>
         </div>
+        </>
       )}
 
       <NuevaRecepcionModal

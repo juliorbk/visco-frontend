@@ -8,7 +8,12 @@ import { OrderStepper } from "@/components/visco/procurement/order-stepper"
 import { OrderDetail } from "@/components/visco/procurement/order-detail"
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { ReceiveGoodsModal } from "@/components/visco/procurement/receive-goods-modal"
-import { fetchOrders, approveOrder, cancelOrder } from "@/lib/services/procurement"
+import {
+  fetchOrders,
+  submitForApproval,
+  approveOrder,
+  cancelOrder,
+} from "@/lib/services/procurement"
 import type { PurchaseOrderResponse, Page } from "@/lib/types"
 import { CheckCheck, FileClock, Plus, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -29,7 +34,9 @@ export default function ProcurementPage() {
       setLoading(true)
       const res = await fetchOrders(page, 50)
       setPageData(res)
-      setSelectedId((prev) => (prev && res.content.find((o) => o.id === prev) ? prev : res.content[0]?.id ?? null))
+      setSelectedId((prev) =>
+        prev && res.content.find((o) => o.id === prev) ? prev : res.content[0]?.id ?? null
+      )
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar pedidos")
     } finally {
@@ -43,10 +50,32 @@ export default function ProcurementPage() {
 
   const selected = orders.find((o) => o.id === selectedId) ?? null
 
+  // Patches local state for a single order without a full reload
+  const patchOrder = (updated: PurchaseOrderResponse) => {
+    setPageData((prev) =>
+      prev
+        ? { ...prev, content: prev.content.map((x) => (x.id === updated.id ? updated : x)) }
+        : prev
+    )
+  }
+
+  // PENDING → AWAITING_APPROVAL
+  const handleSubmit = async (o: PurchaseOrderResponse) => {
+    try {
+      const updated = await submitForApproval(o.id)
+      patchOrder(updated)
+      toast.success(`${o.orderNumber} enviado a aprobación`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al enviar a aprobación")
+    }
+  }
+
+  // AWAITING_APPROVAL → APPROVED
+  // userId is resolved server-side from the JWT cookie, no need to pass it here
   const handleApprove = async (o: PurchaseOrderResponse) => {
     try {
       const updated = await approveOrder(o.id)
-      setPageData((prev) => prev ? { ...prev, content: prev.content.map((x) => (x.id === o.id ? updated : x)) } : prev)
+      patchOrder(updated)
       toast.success(`${o.orderNumber} aprobado`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al aprobar")
@@ -56,7 +85,7 @@ export default function ProcurementPage() {
   const handleCancel = async (o: PurchaseOrderResponse) => {
     try {
       const updated = await cancelOrder(o.id)
-      setPageData((prev) => prev ? { ...prev, content: prev.content.map((x) => (x.id === o.id ? updated : x)) } : prev)
+      patchOrder(updated)
       toast.success(`${o.orderNumber} cancelado`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cancelar")
@@ -99,86 +128,87 @@ export default function ProcurementPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <div>
-              <h3 className="font-serif text-lg font-semibold">Pedidos Activos</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {pageData?.page.totalElements ?? 0} pedidos en el sistema
-              </p>
+            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-lg font-semibold">Pedidos Activos</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {pageData?.page.totalElements ?? 0} pedidos en el sistema
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
-                  <th className="text-left font-medium px-5 py-3">ID</th>
-                  <th className="text-left font-medium px-5 py-3">Fecha</th>
-                  <th className="text-left font-medium px-5 py-3">Proveedor</th>
-                  <th className="text-left font-medium px-5 py-3">Estado</th>
-                  <th className="text-left font-medium px-5 py-3">Solicitante</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center">
-                      <Loader2 className="size-5 animate-spin mx-auto" />
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
+                    <th className="text-left font-medium px-5 py-3">ID</th>
+                    <th className="text-left font-medium px-5 py-3">Fecha</th>
+                    <th className="text-left font-medium px-5 py-3">Proveedor</th>
+                    <th className="text-left font-medium px-5 py-3">Estado</th>
+                    <th className="text-left font-medium px-5 py-3">Solicitante</th>
                   </tr>
-                ) : (
-                  orders.map((o) => (
-                    <tr
-                      key={o.id}
-                      onClick={() => setSelectedId(o.id)}
-                      className={cn(
-                        "border-t border-border cursor-pointer",
-                        selectedId === o.id ? "bg-[#fde8e8]/40" : "hover:bg-[#fafafa]",
-                      )}
-                    >
-                      <td className="px-5 py-3">
-                        <span className="font-medium text-[#7b1a1a]">{o.orderNumber}</span>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-10 text-center">
+                        <Loader2 className="size-5 animate-spin mx-auto" />
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">
-                        {new Date(o.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-5 py-3 text-foreground">{o.supplierName}</td>
-                      <td className="px-5 py-3">
-                        <OrderStatusBadge status={o.status} />
-                      </td>
-                      <td className="px-5 py-3 text-muted-foreground">{o.createdBy}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {pageData && pageData.page.totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-border text-sm">
-              <button
-                disabled={page === 0}
-                onClick={() => setPage((p) => p - 1)}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-              >
-                Anterior
-              </button>
-              <span className="text-xs text-muted-foreground">
-                Página {pageData.page.number + 1} de {pageData.page.totalPages}
-              </span>
-              <button
-                disabled={page >= pageData.page.totalPages - 1}
-                onClick={() => setPage((p) => p + 1)}
-                className="text-muted-foreground hover:text-foreground disabled:opacity-30"
-              >
-                Siguiente
-              </button>
+                  ) : (
+                    orders.map((o) => (
+                      <tr
+                        key={o.id}
+                        onClick={() => setSelectedId(o.id)}
+                        className={cn(
+                          "border-t border-border cursor-pointer",
+                          selectedId === o.id ? "bg-[#fde8e8]/40" : "hover:bg-[#fafafa]",
+                        )}
+                      >
+                        <td className="px-5 py-3">
+                          <span className="font-medium text-[#7b1a1a]">{o.orderNumber}</span>
+                        </td>
+                        <td className="px-5 py-3 text-muted-foreground">
+                          {new Date(o.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-5 py-3 text-foreground">{o.supplierName}</td>
+                        <td className="px-5 py-3">
+                          <OrderStatusBadge status={o.status} />
+                        </td>
+                        <td className="px-5 py-3 text-muted-foreground">{o.createdBy}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
+            {pageData && pageData.page.totalPages > 1 && (
+              <div className="flex items-center justify-between px-5 py-3 border-t border-border text-sm">
+                <button
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                >
+                  Anterior
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Página {pageData.page.number + 1} de {pageData.page.totalPages}
+                </span>
+                <button
+                  disabled={page >= pageData.page.totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="text-muted-foreground hover:text-foreground disabled:opacity-30"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
         <div className="lg:col-span-1">
           <OrderDetail
             order={selected}
+            onSubmit={handleSubmit}
             onApprove={handleApprove}
             onCancel={handleCancel}
             onReceive={handleReceive}

@@ -123,6 +123,8 @@ export interface PurchaseOrderResponse {
   approvedBy: string | null
   approvedAt: string | null
   requisitionId: number | null
+  destinationWarehouseId: number | null
+  destinationWarehouseName: string | null
   leadTime: number | null
   items: PurchaseOrderItemResponse[]
 }
