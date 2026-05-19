@@ -499,17 +499,69 @@ export function CreatePOModal({
                   {lines.map((l, i) => (
                     <li
                       key={i}
-                      className="flex items-center justify-between gap-3 px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
+                      className="flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-foreground truncate">{l.productName}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {l.quantity} × ${l.unitPrice.toFixed(2)}
-                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">{l.sku}</div>
                       </div>
-                      <span className="tabular-nums font-medium">
-                        ${(l.quantity * l.unitPrice).toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="0"
+                          className="w-16 rounded-md border border-border bg-card px-2 py-1 text-center text-xs tabular-nums"
+                          value={l.quantity || ""}
+                          onChange={(e) => {
+                            if (e.target.value === "") {
+                              setLines((prev) =>
+                                prev.map((line, idx) =>
+                                  idx === i ? { ...line, quantity: 0 } : line,
+                                ),
+                              )
+                              return
+                            }
+                            const v = parseInt(e.target.value, 10)
+                            if (!isNaN(v) && v >= 0) {
+                              setLines((prev) =>
+                                prev.map((line, idx) =>
+                                  idx === i ? { ...line, quantity: v } : line,
+                                ),
+                              )
+                            }
+                          }}
+                        />
+                        <span className="text-xs text-muted-foreground">×</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          className="w-24 rounded-md border border-border bg-card px-2 py-1 text-right text-xs tabular-nums"
+                          value={l.unitPrice || ""}
+                          onChange={(e) => {
+                            if (e.target.value === "") {
+                              setLines((prev) =>
+                                prev.map((line, idx) =>
+                                  idx === i ? { ...line, unitPrice: 0 } : line,
+                                ),
+                              )
+                              return
+                            }
+                            const v = parseFloat(e.target.value)
+                            if (!isNaN(v)) {
+                              setLines((prev) =>
+                                prev.map((line, idx) =>
+                                  idx === i ? { ...line, unitPrice: v } : line,
+                                ),
+                              )
+                            }
+                          }}
+                        />
+                        <span className="tabular-nums font-medium w-24 text-right text-xs">
+                          ${(l.quantity * l.unitPrice).toLocaleString()}
+                        </span>
+                      </div>
                       <button
                         onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
                         className="text-muted-foreground hover:text-red-600 shrink-0"
