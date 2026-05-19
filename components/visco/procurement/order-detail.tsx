@@ -4,7 +4,7 @@ import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
 import { FileDown } from "lucide-react"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
-import { PurchaseOrderPDF } from "@/lib/pdf/purchase-order-pdf"
+import { generatePurchaseOrderPDF } from "@/lib/pdf/purchase-order-pdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
 
 // PENDING      → can only be submitted for approval
@@ -101,12 +101,10 @@ export function OrderDetail({
         <Button
           variant="outline"
           className="w-full bg-card text-xs"
-          onClick={() =>
-            downloadPDF(
-              <PurchaseOrderPDF order={order} />,
-              `ORDEN_COMPRA_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`,
-            )
-          }
+          onClick={() => {
+            const doc = generatePurchaseOrderPDF(order)
+            downloadPDF(doc, `ORDEN_COMPRA_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
+          }}
         >
           <FileDown className="size-4 mr-2" />
           Exportar PDF

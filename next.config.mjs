@@ -7,7 +7,6 @@ allowedDevOrigins: ['10.2.0.2'],
   images: {
     unoptimized: true,
   },
-  transpilePackages: ["@react-pdf/renderer"],
   async rewrites() {
     return [
       {
