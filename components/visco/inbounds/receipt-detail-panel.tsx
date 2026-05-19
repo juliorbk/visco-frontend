@@ -1,9 +1,11 @@
 "use client"
 
-import { Copy, ExternalLink, Printer, X } from "lucide-react"
+import { Copy, ExternalLink, FileDown, X } from "lucide-react"
 import type { GoodReceiptResponse } from "@/lib/types"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { downloadPDF } from "@/lib/pdf/download-pdf"
+import { ReceiptPDF } from "@/lib/pdf/receipt-pdf"
 
 export function ReceiptDetailPanel({
   receipt,
@@ -136,9 +138,17 @@ export function ReceiptDetailPanel({
           <ExternalLink className="w-4 h-4" />
           Ver Orden de Compra
         </button>
-        <button className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2">
-          <Printer className="w-4 h-4" />
-          Imprimir Nota
+        <button
+          className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2"
+          onClick={() =>
+            downloadPDF(
+              <ReceiptPDF receipt={receipt} />,
+              `NOTA_ENTREGA_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`,
+            )
+          }
+        >
+          <FileDown className="w-4 h-4" />
+          Exportar PDF
         </button>
       </div>
     </div>
