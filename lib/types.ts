@@ -126,6 +126,22 @@ export interface PurchaseOrderResponse {
   destinationWarehouseId: number | null
   destinationWarehouseName: string | null
   leadTime: number | null
+  paymentTerms: string | null
+  specialConditions: string | null
+  taxAmount: number | null
+  shippingCost: number | null
+  otherCost: number | null
+  supplier?: {
+    name: string
+    address: string
+    email: string
+    phoneNumbers: string[]
+  } | null
+  destinationWarehouse?: {
+    name: string
+    physicalAddress: string
+    description: string
+  } | null
   items: PurchaseOrderItemResponse[]
 }
 
@@ -162,6 +178,20 @@ export interface GoodReceiptResponse {
   receivedAt: string
   notes: string
   items: GoodReceiptItemResponse[]
+  purchaseOrder?: {
+    supplier: {
+      name: string
+      address: string
+      email: string
+      phoneNumbers: string[]
+    }
+    destinationWarehouse: {
+      name: string
+      physicalAddress: string
+      description: string
+    }
+    createdAt: string
+  } | null
 }
 
 export interface GoodReceiptItemResponse {
@@ -171,12 +201,14 @@ export interface GoodReceiptItemResponse {
   expectedQuantity: number
   receivedQuantity: number
   difference: number
+  unitPrice?: number | null
+  totalPrice?: number | null
 }
 
 export interface ReceiveGoodsRequest {
   items: { productId: number; receivedQuantity: number }[]
   notes: string
-  destinationLocationId: number
+  destinationWarehouseId: number
 }
 
 // ── Warehouse ──
@@ -185,6 +217,11 @@ export interface WarehouseResponse {
   id: number
   name: string
   sapCenterCode: string
+  description:string
+  physicalAddress:string
+  active: boolean
+  responsibleUserId: string
+  responsibleUserName: string
 }
 
 export interface CreateWarehouseRequest {
@@ -216,8 +253,8 @@ export interface ProductStockBreakdown {
 
 export interface TransferStockRequest {
   productId: number
-  fromLocationId: number
-  toLocationId: number
+  fromWarehouseId: number
+  toWarehouseId: number
   quantity: number
   createdById: string
   unitCost?: number | null
@@ -226,7 +263,7 @@ export interface TransferStockRequest {
 
 export interface AdjustStockRequest {
   productId: number
-  locationId: number
+  warehouseId: number
   newStock: number
   reason?: string
   createdById: string
@@ -339,6 +376,37 @@ export interface CreateRequisitionRequest {
   requestedById: string
   costCenterId: number
   items: { productId: number; quantity: number; notes?: string }[]
+}
+
+// ── Inventory Movements ──
+
+export type MovementType = "TRANSFER" | "ADJUSTMENT" | "RECEIPT"
+
+export interface InventoryMovementResponse {
+  id: number
+  type: MovementType
+  productId: number
+  productName: string
+  productSku: string
+  fromWarehouseId: number | null
+  fromWarehouseName: string | null
+  toWarehouseId: number | null
+  toWarehouseName: string | null
+  quantity: number
+  stockBefore: number | null
+  stockAfter: number | null
+  reason: string | null
+  createdBy: string
+  createdAt: string
+}
+
+export interface WarehouseDetailResponse extends WarehouseResponse {
+  physicalAddress: string
+  description: string
+  responsibleUserId: string | null
+  responsibleUserName: string | null
+  totalProducts: number
+  totalStock: number
 }
 
 // ── Spring Page wrapper ──
