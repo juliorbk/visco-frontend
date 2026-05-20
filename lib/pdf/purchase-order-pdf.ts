@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf"
-import "jspdf-autotable"
+import autoTable from "jspdf-autotable"
 import type { PurchaseOrderResponse } from "@/lib/types"
 import {
   COLORS,
@@ -129,7 +129,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
     bodyRows.push(["", "", "", "", ""])
   }
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     head: [["#", "DESCRIPCIÓN", "CANT", "P/U", "TOTAL"]],
     body: bodyRows,

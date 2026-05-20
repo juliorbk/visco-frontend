@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf"
-import "jspdf-autotable"
+import autoTable from "jspdf-autotable"
 import type { GoodReceiptResponse } from "@/lib/types"
 import {
   COLORS,
@@ -133,7 +133,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
     ]
   })
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: y,
     head: [columns],
     body: bodyRows,
