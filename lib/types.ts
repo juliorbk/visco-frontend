@@ -24,7 +24,7 @@ export type Uom =
   | "LTS" | "GL" | "GLN" | "PAQ" | "CJ" | "ROL" | "KIT" | "CIL" | "YD"
   | "TON" | "TM" | "TO" | "BOT" | "BTO" | "CTO" | "PUL" | "CL" | "FC" | "TF"
   | "PAA" | "PI2" | "PI3" | "BOL" | "CEN" | "MIL" | "AM" | "LOT" | "MTL"
-  | "BL" | "SB" | "CTE" | "PAI"
+  | "BL" | "SB" | "CTE" | "PAI" | "TR"
 
 // ── Auth ──
 

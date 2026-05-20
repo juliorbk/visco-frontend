@@ -10,12 +10,14 @@ interface NuevaRecepcionModalProps {
   isOpen: boolean
   onClose: () => void
   purchaseOrders: PurchaseOrderResponse[]
+  onSubmit?: () => Promise<void>
 }
 
 export function NuevaRecepcionModal({
   isOpen,
   onClose,
   purchaseOrders,
+  onSubmit,
 }: NuevaRecepcionModalProps) {
   const [step, setStep] = useState(1)
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderResponse | null>(null)
@@ -23,14 +25,14 @@ export function NuevaRecepcionModal({
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [destinationLocationId, setDestinationLocationId] = useState<number>(1)
+  const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
 
   const reset = () => {
     setStep(1)
     setSelectedPO(null)
     setReceivedQuantities({})
     setNotes("")
-    setDestinationLocationId(1)
+    setDestinationWarehouseId(null)
   }
 
   useEffect(() => {
@@ -70,6 +72,10 @@ export function NuevaRecepcionModal({
 
   const handleSubmit = async () => {
     if (!selectedPO) return
+    if (!destinationWarehouseId) {
+      toast.error("Selecciona un almacén destino")
+      return
+    }
     setSaving(true)
     try {
       await receiveGoods(selectedPO.id, {
@@ -78,9 +84,10 @@ export function NuevaRecepcionModal({
           receivedQuantity: receivedQuantities[item.productId] ?? 0,
         })),
         notes,
-        destinationLocationId,
+        destinationWarehouseId,
       })
       toast.success("Recepción registrada correctamente")
+      await onSubmit?.()
       onClose()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al registrar recepción")
@@ -206,13 +213,14 @@ export function NuevaRecepcionModal({
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-[#111827] mb-2">Ubicación destino</label>
+                <label className="block text-sm font-medium text-[#111827] mb-2">Almacén destino</label>
                 <select
-                  value={destinationLocationId}
-                  onChange={(e) => setDestinationLocationId(Number(e.target.value))}
+                  value={destinationWarehouseId ?? ""}
+                  onChange={(e) => setDestinationWarehouseId(Number(e.target.value))}
                   className="w-full px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 bg-white"
                   disabled={saving}
                 >
+                  <option value="" disabled>Seleccionar almacén...</option>
                   {warehouses.map((w) => (
                     <option key={w.id} value={w.id}>
                       {w.name}

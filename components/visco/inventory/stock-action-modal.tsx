@@ -42,8 +42,8 @@ export function StockActionModal({
 }) {
   const [mode, setMode] = useState<Mode>("transfer")
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [fromLocationId, setFromLocationId] = useState<number>(1)
-  const [toLocationId, setToLocationId] = useState<number>(2)
+  const [fromWarehouseId, setFromWarehouseId] = useState<number>(1)
+  const [toWarehouseId, setToWarehouseId] = useState<number>(2)
   const [quantity, setQuantity] = useState("1")
   const [newStock, setNewStock] = useState("0")
   const [reason, setReason] = useState("")
@@ -55,8 +55,8 @@ export function StockActionModal({
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
         if (wh.length >= 2) {
-          setFromLocationId(wh[0].id)
-          setToLocationId(wh[1].id)
+          setFromWarehouseId(wh[0].id)
+          setToWarehouseId(wh[1].id)
         }
       }).catch(() => {})
     }
@@ -76,13 +76,13 @@ export function StockActionModal({
     if (!user || !product) return
     const qty = Number(quantity)
     if (qty <= 0) { toast.error("La cantidad debe ser mayor a cero"); return }
-    if (fromLocationId === toLocationId) { toast.error("Origen y destino deben ser diferentes"); return }
+    if (fromWarehouseId === toWarehouseId) { toast.error("Origen y destino deben ser diferentes"); return }
     setSaving(true)
     try {
       await transferStock({
         productId: product.id,
-        fromLocationId,
-        toLocationId,
+        fromWarehouseId,
+        toWarehouseId,
         quantity: qty,
         createdById: user.id,
         unitCost: unitCost ? Number(unitCost) : null,
@@ -106,7 +106,7 @@ export function StockActionModal({
     try {
       await adjustStock({
         productId: product.id,
-        locationId: fromLocationId,
+        warehouseId: fromWarehouseId,
         newStock: ns,
         reason,
         createdById: user.id,
@@ -157,7 +157,7 @@ export function StockActionModal({
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Origen</Label>
-              <Select value={String(fromLocationId)} onValueChange={(v) => setFromLocationId(Number(v))}>
+              <Select value={String(fromWarehouseId)} onValueChange={(v) => setFromWarehouseId(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {warehouses.map((w) => (
@@ -168,7 +168,7 @@ export function StockActionModal({
             </div>
             <div className="space-y-1.5">
               <Label>Destino</Label>
-              <Select value={String(toLocationId)} onValueChange={(v) => setToLocationId(Number(v))}>
+              <Select value={String(toWarehouseId)} onValueChange={(v) => setToWarehouseId(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {warehouses.map((w) => (
@@ -196,7 +196,7 @@ export function StockActionModal({
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Almacén</Label>
-              <Select value={String(fromLocationId)} onValueChange={(v) => setFromLocationId(Number(v))}>
+              <Select value={String(fromWarehouseId)} onValueChange={(v) => setFromWarehouseId(Number(v))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {warehouses.map((w) => (

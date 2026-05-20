@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { fetchKpis } from "@/lib/services/dashboard"
-import type { KpiStatsDTO } from "@/lib/types"
+import { fetchProducts } from "@/lib/services/inventory"
+import type { KpiStatsDTO, ProductDTO } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -12,11 +13,31 @@ export function KpiCards() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchKpis()
-      .then(setData)
-      .catch(() => setData(null))
-      .finally(() => setLoading(false))
+    async function load() {
+      try {
+        const [kpiData, allProducts] = await Promise.all([
+          fetchKpis(),
+          loadAllProducts(),
+        ])
+        const totalStock = allProducts.reduce((sum, p) => sum + p.totalStock, 0)
+        setData({ ...kpiData, totalInventoryUnits: totalStock })
+      } catch {
+        setData(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
+
+  async function loadAllProducts(page = 0, accumulated: ProductDTO[] = []): Promise<ProductDTO[]> {
+    const result = await fetchProducts(page, 100)
+    const all = [...accumulated, ...result.content]
+    if (result.page.number < result.page.totalPages - 1) {
+      return loadAllProducts(page + 1, all)
+    }
+    return all
+  }
 
   if (loading) {
     return (

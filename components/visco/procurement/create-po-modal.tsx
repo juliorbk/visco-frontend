@@ -364,8 +364,8 @@ export function CreatePOModal({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lt">Lead Time (días)</Label>
-              <Input id="lt" type="number" min="0" placeholder="Opcional" value={leadTime} onChange={(e) => setLeadTime(e.target.value)} />
+              <Label htmlFor="lt">Lead Time (días) *</Label>
+              <Input id="lt" type="number" min="0" placeholder="Obligatorio" value={leadTime} onChange={(e) => setLeadTime(e.target.value)} />
             </div>
             <div className="sm:col-span-2 space-y-1.5">
               <Label>Requisición (opcional)</Label>

@@ -40,7 +40,7 @@ export function ReceiveGoodsModal({
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [destinationLocationId, setDestinationLocationId] = useState<number | null>(null)
+  const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
 
   useEffect(() => {
     if (order) {
@@ -48,7 +48,7 @@ export function ReceiveGoodsModal({
       order.items.forEach((it) => (init[it.productId] = it.quantity))
       setReceived(init)
       setNotes("")
-      setDestinationLocationId(null)
+      setDestinationWarehouseId(null)
     }
   }, [order])
 
@@ -57,7 +57,7 @@ export function ReceiveGoodsModal({
       fetchWarehouses()
         .then((wh) => {
           setWarehouses(wh)
-          if (wh.length > 0 && !destinationLocationId) setDestinationLocationId(wh[0].id)
+          if (wh.length > 0 && !destinationWarehouseId) setDestinationWarehouseId(wh[0].id)
         })
         .catch(() => {})
     }
@@ -66,7 +66,7 @@ export function ReceiveGoodsModal({
   if (!order) return null
 
   const submit = async () => {
-    if (!destinationLocationId) {
+    if (!destinationWarehouseId) {
       toast.error("Selecciona un almacén destino")
       return
     }
@@ -82,7 +82,7 @@ export function ReceiveGoodsModal({
           receivedQuantity: received[it.productId] ?? 0,
         })),
         notes,
-        destinationLocationId,
+        destinationWarehouseId,
       })
       toast.success("Recepción registrada correctamente")
       onReceived()
@@ -106,8 +106,8 @@ export function ReceiveGoodsModal({
 
         <div className="space-y-3 overflow-y-auto pr-1">
           <div className="space-y-1.5">
-            <Label>Ubicación destino</Label>
-            <Select value={String(destinationLocationId ?? "")} onValueChange={(v) => setDestinationLocationId(Number(v))}>
+            <Label>Almacén destino</Label>
+            <Select value={String(destinationWarehouseId ?? "")} onValueChange={(v) => setDestinationWarehouseId(Number(v))}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar almacén…" />
               </SelectTrigger>

@@ -12,6 +12,7 @@ import { RegisterModal } from "@/components/visco/auth/register-modal"
 import { toast } from "sonner"
 import { fetchUser } from "@/lib/auth-client"
 
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("ana.rodriguez@visco.com")

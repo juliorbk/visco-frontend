@@ -1,4 +1,4 @@
-const BASE_URL = ""
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -8,7 +8,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     Object.assign(headers, options.headers)
   }
 
-  const res = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers, credentials: "include" })
+  const url = `${BASE_URL}${endpoint}`
+  console.log(`[API] ${options.method || "GET"} ${url}`) // Debug
+  
+  const res = await fetch(url, { 
+    ...options, 
+    headers, 
+    credentials: "include" 
+  })
 
   if (res.status === 401 || res.status === 403) {
     if (typeof window !== "undefined") {
