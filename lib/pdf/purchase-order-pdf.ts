@@ -79,20 +79,22 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const doc = new jsPDF("p", "mm", "a4")
   const pageW = 210
   const margin = 20
+  const contentW = pageW - 2 * margin
   const x0 = margin
   let y = margin
 
   const supplier = order.supplier
   const warehouse = order.destinationWarehouse
 
+  // ── Logo + Title + Info ──
   addLogoPlaceholder(doc, x0, y, 40, 20)
 
-  doc.setFontSize(22)
+  doc.setFontSize(20)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
   doc.text("ORDEN DE COMPRA", pageW / 2, y + 8, { align: "center" })
 
-  const infoX = 138
+  const infoX = 135
   const infoLines = [
     ["FECHA:", formatDateShort(order.createdAt)],
     ["OC #:", order.orderNumber],
@@ -106,21 +108,27 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
     doc.text(label, infoX, y + 4 + i * 5)
     doc.setTextColor(...COLORS.text)
     doc.setFont("helvetica", "normal")
-    doc.text(value, infoX + 22, y + 4 + i * 5)
+    doc.text(value, infoX + 20, y + 4 + i * 5)
     doc.setFont("helvetica", "bold")
   })
 
-  y += 30
-  addSeparator(doc, x0, y, pageW - 2 * margin)
-  y += 10
+  y += 28
+  addSeparator(doc, x0, y, contentW)
+  y += 8
 
-  const boxW = (pageW - 2 * margin - 6) / 2
+  // ── Supplier / Ship To boxes ──
+  const boxW = (contentW - 6) / 2
+  const boxH = 30
 
+  // Supplier box
+  doc.setDrawColor(...COLORS.border)
+  doc.setFillColor(...COLORS.bgLight)
+  doc.roundedRect(x0, y, boxW, boxH, 2, 2, "FD")
   addSectionTitle(doc, x0, y, boxW, "Proveedor")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  let by = y + 16
+  let by = y + 14
   doc.text(supplier?.name ?? order.supplierName, x0 + 4, by)
   by += 5
   doc.text(supplier?.address ?? "—", x0 + 4, by)
@@ -128,32 +136,32 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   if (supplier?.email) { doc.text(supplier.email, x0 + 4, by); by += 5 }
   if (supplier?.phoneNumbers?.length) {
     doc.text("Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by)
-    by += 5
   }
 
+  // Ship To box
   const x1 = x0 + boxW + 6
+  doc.roundedRect(x1, y, boxW, boxH, 2, 2, "FD")
   addSectionTitle(doc, x1, y, boxW, "Envíe a")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  by = y + 16
+  by = y + 14
   doc.text(warehouse?.name ?? order.destinationWarehouseName ?? "—", x1 + 4, by)
   by += 5
   doc.text(warehouse?.physicalAddress ?? "—", x1 + 4, by)
   by += 5
   if (warehouse?.description) { doc.text(warehouse.description, x1 + 4, by) }
 
-  y += Math.max(by - y + 6, 36)
-  addSeparator(doc, x0, y, pageW - 2 * margin, COLORS.border)
-  y += 6
+  y += boxH + 6
 
+  // ─ Terms Row ──
   const terms = [
     ["REQUISAR", order.createdBy],
     ["EMBARCAR VÍA", order.leadTime ? `${order.leadTime} días` : "—"],
     ["F.O.B.", "—"],
     ["COND. ENVÍO", order.paymentTerms ?? "—"],
   ]
-  const colW = (pageW - 2 * margin) / 4
+  const colW = contentW / 4
   terms.forEach(([title, value], i) => {
     const cx = x0 + i * colW
     doc.setFillColor(...COLORS.primary)
@@ -167,13 +175,13 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
     doc.setFont("helvetica", "normal")
     doc.text(value, cx + 2, y + 15)
   })
-  y += 24
+  y += 22
 
+  // ── Items Table ──
   const subtotal = order.items.reduce((s, i) => s + i.subtotal, 0)
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
-  const tableW = pageW - 2 * margin
-  const colWidths = [12, tableW - 12 - 18 - 28 - 28, 18, 28, 28]
+  const colWidths = [12, contentW - 12 - 18 - 28 - 28, 18, 28, 28]
   const head = ["#", "DESCRIPCIÓN", "CANT", "P/U", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
@@ -185,9 +193,10 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const emptyCount = Math.max(0, 5 - order.items.length)
   for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", ""])
 
-  y = addTable(doc, x0, y, tableW, head, bodyRows, colWidths)
+  y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
   y += 6
 
+  // ── Totals ──
   const totalX = pageW - margin - 70
   const totalW = 70
   const totals = [["SUBTOTAL", formatCurrency(subtotal)]]
@@ -215,13 +224,14 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
 
   y = totalY + 14
 
+  // ── Comments ──
   const commentsText = order.specialConditions || order.description || "—"
-  addSectionTitle(doc, x0, y, pageW - 2 * margin, "Comentarios o instrucciones especiales")
+  addSectionTitle(doc, x0, y, contentW, "Comentarios o instrucciones especiales")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  const lines = doc.splitTextToSize(commentsText, pageW - 2 * margin - 16)
-  doc.text(lines, x0 + 4, y + 18)
+  const lines = doc.splitTextToSize(commentsText, contentW - 8)
+  doc.text(lines, x0 + 4, y + 16)
 
   return doc
 }
