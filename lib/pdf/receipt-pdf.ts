@@ -1,5 +1,4 @@
 import { jsPDF } from "jspdf"
-import autoTable from "jspdf-autotable"
 import type { GoodReceiptResponse } from "@/lib/types"
 import {
   COLORS,
@@ -8,6 +7,70 @@ import {
   formatDateLong,
   formatCurrency,
 } from "./pdf-utils"
+
+function addTable(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  head: string[],
+  body: string[][],
+  colWidths: number[],
+) {
+  const rowH = 6
+  const headH = 7
+  const border = COLORS.border
+  const primary = COLORS.primary
+  const white = COLORS.white
+  const text = COLORS.text
+
+  doc.setFillColor(...primary)
+  doc.rect(x, y, w, headH, "F")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(7)
+  doc.setTextColor(...white)
+
+  let cx = x
+  head.forEach((h, i) => {
+    doc.text(h, cx + 2, y + headH / 2 + 2)
+    cx += colWidths[i]
+    if (i < head.length - 1) {
+      doc.setDrawColor(...white)
+      doc.setLineWidth(0.2)
+      doc.line(cx, y, cx, y + headH)
+    }
+  })
+
+  doc.setDrawColor(...border)
+  doc.setLineWidth(0.3)
+  doc.line(x, y + headH, x + w, y + headH)
+
+  let cy = y + headH
+  body.forEach((row, ri) => {
+    if (ri % 2 === 1) {
+      doc.setFillColor(249, 250, 251)
+      doc.rect(x, cy, w, rowH, "F")
+    }
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(8)
+    doc.setTextColor(...text)
+
+    let rx = x
+    row.forEach((cell, ci) => {
+      const lines = doc.splitTextToSize(cell, colWidths[ci] - 4)
+      doc.text(lines[0] ?? "", rx + 2, cy + rowH / 2 + 2)
+      rx += colWidths[ci]
+      if (ci < row.length - 1) {
+        doc.line(rx, cy, rx, cy + rowH)
+      }
+    })
+
+    cy += rowH
+    doc.line(x, cy, x + w, cy)
+  })
+
+  return cy
+}
 
 export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   const doc = new jsPDF("p", "mm", "a4")
@@ -22,7 +85,6 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
   const supplierAddress = supplier?.address ?? "—"
 
-  // ── Header ──
   addLogoPlaceholder(doc, x0, y, 40, 18)
 
   doc.setFontSize(24)
@@ -39,11 +101,9 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   addSeparator(doc, x0, y, pageW - 2 * margin)
   y += 10
 
-  // ── Document Info ──
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-
   doc.text("FECHA DE RECEPCIÓN", x0, y)
   doc.text("LUGAR", x0 + 70, y)
   doc.text("ESTADO", x0 + 140, y)
@@ -64,10 +124,8 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
 
   y += 18
 
-  // ── Supplier & Warehouse Info ──
   const boxW = (pageW - 2 * margin - 8) / 2
 
-  // Supplier box
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x0, y, boxW, 28, 2, 2, "FD")
@@ -82,7 +140,6 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.text(supplierAddress, x0 + 4, y + 18)
   if (supplier?.email) doc.text(supplier.email, x0 + 4, y + 24)
 
-  // Warehouse box
   const x1 = x0 + boxW + 8
   doc.roundedRect(x1, y, boxW, 28, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
@@ -98,7 +155,6 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
 
   y += 36
 
-  // ── Items Table ──
   const hasUnitPrices = receipt.items.some((i) => i.unitPrice != null)
   const totalReceived = receipt.items.reduce((s, i) => s + i.receivedQuantity, 0)
   const totalExpected = receipt.items.reduce((s, i) => s + i.expectedQuantity, 0)
@@ -133,55 +189,29 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
     ]
   })
 
-  autoTable(doc, {
-    startY: y,
-    head: [columns],
-    body: bodyRows,
-    margin: { left: margin, right: margin },
-    tableWidth: pageW - 2 * margin,
-    styles: {
-      fontSize: 8,
-      cellPadding: 1.5,
-      lineColor: COLORS.border,
-      lineWidth: 0.3,
-      textColor: COLORS.text,
-    },
-    headStyles: {
-      fillColor: COLORS.primary,
-      textColor: COLORS.white,
-      fontStyle: "bold",
-      fontSize: 7,
-    },
-    columnStyles: {
-      0: { cellWidth: 18, halign: "center" },
-      1: { cellWidth: "auto" },
-      2: { cellWidth: 28 },
-      3: { cellWidth: 22, halign: "right" },
-      4: { cellWidth: 22, halign: "right" },
-    },
-  })
+  const tableW = pageW - 2 * margin
+  const colWidths = hasUnitPrices
+    ? [18, tableW - 18 - 28 - 22 - 22, 28, 22, 22]
+    : [18, tableW - 18 - 28 - 22 - 22, 28, 22, 22]
 
-  y = (doc as any).lastAutoTable.finalY + 6
+  y = addTable(doc, x0, y, tableW, columns, bodyRows, colWidths)
+  y += 6
 
-  // ── Summary Totals ──
   if (hasUnitPrices) {
     doc.setFontSize(8)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...COLORS.text)
     const sumX = pageW - margin - 70
-
     doc.text("Total Esperado", sumX, y)
     doc.text(`${totalExpected} uds.`, sumX + 68, y, { align: "right" })
     y += 5
     doc.text("Total Recibido", sumX, y)
     doc.text(`${totalReceived} uds.`, sumX + 68, y, { align: "right" })
     y += 3
-
     doc.setDrawColor(...COLORS.primary)
     doc.setLineWidth(0.6)
     doc.line(sumX, y, sumX + 70, y)
     y += 5
-
     doc.setFont("helvetica", "bold")
     doc.setFontSize(10)
     doc.setTextColor(...COLORS.primary)
@@ -201,10 +231,8 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
     y += 10
   }
 
-  // ── Signature & Observations ──
   const footBoxW = (pageW - 2 * margin - 8) / 2
 
-  // Signature box
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x0, y, footBoxW, 40, 2, 2, "FD")
@@ -219,7 +247,6 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.setTextColor(...COLORS.textMuted)
   doc.text("Nombre y firma", x0 + footBoxW / 2, y + 34, { align: "center" })
 
-  // Observations box
   const obsX = x0 + footBoxW + 8
   doc.roundedRect(obsX, y, footBoxW, 40, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
