@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -78,6 +78,22 @@ export default function InventoryPage() {
     fetchData()
   }, [page, debouncedSearch, category, refreshTick])
 
+  const mainCategories = useMemo(
+    () => categories.filter((c) => c.parentId === null),
+    [categories],
+  )
+
+  const subCategoriesByParent = useMemo(() => {
+    const map = new Map<number, Category[]>()
+    categories.forEach((c) => {
+      if (c.parentId !== null) {
+        if (!map.has(c.parentId)) map.set(c.parentId, [])
+        map.get(c.parentId)!.push(c)
+      }
+    })
+    return map
+  }, [categories])
+
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
     if (p.totalStock < p.reorderPoint) return "Bajo stock"
@@ -135,11 +151,21 @@ export default function InventoryPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.name}>
-                {c.name}
-              </SelectItem>
-            ))}
+            {mainCategories.map((main) => {
+              const subs = subCategoriesByParent.get(main.id) ?? []
+              return (
+                <div key={main.id}>
+                  <SelectItem value={main.name}>
+                    {main.name}
+                  </SelectItem>
+                  {subs.map((sub) => (
+                    <SelectItem key={sub.id} value={sub.name} className="pl-6">
+                      └ {sub.name}
+                    </SelectItem>
+                  ))}
+                </div>
+              )
+            })}
           </SelectContent>
         </Select>
       </div>

@@ -48,16 +48,16 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
       <aside
         className={cn(
-          "fixed left-0 top-0 bottom-0 w-[220px] flex-col bg-[#7b1a1a] text-white z-50 transition-transform duration-300",
+          "fixed left-0 top-0 bottom-0 w-[220px] flex-col bg-sidebar text-sidebar-foreground z-50 transition-transform duration-300",
           "md:flex md:translate-x-0 md:z-30",
           open ? "flex translate-x-0" : "hidden -translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between px-5 py-6 border-b border-[#5c1212]">
+        <div className="flex items-center justify-between px-5 py-6 border-b border-sidebar-border">
           <Logo size="md" />
           <button
             onClick={onClose}
-            className="md:hidden size-8 grid place-items-center rounded-md hover:bg-[#5c1212] text-white/80"
+            className="md:hidden size-8 grid place-items-center rounded-md hover:bg-sidebar-accent text-sidebar-foreground/80"
             aria-label="Cerrar menú"
           >
             <X className="size-5" />
@@ -75,11 +75,11 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                 onClick={onClose}
                 className={cn(
                   "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                  active ? "bg-[#5c1212] text-white" : "text-white/85 hover:bg-[#5c1212]/60 hover:text-white",
+                  active ? "bg-sidebar-accent text-sidebar-foreground" : "text-sidebar-foreground/85 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-white" aria-hidden />
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r bg-sidebar-primary" aria-hidden />
                 )}
                 <Icon className="size-4 shrink-0" />
                 <span>{item.label}</span>
@@ -88,11 +88,11 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           })}
         </nav>
 
-        <div className="p-3 border-t border-[#5c1212]">
+        <div className="p-3 border-t border-sidebar-border">
           <Link
             href="/procurement?new=1"
             onClick={onClose}
-            className="flex items-center justify-center gap-1.5 w-full rounded-md bg-[#3d0a0a] hover:bg-[#2a0707] text-white text-xs font-medium px-3 py-2.5 transition-colors"
+            className="flex items-center justify-center gap-1.5 w-full rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-3 py-2.5 transition-colors"
           >
             <Plus className="size-3.5" />
             New Purchase Order

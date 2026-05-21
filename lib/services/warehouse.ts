@@ -57,10 +57,12 @@ export async function fetchMovements(
   size = 20,
   warehouseId?: number,
   type?: string,
+  productId?: number,
 ): Promise<Page<InventoryMovementResponse>> {
   let url = `/api/warehouse/movements?page=${page}&size=${size}`
   if (warehouseId) url += `&warehouseId=${warehouseId}`
   if (type) url += `&type=${type}`
+  if (productId) url += `&productId=${productId}`
   return api.get<Page<InventoryMovementResponse>>(url)
 }
 
@@ -74,4 +76,29 @@ export async function fetchReceiptsByOrder(orderId: number): Promise<GoodReceipt
 
 export async function fetchReceipt(id: number): Promise<GoodReceiptResponse> {
   return api.get<GoodReceiptResponse>(`/api/warehouse/receipts/${id}`)
+}
+
+export async function exportMovements(
+  warehouseId?: number,
+  type?: string,
+  productId?: number,
+): Promise<void> {
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+  let url = `${BASE_URL}/api/warehouse/movements/export?`
+  if (warehouseId) url += `warehouseId=${warehouseId}&`
+  if (type) url += `type=${type}&`
+  if (productId) url += `productId=${productId}&`
+
+  const res = await fetch(url, { credentials: "include" })
+  if (!res.ok) throw new Error("Error al exportar movimientos")
+
+  const blob = await res.blob()
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = downloadUrl
+  a.download = `stock-movements-${new Date().toISOString().split("T")[0]}.csv`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(downloadUrl)
 }

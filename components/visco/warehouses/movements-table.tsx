@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InventoryMovementResponse, MovementType, Page } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, ArrowRightLeft, Equal, Truck, ChevronLeft, ChevronRight } from "lucide-react"
+import { Loader2, ArrowRightLeft, Equal, Truck, ChevronLeft, ChevronRight, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { MovementDetailModal } from "@/components/visco/warehouses/movement-detail-modal"
+import { exportMovements } from "@/lib/services/warehouse"
+import { toast } from "sonner"
 
 const typeConfig: Record<MovementType, { label: string; color: string; icon: typeof ArrowRightLeft }> = {
   TRANSFER: {
@@ -40,6 +43,8 @@ export function MovementsTable({
   onPageChange,
   typeFilter,
   onTypeFilterChange,
+  warehouseName,
+  warehouseId,
 }: {
   data: InventoryMovementResponse[]
   loading: boolean
@@ -48,7 +53,24 @@ export function MovementsTable({
   onPageChange: (p: number) => void
   typeFilter: string
   onTypeFilterChange: (t: string) => void
+  warehouseName?: string | null
+  warehouseId?: number | null
 }) {
+  const [selectedMovement, setSelectedMovement] = useState<InventoryMovementResponse | null>(null)
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = async () => {
+    setExporting(true)
+    try {
+      const type = typeFilter === "all" ? undefined : typeFilter
+      await exportMovements(warehouseId ?? undefined, type)
+      toast.success("Movimientos exportados correctamente")
+    } catch {
+      toast.error("Error al exportar movimientos")
+    } finally {
+      setExporting(false)
+    }
+  }
   if (loading) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
@@ -68,7 +90,7 @@ export function MovementsTable({
 
   return (
     <div>
-      <div className="mb-3">
+      <div className="mb-3 flex items-center gap-3 flex-wrap">
         <Select value={typeFilter} onValueChange={onTypeFilterChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filtrar por tipo" />
@@ -80,6 +102,21 @@ export function MovementsTable({
             <SelectItem value="RECEIPT">Recepciones</SelectItem>
           </SelectContent>
         </Select>
+        {warehouseName && (
+          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+            Almacén: <span className="font-medium text-foreground">{warehouseName}</span>
+          </span>
+        )}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleExport}
+          disabled={exporting || data.length === 0}
+          className="ml-auto"
+        >
+          {exporting ? <Loader2 className="size-4 mr-1 animate-spin" /> : <Download className="size-4 mr-1" />}
+          Exportar
+        </Button>
       </div>
 
       <div className="rounded-xl border bg-card divide-y">
@@ -87,7 +124,11 @@ export function MovementsTable({
           const cfg = typeConfig[m.type]
           const Icon = cfg.icon
           return (
-            <div key={m.id} className="p-4 hover:bg-muted/30 transition-colors">
+            <div
+              key={m.id}
+              className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
+              onClick={() => setSelectedMovement(m)}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={cn("size-9 shrink-0 rounded-lg grid place-items-center border", cfg.color)}>
@@ -161,6 +202,12 @@ export function MovementsTable({
           </Button>
         </div>
       )}
+
+      <MovementDetailModal
+        movement={selectedMovement}
+        open={!!selectedMovement}
+        onOpenChange={(o) => { if (!o) setSelectedMovement(null) }}
+      />
     </div>
   )
 }

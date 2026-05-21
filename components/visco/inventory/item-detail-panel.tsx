@@ -3,10 +3,13 @@
 import { useState } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import type { ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { StockActionModal } from "@/components/visco/inventory/stock-action-modal"
-import { Image as ImageIcon, Pencil, ShoppingCart, ArrowRightLeft, Equal, RefreshCw } from "lucide-react"
+import { ProductMovementsHistory } from "@/components/visco/inventory/product-movements-history"
+import { ProductStockBreakdownView } from "@/components/visco/warehouses/product-stock-breakdown"
+import { Image as ImageIcon, Pencil, ShoppingCart, ArrowRightLeft, Equal, RefreshCw, History } from "lucide-react"
 
 export function ItemDetailPanel({
   product,
@@ -54,34 +57,51 @@ export function ItemDetailPanel({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Stat label="Total Stock" value={`${product.totalStock} ${product.uom.toLowerCase()}`} />
-              <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
-              <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
-              <Stat label="Supplier" value={product.supplierName ?? "-"} />
-              <Stat label="Category" value={product.categoryName ?? "-"} />
-              <Stat label="SAP Code" value={product.sapCode} />
-            </div>
+            <Tabs defaultValue="info">
+              <TabsList className="w-full">
+                <TabsTrigger value="info" className="flex-1">Info</TabsTrigger>
+                <TabsTrigger value="history" className="flex-1">
+                  <History className="size-3.5 mr-1" /> Historial
+                </TabsTrigger>
+              </TabsList>
 
-            <div className="flex flex-col gap-2 pt-2">
-              <Button
-                variant="outline"
-                className="bg-card"
-                onClick={() => onEdit(product)}
-              >
-                <Pencil className="size-4" /> Edit Item
-              </Button>
-              <Button
-                variant="outline"
-                className="bg-card"
-                onClick={() => setStockActionOpen(true)}
-              >
-                <RefreshCw className="size-4" /> Stock Actions
-              </Button>
-              <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-                <ShoppingCart className="size-4" /> Create PO
-              </Button>
-            </div>
+              <TabsContent value="info" className="mt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <Stat label="Total Stock" value={`${product.totalStock} ${product.uom.toLowerCase()}`} />
+                  <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
+                  <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
+                  <Stat label="Supplier" value={product.supplierName ?? "-"} />
+                  <Stat label="Category" value={product.categoryName ?? "-"} />
+                  <Stat label="SAP Code" value={product.sapCode} />
+                </div>
+
+                <ProductStockBreakdownView productId={product.id} />
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    className="bg-card"
+                    onClick={() => onEdit(product)}
+                  >
+                    <Pencil className="size-4" /> Edit Item
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="bg-card"
+                    onClick={() => setStockActionOpen(true)}
+                  >
+                    <RefreshCw className="size-4" /> Stock Actions
+                  </Button>
+                  <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
+                    <ShoppingCart className="size-4" /> Create PO
+                  </Button>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-4">
+                <ProductMovementsHistory productId={product.id} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
 

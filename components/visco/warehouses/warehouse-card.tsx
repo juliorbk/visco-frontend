@@ -1,17 +1,23 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import type { WarehouseStockSummary } from "@/lib/types"
 import { Package } from "lucide-react"
+
+interface WarehouseCardData {
+  id: number
+  name: string
+  totalStock: number
+  totalPendingStock: number
+}
 
 export function WarehouseCard({
   warehouse,
   selected,
   onSelect,
 }: {
-  warehouse: WarehouseStockSummary
+  warehouse: WarehouseCardData
   selected: boolean
-  onSelect: (w: WarehouseStockSummary) => void
+  onSelect: (w: WarehouseCardData) => void
 }) {
   return (
     <button
@@ -30,9 +36,9 @@ export function WarehouseCard({
             <Package className="size-5 text-[#7b1a1a]" />
           </div>
           <div className="min-w-0">
-            <p className="font-medium text-sm truncate">{warehouse.warehouseName}</p>
+            <p className="font-medium text-sm truncate">{warehouse.name}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              ID: {warehouse.warehouseId}
+              ID: {warehouse.id}
             </p>
           </div>
         </div>
@@ -40,7 +46,7 @@ export function WarehouseCard({
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-muted/50 p-2 text-center">
-          <p className="font-semibold text-foreground">{warehouse.totalStock}</p>
+          <p className="font-semibold text-foreground">{warehouse.totalStock}</p> 
           <p className="text-muted-foreground">En stock</p>
         </div>
         <div className="rounded-lg bg-muted/50 p-2 text-center">

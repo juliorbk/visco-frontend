@@ -24,7 +24,7 @@ import { adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, Equal } from "lucide-react"
+import { Loader2, Equal, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 export function AdjustModal({
@@ -90,6 +90,15 @@ export function AdjustModal({
         unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`Stock ajustado a ${ns}`)
+      if (selectedProduct && ns <= selectedProduct.reorderPoint) {
+        toast.warning(
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="size-4" />
+            <span>Stock por debajo del punto de reorden ({selectedProduct.reorderPoint})</span>
+          </div>,
+          { duration: 6000 }
+        )
+      }
       onDone()
       close()
     } catch (err) {

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { fetchKpis } from "@/lib/services/dashboard"
-import { fetchProducts } from "@/lib/services/inventory"
-import type { KpiStatsDTO, ProductDTO } from "@/lib/types"
+import type { KpiStatsDTO } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
@@ -15,13 +14,11 @@ export function KpiCards() {
   useEffect(() => {
     async function load() {
       try {
-        const [kpiData, allProducts] = await Promise.all([
-          fetchKpis(),
-          loadAllProducts(),
-        ])
-        const totalStock = allProducts.reduce((sum, p) => sum + p.totalStock, 0)
-        setData({ ...kpiData, totalInventoryUnits: totalStock })
-      } catch {
+        // Ahora solo hacemos UNA petición ligera y rápida
+        const kpiData = await fetchKpis()
+        setData(kpiData)
+      } catch (error) {
+        console.error("Error cargando KPIs", error)
         setData(null)
       } finally {
         setLoading(false)
@@ -29,15 +26,6 @@ export function KpiCards() {
     }
     load()
   }, [])
-
-  async function loadAllProducts(page = 0, accumulated: ProductDTO[] = []): Promise<ProductDTO[]> {
-    const result = await fetchProducts(page, 100)
-    const all = [...accumulated, ...result.content]
-    if (result.page.number < result.page.totalPages - 1) {
-      return loadAllProducts(page + 1, all)
-    }
-    return all
-  }
 
   if (loading) {
     return (
@@ -64,14 +52,15 @@ export function KpiCards() {
     {
       icon: <Truck className="size-5" />,
       label: "Pedidos totales",
-      value: data.totalOrders.toLocaleString(),
+      value: data.totalOrders?.toLocaleString() ?? "0",
       delta: 0,
       trend: "flat" as const,
     },
     {
       icon: <Monitor className="size-5" />,
       label: "Inventario total",
-      value: data.totalInventoryUnits.toLocaleString(),
+      // Asumimos que el backend ahora enviará esta propiedad
+      value: data.totalInventoryUnits?.toLocaleString() ?? "0", 
       unit: "unidades",
       delta: 0,
       trend: "flat" as const,
@@ -79,16 +68,16 @@ export function KpiCards() {
     {
       icon: <DollarSign className="size-5" />,
       label: "Gastos mensuales",
-      value: `$${(data.monthlySpend / 1000).toFixed(1)}k`,
+      value: `$${((data.monthlySpend ?? 0) / 1000).toFixed(1)}k`,
       delta: 0,
       trend: "flat" as const,
     },
     {
       icon: <CheckCircle2 className="size-5" />,
       label: "Tasa de cumplimiento",
-      value: `${data.fulfillmentRate.toFixed(1)}%`,
-      delta: data.fulfillmentRate - 90,
-      trend: data.fulfillmentRate >= 90 ? ("up" as const) : ("down" as const),
+      value: `${(data.fulfillmentRate ?? 0).toFixed(1)}%`,
+      delta: (data.fulfillmentRate ?? 0) - 90,
+      trend: (data.fulfillmentRate ?? 0) >= 90 ? ("up" as const) : ("down" as const),
     },
   ]
 

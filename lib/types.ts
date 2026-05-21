@@ -275,6 +275,7 @@ export interface AdjustStockRequest {
 export interface Category {
   id: number
   name: string
+  parentId: number | null
   parentCategory?: Category | null
 }
 

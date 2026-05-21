@@ -23,7 +23,7 @@ import {
 import { transferStock, adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, ArrowRightLeft, Equal } from "lucide-react"
+import { Loader2, ArrowRightLeft, Equal, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -88,6 +88,15 @@ export function StockActionModal({
         unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`${qty} unidades transferidas`)
+      if (product.totalStock - qty <= product.reorderPoint) {
+        toast.warning(
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="size-4" />
+            <span>Stock bajo después de la transferencia. Punto de reorden: {product.reorderPoint}</span>
+          </div>,
+          { duration: 6000 }
+        )
+      }
       onDone()
       close()
     } catch (err) {
@@ -113,6 +122,15 @@ export function StockActionModal({
         unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`Stock ajustado a ${ns}`)
+      if (ns <= product.reorderPoint) {
+        toast.warning(
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="size-4" />
+            <span>Stock por debajo del punto de reorden ({product.reorderPoint})</span>
+          </div>,
+          { duration: 6000 }
+        )
+      }
       onDone()
       close()
     } catch (err) {

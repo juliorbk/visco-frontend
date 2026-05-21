@@ -48,14 +48,14 @@
 
   --radius: 0.625rem;
 
-  --sidebar: #7b1a1a;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #7b1a1a;
+  --sidebar: #4a0e0e;
+  --sidebar-foreground: #f0ece8;
+  --sidebar-primary: #d4c5b9;
+  --sidebar-primary-foreground: #4a0e0e;
   --sidebar-accent: #5c1212;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #5c1212;
-  --sidebar-ring: #ffffff;
+  --sidebar-accent-foreground: #f0ece8;
+  --sidebar-border: #3d0a0a;
+  --sidebar-ring: #d4c5b9;
 }
 
 .dark {

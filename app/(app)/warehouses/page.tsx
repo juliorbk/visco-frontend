@@ -10,14 +10,15 @@ import { MovementsTable } from "@/components/visco/warehouses/movements-table"
 import { TransferModal } from "@/components/visco/warehouses/transfer-modal"
 import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
-import { fetchStockSummary, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
-import type { WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
+import { fetchStockSummary, fetchWarehouses, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
+import type { WarehouseResponse, WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
 import { Plus, ArrowRightLeft, Equal, Warehouse, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 20
 
 export default function WarehousesPage() {
+  const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [stockSummary, setStockSummary] = useState<WarehouseStockSummary[]>([])
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [selectedWhId, setSelectedWhId] = useState<number | null>(null)
@@ -37,10 +38,14 @@ export default function WarehousesPage() {
   const loadSummary = useCallback(async () => {
     try {
       setLoadingSummary(true)
-      const data = await fetchStockSummary()
-      setStockSummary(data)
-      if (data.length > 0 && selectedWhId === null) {
-        setSelectedWhId(data[0].warehouseId)
+      const [whData, summaryData] = await Promise.all([
+        fetchWarehouses(),
+        fetchStockSummary(),
+      ])
+      setWarehouses(whData)
+      setStockSummary(summaryData)
+      if (whData.length > 0 && selectedWhId === null) {
+        setSelectedWhId(whData[0].id)
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar resumen")
@@ -66,7 +71,7 @@ export default function WarehousesPage() {
     try {
       setLoadingMovements(true)
       const type = movementTypeFilter === "all" ? undefined : movementTypeFilter
-      const res = await fetchMovements(movementsPage, PAGE_SIZE, undefined, type)
+      const res = await fetchMovements(movementsPage, PAGE_SIZE, selectedWhId ?? undefined, type)
       setMovements(res.content ?? [])
       setMovementsTotalPages(res.page.totalPages)
     } catch (err) {
@@ -74,13 +79,22 @@ export default function WarehousesPage() {
     } finally {
       setLoadingMovements(false)
     }
-  }, [movementsPage, movementTypeFilter])
+  }, [movementsPage, movementTypeFilter, selectedWhId])
 
   useEffect(() => { loadSummary() }, [loadSummary])
   useEffect(() => { loadDetail() }, [loadDetail])
   useEffect(() => { loadMovements() }, [loadMovements])
 
   const selectedSummary = stockSummary.find((s) => s.warehouseId === selectedWhId) ?? null
+
+  const warehousesWithStock = warehouses.map((w) => {
+    const summary = stockSummary.find((s) => s.warehouseId === w.id)
+    return {
+      ...w,
+      totalStock: summary?.totalStock ?? 0,
+      totalPendingStock: summary?.totalPendingStock ?? 0,
+    }
+  })
 
   return (
     <div>
@@ -132,18 +146,18 @@ export default function WarehousesPage() {
                   <Loader2 className="size-5 animate-spin" />
                   Cargando almacenes…
                 </div>
-              ) : stockSummary.length === 0 ? (
+              ) : warehousesWithStock.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
                   No hay almacenes registrados.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {stockSummary.map((s) => (
+                  {warehousesWithStock.map((w) => (
                     <WarehouseCard
-                      key={s.warehouseId}
-                      warehouse={s}
-                      selected={selectedWhId === s.warehouseId}
-                      onSelect={(w) => setSelectedWhId(w.warehouseId)}
+                      key={w.id}
+                      warehouse={w}
+                      selected={selectedWhId === w.id}
+                      onSelect={(wh) => { setSelectedWhId(wh.id); setMovementsPage(0) }}
                     />
                   ))}
                 </div>
@@ -167,6 +181,8 @@ export default function WarehousesPage() {
             onPageChange={setMovementsPage}
             typeFilter={movementTypeFilter}
             onTypeFilterChange={(t) => { setMovementTypeFilter(t); setMovementsPage(0) }}
+            warehouseName={selectedSummary?.warehouseName ?? null}
+            warehouseId={selectedWhId}
           />
         </TabsContent>
       </Tabs>

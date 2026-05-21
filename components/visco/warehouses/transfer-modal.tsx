@@ -24,7 +24,7 @@ import { transferStock, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, ArrowRightLeft } from "lucide-react"
+import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 export function TransferModal({
@@ -96,6 +96,15 @@ export function TransferModal({
         reason: reason || null,
       })
       toast.success(`${qty} unidades transferidas`)
+      if (selectedProduct && selectedProduct.totalStock - qty <= selectedProduct.reorderPoint) {
+        toast.warning(
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="size-4" />
+            <span>Stock bajo después de la transferencia. Punto de reorden: {selectedProduct.reorderPoint}</span>
+          </div>,
+          { duration: 6000 }
+        )
+      }
       onDone()
       close()
     } catch (err) {

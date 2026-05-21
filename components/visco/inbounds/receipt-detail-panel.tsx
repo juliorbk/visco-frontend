@@ -97,9 +97,11 @@ export function ReceiptDetailPanel({
             </thead>
             <tbody>
               {receipt.items.map((item) => {
-                const diff = item.difference
+                // Nueva lógica: Esperado menos Recibido
+                const diff = item.expectedQuantity - item.receivedQuantity
                 const isComplete = diff === 0
-                const isPartial = diff < 0
+                const isMissing = diff > 0 // Faltan (Positivo)
+                const isExtra = diff < 0 // Sobran (Negativo)
 
                 return (
                   <tr key={item.productId} className="border-b border-[#f3f4f6] hover:bg-[#f5f5f7]">
@@ -111,10 +113,13 @@ export function ReceiptDetailPanel({
                       {isComplete && (
                         <span className="text-green-700 flex items-center justify-end gap-1">✓ 0</span>
                       )}
-                      {isPartial && (
+                      {isMissing && (
                         <span className="text-red-700 flex items-center justify-end gap-1">⚠ {diff}</span>
                       )}
-                      {diff > 0 && <span className="text-blue-700">+{diff}</span>}
+                      {isExtra && (
+                        /* El signo menos ya viene incluido en el número negativo, así que removemos el "+" que estaba antes */
+                        <span className="text-blue-700 flex items-center justify-end gap-1">{diff}</span>
+                      )}
                     </td>
                   </tr>
                 )

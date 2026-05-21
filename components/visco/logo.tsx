@@ -3,38 +3,34 @@ import { cn } from "@/lib/utils"
 interface LogoProps {
   className?: string
   showSubtitle?: boolean
-  color?: "white" | "brand"
   size?: "sm" | "md" | "lg"
+  // Si necesitas que la imagen sea blanca en modo oscuro, considera usar un SVG 
+  // o pasar un prop de imagen diferente (ej. srcWhite / srcBrand).
 }
 
 /**
- * "VISCO ORINOCO" logo. Stacked two lines, vertical separator splits
- * "V | SCO" on line 1 and "OR | NOCO" on line 2.
+ * "VISCO ORINOCO" logo.
+ * Utiliza el archivo visco-logo.png en lugar de texto.
  */
-export function Logo({ className, showSubtitle = true, color = "white", size = "md" }: LogoProps) {
-  const colorClass = color === "white" ? "text-white" : "text-[#7b1a1a]"
+export function Logo({ className, showSubtitle = true, size = "md" }: LogoProps) {
+  // Ajustamos el tamaño basándonos en el ancho (w) en lugar del tamaño de fuente
   const sizeClass =
-    size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-lg"
-  const sepColor = color === "white" ? "bg-white/70" : "bg-[#7b1a1a]/60"
+    size === "sm" ? "w-24" : size === "lg" ? "w-48" : "w-32"
 
   return (
-    <div className={cn("flex flex-col font-serif tracking-tight", colorClass, className)}>
-      <div className={cn("flex items-center gap-1 font-bold leading-none", sizeClass)}>
-        <span>V</span>
-        <span className={cn("h-[0.85em] w-px", sepColor)} aria-hidden />
-        <span>SCO</span>
-      </div>
-      <div className={cn("flex items-center gap-1 font-bold leading-none mt-1", sizeClass)}>
-        <span>OR</span>
-        <span className={cn("h-[0.85em] w-px", sepColor)} aria-hidden />
-        <span>NOCO</span>
-      </div>
+    <div className={cn("flex flex-col items-start tracking-tight", className)}>
+      
+      <img 
+        src="/visco-logo.png" // Asegúrate de que la ruta apunte correctamente a tu imagen
+        alt="Visco Orinoco Logo"
+        className={cn("object-contain", sizeClass)}
+      />
+
       {showSubtitle && (
         <span
           className={cn(
-            "mt-1.5 font-sans uppercase tracking-[0.18em] not-italic",
-            size === "sm" ? "text-[9px]" : "text-[10px]",
-            color === "white" ? "text-white/75" : "text-[#7b1a1a]/70",
+            "mt-1.5 font-sans uppercase tracking-[0.18em] not-italic text-sidebar-primary/70",
+            size === "sm" ? "text-[9px]" : "text-[10px]"
           )}
         >
           Enterprise Tier

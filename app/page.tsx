@@ -15,7 +15,7 @@ import { fetchUser } from "@/lib/auth-client"
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("ana.rodriguez@visco.com")
+  const [email, setEmail] = useState("example@visco.com")
   const [password, setPassword] = useState("demo1234")
   const [showPwd, setShowPwd] = useState(false)
   const [remember, setRemember] = useState(true)
