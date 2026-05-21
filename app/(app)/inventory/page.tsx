@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/select"
 import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight } from "lucide-react"
 import { fetchProducts } from "@/lib/services/inventory"
-import type { ProductDTO } from "@/lib/types"
+import { fetchCategories } from "@/lib/services/categories"
+import type { ProductDTO, Category } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { ItemDetailPanel } from "@/components/visco/inventory/item-detail-panel"
 import { AddItemModal } from "@/components/visco/inventory/add-item-modal"
@@ -30,13 +31,14 @@ export default function InventoryPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
-  
-// Nuevo estado para el debounce
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  // Estados de paginación
+  const [categories, setCategories] = useState<Category[]>([])
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
+
+  useEffect(() => {
+    fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
+  }, [])
 
 const load = useCallback(async () => {
   try {
@@ -60,9 +62,6 @@ useEffect(() => {
 useEffect(() => {
   load()
 }, [page, load])
-
-// Simplifica esto
-const filtered = products 
 
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
@@ -115,6 +114,19 @@ const filtered = products
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Todas las categorías" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.name}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
@@ -137,14 +149,14 @@ const filtered = products
                     <Loader2 className="size-6 animate-spin mx-auto" />
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No hay productos que coincidan con tu búsqueda.
                   </td>
                 </tr>
               ) : (
-                filtered.map((p) => (
+                products.map((p) => (
                   <tr
                     key={p.id}
                     onClick={() => setSelected(p)}
