@@ -92,7 +92,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.accent)
-  doc.text("NOTA DE ENTREGA", pageW - margin, y + 7, { align: "right" })
+  doc.text("NOTA DE RECEPCION", pageW - margin, y + 7, { align: "right" })
 
   doc.setFontSize(11)
   doc.setFont("helvetica", "bold")

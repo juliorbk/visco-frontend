@@ -63,7 +63,7 @@ export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, 
   doc.roundedRect(x, y, w, h, 3, 3, "FD")
   doc.setFontSize(10)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text("[Logo]", x + w / 2, y + h / 2 + 3, { align: "center" })
+doc.addImage("visco-logo.png", "PNG", x + w / 4, y + h / 4, w / 2, h / 2);
 }
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {
