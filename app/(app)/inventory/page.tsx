@@ -30,42 +30,39 @@ export default function InventoryPage() {
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
-
+  
+// Nuevo estado para el debounce
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   // Estados de paginación
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetchProducts(page, 20)
-      setProducts(res.content ?? [])
-      setTotalPages(res.page.totalPages)
-      setTotalElements(res.page.totalElements)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar productos")
-    } finally {
-      setLoading(false)
-    }
-  }, [page])
+const load = useCallback(async () => {
+  try {
+    setLoading(true)
+    const res = await fetchProducts(page, 20, search, category)
+    setProducts(res.content ?? [])
+    setTotalPages(res.page.totalPages)
+    setTotalElements(res.page.totalElements)
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "Error al cargar productos")
+  } finally {
+    setLoading(false)
+  }
+}, [page, search, category])
 
-  useEffect(() => {
-    load()
-  }, [load])
+useEffect(() => {
+  setPage(0)
+  load()
+}, [search, category])
 
-  // Nota: Este filtrado aplicará únicamente sobre los elementos de la página actual.
-  // Para un filtrado global, deberías enviar el `search` y `category` a la API en la función load().
-  const filtered = useMemo(() => {
-    return products.filter((p) => {
-      const matchesSearch =
-        !search ||
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase())
-      const matchesCat = category === "all" || (p.categoryName?.toLowerCase() === category.toLowerCase())
-      return matchesSearch && matchesCat
-    })
-  }, [products, search, category])
+useEffect(() => {
+  load()
+}, [page, load])
+
+// Simplifica esto
+const filtered = products 
 
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"

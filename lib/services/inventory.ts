@@ -1,8 +1,21 @@
 import { api } from "@/lib/api"
 import type { ProductDTO, Page } from "@/lib/types"
 
-export async function fetchProducts(page = 0, size = 50): Promise<Page<ProductDTO>> {
-  return api.get<Page<ProductDTO>>(`/api/inventory/products?page=${page}&size=${size}`)
+export async function fetchProducts(
+  page = 0,
+  size = 50,
+  search?: string,
+  category?: string
+): Promise<Page<ProductDTO>> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    size: size.toString(),
+  })
+
+  if (search) params.append("search", search)
+  if (category && category !== "all") params.append("category", category)
+
+  return api.get<Page<ProductDTO>>(`/api/inventory/products?${params.toString()}`)
 }
 
 export async function fetchProduct(id: number): Promise<ProductDTO> {
