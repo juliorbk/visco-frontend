@@ -22,7 +22,8 @@ import {
 import { UOM_OPTIONS } from "@/lib/mock-data"
 import { createProduct, updateProduct } from "@/lib/services/inventory"
 import { fetchSuppliers } from "@/lib/services/suppliers"
-import type { ProductDTO, SupplierDTO } from "@/lib/types"
+import { fetchCategories } from "@/lib/services/categories"
+import type { ProductDTO, SupplierDTO, Category } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -34,6 +35,7 @@ interface FormState {
   uom: string
   reorderPoint: string
   supplierId: number | null
+  categoryId: number | null
 }
 
 const empty: FormState = {
@@ -44,6 +46,7 @@ const empty: FormState = {
   uom: "UNIDAD",
   reorderPoint: "0",
   supplierId: null,
+  categoryId: null,
 }
 
 export function AddItemModal({
@@ -60,10 +63,12 @@ export function AddItemModal({
   const [form, setForm] = useState<FormState>(empty)
   const [saving, setSaving] = useState(false)
   const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
 
   useEffect(() => {
     if (open) {
       fetchSuppliers(0, 200).then((res) => setSuppliers(res.content ?? [])).catch(() => {})
+      fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
     }
   }, [open])
 
@@ -77,6 +82,7 @@ export function AddItemModal({
         uom: editing.uom,
         reorderPoint: String(editing.reorderPoint),
         supplierId: editing.supplierId,
+        categoryId: editing.categoryId,
       })
     } else {
       setForm(empty)
@@ -98,6 +104,7 @@ export function AddItemModal({
         uom: form.uom,
         reorderPoint: Number(form.reorderPoint) || 0,
         supplierId: form.supplierId,
+        categoryId: form.categoryId,
       }
       if (editing) {
         await updateProduct(editing.id, data)
@@ -213,6 +220,26 @@ export function AddItemModal({
                 {suppliers.map((s) => (
                   <SelectItem key={s.id} value={String(s.id)}>
                     {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Categoría</Label>
+            <Select
+              value={form.categoryId ? String(form.categoryId) : ""}
+              onValueChange={(v) => update("categoryId", v ? Number(v) : null)}
+              disabled={saving}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sin categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
