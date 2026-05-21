@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,43 +25,58 @@ import { toast } from "sonner"
 export default function InventoryPage() {
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Búsqueda con debounce
   const [search, setSearch] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
   const [category, setCategory] = useState<string>("all")
+  const [categories, setCategories] = useState<Category[]>([])
+  
+  // UI states
   const [selected, setSelected] = useState<ProductDTO | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
+
+  // Paginación y refresco
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
+  const [refreshTick, setRefreshTick] = useState(0)
 
   useEffect(() => {
     fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
   }, [])
 
-const load = useCallback(async () => {
-  try {
-    setLoading(true)
-    const res = await fetchProducts(page, 20, search, category)
-    setProducts(res.content ?? [])
-    setTotalPages(res.page.totalPages)
-    setTotalElements(res.page.totalElements)
-  } catch (err) {
-    toast.error(err instanceof Error ? err.message : "Error al cargar productos")
-  } finally {
-    setLoading(false)
-  }
-}, [page, search, category])
+  // 1. Efecto Debounce
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 500)
+    return () => clearTimeout(timer)
+  }, [search])
 
-useEffect(() => {
-  setPage(0)
-  load()
-}, [search, category])
+  // 2. Efecto Filtros: Reinicia a la página 0 si la búsqueda o categoría cambian
+  useEffect(() => {
+    setPage(0)
+  }, [debouncedSearch, category])
 
-useEffect(() => {
-  load()
-}, [page, load])
+  // 3. Efecto Fetch Unificado
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const res = await fetchProducts(page, 20, debouncedSearch, category)
+        setProducts(res.content ?? [])
+        setTotalPages(res.page.totalPages)
+        setTotalElements(res.page.totalElements)
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Error al cargar productos")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [page, debouncedSearch, category, refreshTick])
 
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
@@ -183,7 +198,6 @@ useEffect(() => {
           </table>
         </div>
 
-        {/* Paginación */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-5 py-4 border-t border-border bg-[#fafafa]">
             <Button
@@ -229,7 +243,10 @@ useEffect(() => {
           if (!o) setEditing(null)
         }}
         editing={editing}
-        onSave={() => load()}
+        onSave={() => {
+          setPage(0) // Regresamos al inicio para ver el producto recién creado
+          setRefreshTick((prev) => prev + 1) // Forzamos al useEffect a disparar fetchProducts
+        }}
       />
 
       <CategoryManagerModal
