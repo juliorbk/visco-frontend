@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select"
 import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react"
 import { toast } from "sonner"
-import { api } from "@/lib/api"
 import type { RegisterRequest, UserRole, CostCenter } from "@/lib/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
@@ -97,7 +96,17 @@ useEffect(() => {
         role,
         costCenterId: costCenterId || null,
       }
-      await api.post("/api/auth/register", body)
+      const regRes = await fetch(`${BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      })
+      if (!regRes.ok) {
+        const err = await regRes.json().catch(() => ({ error: `Error ${regRes.status}` }))
+        const msg = err.errors?.[0]?.defaultMessage ?? err.error ?? err.detail ?? `Error ${regRes.status}`
+        throw new Error(msg)
+      }
       toast.success(`Usuario ${name} registrado exitosamente`)
       onRegistered?.()
       close()
