@@ -1,5 +1,6 @@
 "use client"
 
+import { ORDER_TYPES, PAYMENT_METHODS } from "@/lib/constants"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Dialog,
