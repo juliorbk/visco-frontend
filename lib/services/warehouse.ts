@@ -83,7 +83,7 @@ export async function exportMovements(
   type?: string,
   productId?: number,
 ): Promise<void> {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+  const BASE_URL = process.env.NEXT_PUBLIC_API_URL 
   let url = `${BASE_URL}/api/warehouse/movements/export?`
   if (warehouseId) url += `warehouseId=${warehouseId}&`
   if (type) url += `type=${type}&`

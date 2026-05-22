@@ -16,10 +16,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import {
-  reportTrendCurrent,
-  categoryExpenses,
-} from "@/lib/mock-data"
+
 import {
   Calendar,
   ChevronRight,

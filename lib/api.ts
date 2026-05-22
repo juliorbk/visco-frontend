@@ -1,4 +1,8 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
+if (!BASE_URL) {
+  console.error("[API] NEXT_PUBLIC_API_URL no está definida. Las llamadas fallarán.")
+}
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {

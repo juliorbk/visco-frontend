@@ -32,7 +32,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { UOM_OPTIONS } from "@/lib/mock-data"
 import { createProduct, updateProduct } from "@/lib/services/inventory"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchCategories } from "@/lib/services/categories"

@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PAYMENT_METHODS, ORDER_TYPES } from "@/lib/mock-data"
 import { createOrder } from "@/lib/services/procurement"
 import { fetchWarehouses } from "@/lib/services/warehouse"
 import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse } from "@/lib/types"

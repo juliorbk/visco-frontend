@@ -3,7 +3,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-allowedDevOrigins: ['192.168.88.38'],
+  allowedDevOrigins: ['192.168.88.38'],
   images: {
     unoptimized: true,
   },
@@ -11,7 +11,7 @@ allowedDevOrigins: ['192.168.88.38'],
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8081/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
       },
     ]
   },
