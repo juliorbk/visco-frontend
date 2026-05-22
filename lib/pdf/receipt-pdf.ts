@@ -87,19 +87,19 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   const supplierAddress = supplier?.address ?? "—"
 
   // ── Header ──
-  addLogoPlaceholder(doc, x0, y, 40, 18)
+  addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.accent)
-  doc.text("NOTA DE RECEPCION", pageW - margin, y + 7, { align: "right" })
+  doc.text("NOTA DE RECEPCION", pageW - margin, y + 10, { align: "right" })
 
   doc.setFontSize(11)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text(`N° ${receipt.receiptNumber}`, pageW - margin, y + 15, { align: "right" })
+  doc.text(`N° ${receipt.receiptNumber}`, pageW - margin, y + 19, { align: "right" })
 
-  y += 26
+  y += 30
   addSeparator(doc, x0, y, contentW)
   y += 8
 

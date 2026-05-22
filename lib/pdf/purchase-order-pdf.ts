@@ -105,14 +105,14 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.setFont("helvetica", "bold")
   infoLines.forEach(([label, value], i) => {
     doc.setTextColor(...COLORS.textMuted)
-    doc.text(label, infoX, y + 4 + i * 5)
+    doc.text(label, infoX, y + 14 + i * 5)
     doc.setTextColor(...COLORS.text)
     doc.setFont("helvetica", "normal")
-    doc.text(value, infoX + 20, y + 4 + i * 5)
+    doc.text(value, infoX + 20, y + 14 + i * 5)
     doc.setFont("helvetica", "bold")
   })
 
-  y += 28
+  y += 36
   addSeparator(doc, x0, y, contentW)
   y += 8
 
