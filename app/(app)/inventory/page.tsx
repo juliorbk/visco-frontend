@@ -31,6 +31,8 @@ export default function InventoryPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [category, setCategory] = useState<string>("all")
   const [categories, setCategories] = useState<Category[]>([])
+  const [sortBy, setSortBy] = useState<string>("")
+  const [sortDir, setSortDir] = useState<string>("asc")
   
   // UI states
   const [selected, setSelected] = useState<ProductDTO | null>(null)
@@ -57,14 +59,14 @@ export default function InventoryPage() {
   // 2. Efecto Filtros: Reinicia a la página 0 si la búsqueda o categoría cambian
   useEffect(() => {
     setPage(0)
-  }, [debouncedSearch, category])
+  }, [debouncedSearch, category, sortBy, sortDir])
 
   // 3. Efecto Fetch Unificado
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const res = await fetchProducts(page, 20, debouncedSearch, category)
+        const res = await fetchProducts(page, 20, debouncedSearch, category, sortBy, sortDir)
         setProducts(res.content ?? [])
         setTotalPages(res.page.totalPages)
         setTotalElements(res.page.totalElements)
@@ -168,6 +170,26 @@ export default function InventoryPage() {
             })}
           </SelectContent>
         </Select>
+        <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setSortDir("asc") }}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Ordenar por" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Por defecto</SelectItem>
+            <SelectItem value="stock">Stock</SelectItem>
+          </SelectContent>
+        </Select>
+        {sortBy && (
+          <Select value={sortDir} onValueChange={setSortDir}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="asc">Ascendente</SelectItem>
+              <SelectItem value="desc">Descendente</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
