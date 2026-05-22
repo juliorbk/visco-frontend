@@ -41,7 +41,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST" })
+      await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST", credentials: "include" })
     } catch {
       // Proceed even if server call fails
     }
