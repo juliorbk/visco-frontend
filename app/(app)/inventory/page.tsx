@@ -212,7 +212,7 @@ export default function InventoryPage() {
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-5 py-3 tabular-nums">
                       {p.totalStock}{" "}
-                      <span className="text-xs text-muted-foreground">{p.uom.toLowerCase()}</span>
+                      <span className="text-xs text-muted-foreground">{p.uom}</span>
                     </td>
                     <td className="px-5 py-3">
                       <InventoryStatusBadge status={computeStatus(p)} />

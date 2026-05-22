@@ -148,7 +148,7 @@ export function StockActionModal({
         <DialogHeader>
           <DialogTitle className="font-serif">Stock Action — {product.name}</DialogTitle>
           <DialogDescription>
-            Stock actual: {product.totalStock} {product.uom.toLowerCase()}
+            Stock actual: {product.totalStock} {product.uom}
           </DialogDescription>
         </DialogHeader>
 

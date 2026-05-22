@@ -67,7 +67,7 @@ export function ItemDetailPanel({
 
               <TabsContent value="info" className="mt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <Stat label="Total Stock" value={`${product.totalStock} ${product.uom.toLowerCase()}`} />
+                  <Stat label="Total Stock" value={`${product.totalStock} ${product.uom}`} />
                   <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
                   <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
                   <Stat label="Supplier" value={product.supplierName ?? "-"} />
