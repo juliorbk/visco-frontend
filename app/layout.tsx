@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     "Procurement, inventory and supplier management platform for enterprise operations.",
   generator: "v0.app",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/visco-logo.png",
   },
 }
 
