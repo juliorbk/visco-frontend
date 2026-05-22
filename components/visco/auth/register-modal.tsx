@@ -24,6 +24,8 @@ import { toast } from "sonner"
 import { api } from "@/lib/api"
 import type { RegisterRequest, UserRole, CostCenter } from "@/lib/types"
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: "WAREHOUSEMAN", label: "Almacenista" },
@@ -51,12 +53,15 @@ export function RegisterModal({
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
 
 useEffect(() => {
-  if (open) {
-    // Quita el ${BASE_URL}
-    api.get<CostCenter[]>('/api/cost-centers/all')
-      .then((data) => setCostCenters(data.filter((c) => c.active)))
-      .catch(() => toast.error("Error al cargar centros de costo"))
-  }
+  if (!open) return
+  // Usamos fetch directo para evitar el redirect por 401 del api client
+  fetch(`${BASE_URL}/api/cost-centers/all`, { credentials: "include" })
+    .then((res) => {
+      if (!res.ok) throw new Error()
+      return res.json() as Promise<CostCenter[]>
+    })
+    .then((data) => setCostCenters(data.filter((c) => c.active)))
+    .catch(() => toast.error("Error al cargar centros de costo"))
 }, [open])
 
   const reset = () => {
