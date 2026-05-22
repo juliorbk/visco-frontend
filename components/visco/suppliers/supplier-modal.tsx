@@ -43,7 +43,6 @@ export function SupplierModal({
   const [address, setAddress] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
-  const [sapCode, setSapCode] = useState("")
   const [phones, setPhones] = useState<string[]>([])
   const [phoneInput, setPhoneInput] = useState("")
   const [reps, setReps] = useState<string[]>([])
@@ -56,7 +55,6 @@ export function SupplierModal({
       setAddress(editing.address)
       setDescription(editing.description)
       setCurrency(editing.currency)
-      setSapCode(editing.sapCode)
       setPhones(editing.phoneNumbers)
       setReps(editing.representatives.map((r) => r.fullName))
     } else {
@@ -65,7 +63,6 @@ export function SupplierModal({
       setAddress("")
       setDescription("")
       setCurrency("USD")
-      setSapCode("")
       setPhones([])
       setReps([])
     }
@@ -83,7 +80,6 @@ export function SupplierModal({
         address,
         description,
         currency,
-        sapCode,
         phoneNumbers: phones,
         representatives: reps.map((fullName) => ({ id: 0, fullName })),
         active: true,
@@ -124,10 +120,6 @@ export function SupplierModal({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="ssap">SAP Code</Label>
-            <Input id="ssap" value={sapCode} onChange={(e) => setSapCode(e.target.value)} disabled={saving} />
-          </div>
 
           <div className="sm:col-span-2 space-y-1.5">
             <Label htmlFor="saddr">Dirección</Label>

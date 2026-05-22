@@ -66,8 +66,9 @@ export interface SupplierDTO {
   contactEmail: string
   phoneNumbers: string[]
   active: boolean
-  sapCode: string
   representatives: RepresentativeInfo[]
+  rating?: number
+  totalOrders?: number
 }
 
 export interface RepresentativeInfo {

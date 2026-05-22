@@ -23,12 +23,13 @@ import {
 } from "@/components/ui/select"
 import { createOrder } from "@/lib/services/procurement"
 import { fetchWarehouses } from "@/lib/services/warehouse"
-import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse } from "@/lib/types"
-import { fetchSuppliers } from "@/lib/services/suppliers"
+import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse, SupplierDTO } from "@/lib/types"
+import { fetchSuppliers, createSupplier } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
-import { Check, Loader2, Plus, Trash2, Search, X } from "lucide-react"
+import { Check, Loader2, Plus, Trash2, Search, X, Building2 } from "lucide-react"
+import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -70,6 +71,8 @@ export function CreatePOModal({
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
   const [requisitions, setRequisitions] = useState<RequisitionResponse[]>([])
+  const [supplierModalOpen, setSupplierModalOpen] = useState(false)
+  const [creatingSupplier, setCreatingSupplier] = useState(false)
   const [selectedRequisitionId, setSelectedRequisitionId] = useState<number | null>(null)
 
   // Product finder state
@@ -171,6 +174,21 @@ export function CreatePOModal({
           })),
         )
       }
+    }
+  }
+
+  const handleCreateSupplier = async (data: Partial<SupplierDTO>) => {
+    try {
+      setCreatingSupplier(true)
+      const created = await createSupplier(data)
+      setSuppliers((prev) => [...prev, { id: created.id, name: created.name }])
+      setSupplierId(created.id)
+      setSupplierModalOpen(false)
+      toast.success("Proveedor creado")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al crear proveedor")
+    } finally {
+      setCreatingSupplier(false)
     }
   }
 
@@ -305,18 +323,31 @@ export function CreatePOModal({
             </div>
             <div className="space-y-1.5">
               <Label>Proveedor</Label>
-              <Select value={String(supplierId ?? "")} onValueChange={(v) => setSupplierId(Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select value={String(supplierId ?? "")} onValueChange={(v) => setSupplierId(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {suppliers.map((s) => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setSupplierModalOpen(true)}
+                  title="Crear nuevo proveedor"
+                >
+                  <Building2 className="size-4" />
+                </Button>
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Almacén destino</Label>
@@ -629,6 +660,15 @@ export function CreatePOModal({
           )}
         </DialogFooter>
       </DialogContent>
+
+      <SupplierModal
+        open={supplierModalOpen}
+        onOpenChange={(o) => {
+          setSupplierModalOpen(o)
+        }}
+        onSave={handleCreateSupplier}
+        saving={creatingSupplier}
+      />
     </Dialog>
   )
 }
