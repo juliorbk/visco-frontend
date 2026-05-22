@@ -28,6 +28,7 @@ import { fetchSuppliers, createSupplier } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
+import { canCreateSupplierFromPo } from "@/lib/permissions"
 import { Check, Loader2, Plus, Trash2, Search, X, Building2 } from "lucide-react"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { cn } from "@/lib/utils"
@@ -73,6 +74,8 @@ export function CreatePOModal({
   const [requisitions, setRequisitions] = useState<RequisitionResponse[]>([])
   const [supplierModalOpen, setSupplierModalOpen] = useState(false)
   const [creatingSupplier, setCreatingSupplier] = useState(false)
+  const user = getCachedUser()
+  const canCreateSupplier = canCreateSupplierFromPo(user)
   const [selectedRequisitionId, setSelectedRequisitionId] = useState<number | null>(null)
 
   // Product finder state
@@ -338,15 +341,17 @@ export function CreatePOModal({
                     </SelectContent>
                   </Select>
                 </div>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setSupplierModalOpen(true)}
-                  title="Crear nuevo proveedor"
-                >
-                  <Building2 className="size-4" />
-                </Button>
+                {canCreateSupplier && (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => setSupplierModalOpen(true)}
+                    title="Crear nuevo proveedor"
+                  >
+                    <Building2 className="size-4" />
+                  </Button>
+                )}
               </div>
             </div>
             <div className="space-y-1.5">

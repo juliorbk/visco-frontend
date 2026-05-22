@@ -9,6 +9,8 @@ import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from "@/lib/services/suppliers"
 import type { SupplierDTO } from "@/lib/types"
+import { getCachedUser } from "@/lib/auth-client"
+import { canCreateSupplier } from "@/lib/permissions"
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -45,6 +47,7 @@ export default function SuppliersPage() {
     load()
   }, [load])
 
+  const user = getCachedUser()
   const selected = suppliers.find((s) => s.id === selectedId) ?? null
 
   const handleSave = async (data: Partial<SupplierDTO>, id?: number) => {
@@ -87,16 +90,18 @@ export default function SuppliersPage() {
         title="Gestión de Proveedores"
         subtitle="Catálogo completo, desempeño histórico y cumplimiento normativo."
         actions={
-          <Button
-            size="sm"
-            className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
-            onClick={() => {
-              setEditing(null)
-              setModalOpen(true)
-            }}
-          >
-            <Plus className="size-4 mr-2" /> Nuevo Proveedor
-          </Button>
+          canCreateSupplier(user) ? (
+            <Button
+              size="sm"
+              className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
+              onClick={() => {
+                setEditing(null)
+                setModalOpen(true)
+              }}
+            >
+              <Plus className="size-4 mr-2" /> Nuevo Proveedor
+            </Button>
+          ) : undefined
         }
       />
 

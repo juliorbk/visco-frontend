@@ -25,6 +25,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { SupplierDTO } from "@/lib/types"
+import { getCachedUser } from "@/lib/auth-client"
+import { canEditSupplier, canDeactivateSupplier } from "@/lib/permissions"
 import { useState } from "react"
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -65,6 +67,9 @@ export function SupplierDetail({
   onDeactivate?: (s: SupplierDTO) => void
 }) {
   const [showDesc, setShowDesc] = useState(false)
+  const user = getCachedUser()
+  const canEdit = canEditSupplier(user)
+  const canDeactivate = canDeactivateSupplier(user)
 
   if (!supplier) {
     return (
@@ -82,26 +87,34 @@ export function SupplierDetail({
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h3 className="font-serif text-lg font-semibold">Detalles del Proveedor</h3>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="size-8 grid place-items-center rounded-md hover:bg-secondary text-muted-foreground">
-            <ChevronDown className="size-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit?.(supplier)}>
-              <Pencil className="size-3.5 mr-2" /> Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Clock className="size-3.5 mr-2" /> Ver historial completo
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-red-600 focus:text-red-600"
-              onClick={() => onDeactivate?.(supplier)}
-            >
-              <Ban className="size-3.5 mr-2" /> Desactivar proveedor
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {(canEdit || canDeactivate) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="size-8 grid place-items-center rounded-md hover:bg-secondary text-muted-foreground">
+              <ChevronDown className="size-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canEdit && (
+                <DropdownMenuItem onClick={() => onEdit?.(supplier)}>
+                  <Pencil className="size-3.5 mr-2" /> Editar
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem>
+                <Clock className="size-3.5 mr-2" /> Ver historial completo
+              </DropdownMenuItem>
+              {canDeactivate && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600"
+                    onClick={() => onDeactivate?.(supplier)}
+                  >
+                    <Ban className="size-3.5 mr-2" /> Desactivar proveedor
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Avatar + Name */}
@@ -203,36 +216,42 @@ export function SupplierDetail({
       )}
 
       {/* Action Buttons */}
-      <div className="px-5 py-4 space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-card"
-            onClick={() => onEdit?.(supplier)}
-          >
-            <Pencil className="size-3.5 mr-1.5" /> Editar
-          </Button>
-          <Button variant="outline" size="sm" className="bg-card" asChild>
-            <a href={`mailto:${supplier.contactEmail}`}>
-              <Send className="size-3.5 mr-1.5" /> Enviar Correo
-            </a>
-          </Button>
+      {(canEdit || canDeactivate) && (
+        <div className="px-5 py-4 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-card"
+                onClick={() => onEdit?.(supplier)}
+              >
+                <Pencil className="size-3.5 mr-1.5" /> Editar
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="bg-card" asChild>
+              <a href={`mailto:${supplier.contactEmail}`}>
+                <Send className="size-3.5 mr-1.5" /> Enviar Correo
+              </a>
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" size="sm" className="bg-card">
+              <Clock className="size-3.5 mr-1.5" /> Ver Historial
+            </Button>
+            {canDeactivate && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 bg-card"
+                onClick={() => onDeactivate?.(supplier)}
+              >
+                <Ban className="size-3.5 mr-1.5" /> Desactivar
+              </Button>
+            )}
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" size="sm" className="bg-card">
-            <Clock className="size-3.5 mr-1.5" /> Ver Historial
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 bg-card"
-            onClick={() => onDeactivate?.(supplier)}
-          >
-            <Ban className="size-3.5 mr-1.5" /> Desactivar
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

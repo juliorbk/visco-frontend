@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -61,12 +61,13 @@ export function CreateRequisitionModal({
 
   const [finderOpen, setFinderOpen] = useState(false)
   const [finderQuery, setFinderQuery] = useState("")
+  const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
       fetchCostCenters().then(setCostCenters).catch(() => {})
-      fetchProducts(0, 500).then((res) => setProducts(res.content ?? [])).catch(() => {})
     }
   }, [open])
 
@@ -85,16 +86,26 @@ export function CreateRequisitionModal({
     return () => document.removeEventListener("mousedown", handler)
   }, [finderOpen])
 
-  const filteredProducts = useMemo(() => {
-    if (!finderQuery) return products
-    const q = finderQuery.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.internalCode.toLowerCase().includes(q),
-    )
-  }, [products, finderQuery])
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedFinderQuery(finderQuery), 300)
+    return () => clearTimeout(timer)
+  }, [finderQuery])
+
+  useEffect(() => {
+    if (!finderOpen) return
+    const fetchData = async () => {
+      setLoadingProducts(true)
+      try {
+        const res = await fetchProducts(0, 50, debouncedFinderQuery || undefined)
+        setProducts(res.content ?? [])
+      } catch {
+        // ignore
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+    fetchData()
+  }, [debouncedFinderQuery, finderOpen])
 
   const reset = () => {
     setStep(0)
@@ -299,9 +310,14 @@ export function CreateRequisitionModal({
                   </Button>
                 </div>
 
-                {finderOpen && filteredProducts.length > 0 && (
+                {finderOpen && loadingProducts && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
+                    <Loader2 className="size-4 animate-spin mx-auto" />
+                  </div>
+                )}
+                {finderOpen && !loadingProducts && products.length > 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
-                    {filteredProducts.map((p) => (
+                    {products.map((p) => (
                       <button
                         key={p.id}
                         type="button"
@@ -320,7 +336,7 @@ export function CreateRequisitionModal({
                     ))}
                   </div>
                 )}
-                {finderOpen && finderQuery && filteredProducts.length === 0 && (
+                {finderOpen && !loadingProducts && finderQuery && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No se encontraron productos
                   </div>
