@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { Inter, Lora } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,6 +33,7 @@ export default function RootLayout({
       <body className="font-sans antialiased text-foreground">
         {children}
         <Toaster position="top-right" richColors />
+        <Analytics/>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
