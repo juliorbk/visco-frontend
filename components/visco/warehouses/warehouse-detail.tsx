@@ -66,11 +66,11 @@ export function WarehouseDetail({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg bg-muted/50 p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{warehouse.totalStock}</p>
+          <p className="text-2xl font-bold text-foreground">{warehouse.totalStock ?? 0}</p>
           <p className="text-xs text-muted-foreground">Stock total</p>
         </div>
         <div className="rounded-lg bg-muted/50 p-3 text-center">
-          <p className="text-2xl font-bold text-foreground">{warehouse.totalProducts}</p>
+          <p className="text-2xl font-bold text-foreground">{warehouse.totalProducts ?? 0}</p>
           <p className="text-xs text-muted-foreground">Productos</p>
         </div>
       </div>

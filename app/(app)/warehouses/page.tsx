@@ -59,7 +59,12 @@ export default function WarehousesPage() {
     try {
       setLoadingDetail(true)
       const data = await fetchWarehouseById(selectedWhId)
-      setWarehouseDetail(data)
+      const summary = stockSummary.find((s) => s.warehouseId === selectedWhId)
+      setWarehouseDetail({
+        ...data,
+        totalStock: data.totalStock ?? summary?.totalStock ?? 0,
+        totalProducts: data.totalProducts ?? 0,
+      })
     } catch {
       setWarehouseDetail(null)
     } finally {
