@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   description:
     "Procurement, inventory and supplier management platform for enterprise operations.",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({
