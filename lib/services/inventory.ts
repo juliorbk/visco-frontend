@@ -7,7 +7,8 @@ export async function fetchProducts(
   search?: string,
   category?: string,
   sortBy?: string,
-  sortDir?: string
+  sortDir?: string,
+  hasStock?: boolean
 ): Promise<Page<ProductDTO>> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -20,6 +21,7 @@ export async function fetchProducts(
     params.append("sortBy", sortBy)
     if (sortDir) params.append("sortDir", sortDir)
   }
+  if (hasStock) params.append("hasStock", "true")
 
   return api.get<Page<ProductDTO>>(`/api/inventory/products?${params.toString()}`)
 }

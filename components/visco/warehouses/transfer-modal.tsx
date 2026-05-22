@@ -52,7 +52,7 @@ export function TransferModal({
       setLoadingData(true)
       Promise.all([
         fetchWarehouses(),
-        fetchProducts(0, 200).then((r) => r.content ?? []),
+        fetchProducts(0, 200, undefined, undefined, undefined, undefined, true).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
       ])
         .then(([wh, prod]) => {
           setWarehouses(wh)
