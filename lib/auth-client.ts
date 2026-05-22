@@ -2,11 +2,13 @@ import type { UserDTO } from "./types"
 
 export type { UserDTO as UserInfo }
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
 let cachedUser: UserDTO | null | undefined = undefined
 
 export async function fetchUser(): Promise<UserDTO | null> {
   try {
-    const res = await fetch("/api/auth/me", { credentials: "include" })
+    const res = await fetch(`${BASE_URL}/api/auth/me`, { credentials: "include" })
     if (!res.ok) {
       cachedUser = null
       return null

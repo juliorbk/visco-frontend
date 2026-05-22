@@ -12,6 +12,8 @@ import { RegisterModal } from "@/components/visco/auth/register-modal"
 import { toast } from "sonner"
 import { fetchUser } from "@/lib/auth-client"
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,7 +32,7 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

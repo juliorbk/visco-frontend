@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation"
 import { getCachedUser, fetchUser, clearUserCache } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
   const [user, setUser] = useState(() => getCachedUser())
@@ -39,7 +41,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      await fetch(`${BASE_URL}/api/auth/logout`, { method: "POST" })
     } catch {
       // Proceed even if server call fails
     }
