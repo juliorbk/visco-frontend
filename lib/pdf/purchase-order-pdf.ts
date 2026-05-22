@@ -98,8 +98,8 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const infoLines = [
     ["DATE:", formatDateShort(order.createdAt)],
     ["PO #:", order.orderNumber],
-    ["ORDER TYPE:", translateOrderType(order.type)],
-    ["PAYMENTH METHOD:", translatePaymentMethod(order.paymentMethod)],
+    ["TYPE:", translateOrderType(order.type)],
+    ["PAYMENT:", translatePaymentMethod(order.paymentMethod)],
   ]
   doc.setFontSize(7)
   doc.setFont("helvetica", "bold")
@@ -108,7 +108,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
     doc.text(label, infoX, y + 14 + i * 5)
     doc.setTextColor(...COLORS.text)
     doc.setFont("helvetica", "normal")
-    doc.text(value, infoX + 20, y + 14 + i * 5)
+    doc.text(value, infoX + 25, y + 14 + i * 5)
     doc.setFont("helvetica", "bold")
   })
 
@@ -141,7 +141,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   // Ship To box
   const x1 = x0 + boxW + 6
   doc.roundedRect(x1, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x1, y, boxW, "Envíe a")
+  addSectionTitle(doc, x1, y, boxW, "SHIP TO")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
@@ -157,7 +157,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   // ─ Terms Row ──
   const terms = [
     ["PURCHASER", order.createdBy],
-    ["LEAD TIME", order.leadTime ? `${order.leadTime} días` : "—"],
+    ["LEAD TIME", order.leadTime ? `${order.leadTime} days` : "—"],
     ["F.O.B.", "—"],
     ["SHIP CONDITIONS", order.paymentTerms ?? "—"],
   ]
@@ -182,7 +182,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
   const colWidths = [12, contentW - 12 - 18 - 28 - 28, 18, 28, 28]
-  const head = ["#", "DESCRIPCION", "QTY", "PRICE", "TOTAL"]
+  const head = ["#", "DESCRIPTION", "QTY", "UNIT PRICE", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
     `${item.productName}  ${item.productSku}`,

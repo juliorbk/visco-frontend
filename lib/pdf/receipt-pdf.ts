@@ -120,7 +120,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
   doc.text(
-    receipt.updatedStatus === "DELIVERED" ? "COMPLETED" : "PARCIAL",
+    receipt.updatedStatus === "DELIVERED" ? "COMPLETED" : "PARTIAL",
     x0 + 140,
     y + 5,
   )
@@ -267,7 +267,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
-  const obsText = receipt.notes || "Whitout observations."
+  const obsText = receipt.notes || "Without observations."
   const obsLines = doc.splitTextToSize(obsText, footBoxW - 8)
   doc.text(obsLines, obsX + 4, y + 14)
 
