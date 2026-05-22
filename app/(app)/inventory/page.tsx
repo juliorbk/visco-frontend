@@ -31,7 +31,7 @@ export default function InventoryPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("")
   const [category, setCategory] = useState<string>("all")
   const [categories, setCategories] = useState<Category[]>([])
-  const [sortBy, setSortBy] = useState<string>("")
+  const [sortBy, setSortBy] = useState<string>("none")
   const [sortDir, setSortDir] = useState<string>("asc")
   
   // UI states
@@ -175,11 +175,11 @@ export default function InventoryPage() {
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Por defecto</SelectItem>
+            <SelectItem value="none">Por defecto</SelectItem>
             <SelectItem value="stock">Stock</SelectItem>
           </SelectContent>
         </Select>
-        {sortBy && (
+        {sortBy !== "none" && sortBy !== "" && (
           <Select value={sortDir} onValueChange={setSortDir}>
             <SelectTrigger className="w-36">
               <SelectValue />

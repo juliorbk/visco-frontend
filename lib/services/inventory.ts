@@ -16,7 +16,7 @@ export async function fetchProducts(
 
   if (search) params.append("search", search)
   if (category && category !== "all") params.append("category", category)
-  if (sortBy) params.append("sortBy", sortBy)
+  if (sortBy && sortBy !== "none") params.append("sortBy", sortBy)
   if (sortDir) params.append("sortDir", sortDir)
 
   return api.get<Page<ProductDTO>>(`/api/inventory/products?${params.toString()}`)
