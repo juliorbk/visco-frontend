@@ -25,8 +25,6 @@ import { api } from "@/lib/api"
 import type { RegisterRequest, UserRole, CostCenter } from "@/lib/types"
 
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL
-
 const ROLES: { value: UserRole; label: string }[] = [
   { value: "WAREHOUSEMAN", label: "Almacenista" },
   { value: "PROCUREMENT", label: "Compras" },
@@ -52,13 +50,14 @@ export function RegisterModal({
   const [saving, setSaving] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
 
-  useEffect(() => {
-    if (open) {
-      api.get<CostCenter[]>(`${BASE_URL}/api/cost-centers/all`)
-        .then((data) => setCostCenters(data.filter((c) => c.active)))
-        .catch(() => toast.error("Error al cargar centros de costo"))
-    }
-  }, [open])
+useEffect(() => {
+  if (open) {
+    // Quita el ${BASE_URL}
+    api.get<CostCenter[]>('/api/cost-centers/all')
+      .then((data) => setCostCenters(data.filter((c) => c.active)))
+      .catch(() => toast.error("Error al cargar centros de costo"))
+  }
+}, [open])
 
   const reset = () => {
     setName("")
@@ -93,7 +92,7 @@ export function RegisterModal({
         role,
         costCenterId: costCenterId || null,
       }
-      await api.post(`${BASE_URL}/api/auth/register`, body)
+      await api.post("/api/auth/register", body)
       toast.success(`Usuario ${name} registrado exitosamente`)
       onRegistered?.()
       close()
