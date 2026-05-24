@@ -411,6 +411,24 @@ export interface WarehouseDetailResponse extends WarehouseResponse {
   totalStock: number
 }
 
+export interface PurchaseOrderReceiptSummary {
+  orderId: number
+  orderNumber: string
+  orderStatus: PurchaseOrderStatus
+  totalReceipts: number
+  items: ItemSummary[]
+}
+
+export interface ItemSummary {
+  productId: number
+  productName: string
+  productSku: string
+  orderedQuantity: number
+  receivedQuantity: number
+  pendingQuantity: number
+  fullyReceived: boolean
+}
+
 // ── Spring Page wrapper ──
 
 export interface Page<T> {

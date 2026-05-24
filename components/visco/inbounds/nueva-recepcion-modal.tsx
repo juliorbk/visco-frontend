@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { X, Plus, ChevronRight } from "lucide-react"
-import type { PurchaseOrderResponse, WarehouseResponse } from "@/lib/types"
-import { receiveGoods, fetchWarehouses } from "@/lib/services/warehouse"
+import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
+import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
 import { toast } from "sonner"
 
 interface NuevaRecepcionModalProps {
@@ -22,6 +22,7 @@ export function NuevaRecepcionModal({
   const [step, setStep] = useState(1)
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderResponse | null>(null)
   const [receivedQuantities, setReceivedQuantities] = useState<{ [key: number]: number }>({})
+  const [receiptSummary, setReceiptSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
@@ -31,6 +32,7 @@ export function NuevaRecepcionModal({
     setStep(1)
     setSelectedPO(null)
     setReceivedQuantities({})
+    setReceiptSummary(null)
     setNotes("")
     setDestinationWarehouseId(null)
   }
@@ -44,13 +46,16 @@ export function NuevaRecepcionModal({
 
   if (!isOpen) return null
 
-  const handleSelectPO = (po: PurchaseOrderResponse) => {
+  const handleSelectPO = async (po: PurchaseOrderResponse) => {
     setSelectedPO(po)
-    const initial: { [key: number]: number } = {}
-    po.items.forEach((item) => {
-      initial[item.productId] = item.quantity
-    })
-    setReceivedQuantities(initial)
+    setReceivedQuantities({})
+    setReceiptSummary(null)
+    try {
+      const summary = await fetchReceiptSummary(po.id)
+      setReceiptSummary(summary)
+    } catch {
+      // fallback: no summary available
+    }
   }
 
   const handleQuantityChange = (productId: number, value: number) => {
@@ -98,7 +103,12 @@ export function NuevaRecepcionModal({
 
   const totalItems = selectedPO?.items.length || 0
   const completedItemsCount =
-    selectedPO?.items.filter((item) => receivedQuantities[item.productId] === item.quantity).length || 0
+    selectedPO?.items.filter((item) => {
+      const rcv = receivedQuantities[item.productId] || 0
+      const summaryItem = receiptSummary?.items.find((s) => s.productId === item.productId)
+      const basePending = summaryItem?.pendingQuantity ?? item.quantity
+      return rcv >= basePending && rcv > 0
+    }).length || 0
 
   const approvableOrders = purchaseOrders.filter(
     (po) => po.status === "APPROVED" || po.status === "IN_TRANSIT",
@@ -177,8 +187,10 @@ export function NuevaRecepcionModal({
               <div className="space-y-4 mb-6">
                 {selectedPO.items.map((item) => {
                   const received = receivedQuantities[item.productId] || 0
-                  const expected = item.quantity
-                  const pending = expected - received
+                  const summaryItem = receiptSummary?.items.find((s) => s.productId === item.productId)
+                  const ordered = summaryItem?.orderedQuantity ?? item.quantity
+                  const basePending = summaryItem?.pendingQuantity ?? ordered
+                  const pending = Math.max(0, basePending - received)
                   const isPartial = pending > 0
                   const isComplete = pending === 0 && received > 0
 
@@ -191,9 +203,9 @@ export function NuevaRecepcionModal({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4">
-                        <span className="text-xs text-[#6b7280] font-medium shrink-0 w-[90px]">
-                          Esperado: {expected}
+                      <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                        <span className="text-xs text-[#6b7280] font-medium whitespace-nowrap">
+                          Esperado: {ordered}
                         </span>
                         <input
                           type="number"
@@ -201,12 +213,12 @@ export function NuevaRecepcionModal({
                           onChange={(e) =>
                             handleQuantityChange(item.productId, parseInt(e.target.value) || 0)
                           }
-                          className="w-20 text-center px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                          className="w-full max-w-24 justify-self-center text-center px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                           min="0"
                           disabled={saving}
                         />
                         <span
-                          className={`text-xs font-semibold shrink-0 w-[110px] text-right ${
+                          className={`text-xs font-semibold whitespace-nowrap text-right ${
                             isComplete
                               ? "text-green-700"
                               : isPartial

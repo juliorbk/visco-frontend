@@ -10,6 +10,7 @@ import type {
   TransferStockRequest,
   AdjustStockRequest,
   InventoryMovementResponse,
+  PurchaseOrderReceiptSummary,
   Page,
 } from "@/lib/types"
 
@@ -76,6 +77,10 @@ export async function fetchReceiptsByOrder(orderId: number): Promise<GoodReceipt
 
 export async function fetchReceipt(id: number): Promise<GoodReceiptResponse> {
   return api.get<GoodReceiptResponse>(`/api/warehouse/receipts/${id}`)
+}
+
+export async function fetchReceiptSummary(orderId: number): Promise<PurchaseOrderReceiptSummary> {
+  return api.get<PurchaseOrderReceiptSummary>(`/api/warehouse/orders/${orderId}/receipt-summary`)
 }
 
 export async function exportMovements(

@@ -20,8 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { receiveGoods, fetchWarehouses } from "@/lib/services/warehouse"
-import type { PurchaseOrderResponse, WarehouseResponse } from "@/lib/types"
+import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
+import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -41,14 +41,17 @@ export function ReceiveGoodsModal({
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
+  const [receiptSummary, setReceiptSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
 
   useEffect(() => {
     if (order) {
       const init: Record<number, number> = {}
-      order.items.forEach((it) => (init[it.productId] = it.quantity))
+      order.items.forEach((it) => (init[it.productId] = 0))
       setReceived(init)
       setNotes("")
       setDestinationWarehouseId(null)
+      setReceiptSummary(null)
+      fetchReceiptSummary(order.id).then(setReceiptSummary).catch(() => {})
     }
   }, [order])
 
@@ -122,7 +125,10 @@ export function ReceiveGoodsModal({
           </div>
           {order.items.map((it) => {
             const rcv = received[it.productId] ?? 0
-            const pending = it.quantity - rcv
+            const summaryItem = receiptSummary?.items.find((s) => s.productId === it.productId)
+            const ordered = summaryItem?.orderedQuantity ?? it.quantity
+            const basePending = summaryItem?.pendingQuantity ?? ordered
+            const pending = Math.max(0, basePending - rcv)
             const isPartial = pending > 0
             const isComplete = pending === 0 && rcv > 0
 
@@ -135,9 +141,9 @@ export function ReceiveGoodsModal({
                   <div className="font-medium text-foreground truncate">{it.productName}</div>
                   <div className="text-xs text-muted-foreground">SKU: {it.productSku}</div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-[#6b7280] font-medium shrink-0 w-[90px]">
-                    Esperado: {it.quantity}
+                <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                  <span className="text-xs text-[#6b7280] font-medium whitespace-nowrap">
+                    Esperado: {ordered}
                   </span>
                   <Input
                     type="number"
@@ -148,11 +154,11 @@ export function ReceiveGoodsModal({
                         [it.productId]: Number(e.target.value) || 0,
                       }))
                     }
-                    className="w-20 text-center"
+                    className="w-full max-w-24 justify-self-center text-center"
                     disabled={saving}
                   />
                   <span
-                    className={`text-xs font-semibold shrink-0 w-[110px] text-right ${
+                    className={`text-xs font-semibold whitespace-nowrap text-right ${
                       isComplete
                         ? "text-green-700"
                         : isPartial
