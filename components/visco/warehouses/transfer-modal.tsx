@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { transferStock, fetchWarehouses } from "@/lib/services/warehouse"
-import { fetchProducts } from "@/lib/services/inventory"
+import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
 import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react"
@@ -50,18 +49,20 @@ export function TransferModal({
   useEffect(() => {
     if (open) {
       setLoadingData(true)
-      Promise.all([
-        fetchWarehouses(),
-        fetchProducts(0, 200, undefined, undefined, undefined, undefined, true).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
-      ])
-        .then(([wh, prod]) => {
+      fetchWarehouses()
+        .then((wh) => {
           setWarehouses(wh)
-          setProducts(prod)
-          if (wh.length >= 2) {
-            setFromWarehouseId(wh[0].id)
-            setToWarehouseId(wh[1].id)
-          }
-          if (prod.length > 0) setProductId(prod[0].id)
+          const fromId = wh.length >= 2 ? wh[0].id : 0
+          const toId = wh.length >= 2 ? wh[1].id : 0
+          setFromWarehouseId(fromId)
+          setToWarehouseId(toId)
+          if (fromId) return fetchProductsOnStock(fromId)
+          return { content: [] } as any
+        })
+        .then((page) => {
+          const prods = page.content ?? []
+          setProducts(prods)
+          if (prods.length > 0) setProductId(prods[0].id)
         })
         .catch(() => toast.error("Error al cargar datos"))
         .finally(() => setLoadingData(false))

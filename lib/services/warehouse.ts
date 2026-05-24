@@ -11,6 +11,7 @@ import type {
   AdjustStockRequest,
   InventoryMovementResponse,
   PurchaseOrderReceiptSummary,
+  ProductDTO,
   Page,
 } from "@/lib/types"
 
@@ -81,6 +82,17 @@ export async function fetchReceipt(id: number): Promise<GoodReceiptResponse> {
 
 export async function fetchReceiptSummary(orderId: number): Promise<PurchaseOrderReceiptSummary> {
   return api.get<PurchaseOrderReceiptSummary>(`/api/warehouse/orders/${orderId}/receipt-summary`)
+}
+
+export async function fetchProductsOnStock(
+  warehouseId: number,
+  search?: string,
+  page = 0,
+  size = 200,
+): Promise<Page<ProductDTO>> {
+  let url = `/api/warehouse/stock/on-stock?warehouseId=${warehouseId}&page=${page}&size=${size}`
+  if (search) url += `&search=${encodeURIComponent(search)}`
+  return api.get<Page<ProductDTO>>(url)
 }
 
 export async function exportMovements(
