@@ -40,7 +40,7 @@ export function MovementDetailModal({
 }) {
   if (!movement) return null
 
-  const cfg = typeConfig[movement.type]
+  const cfg = typeConfig[movement.type] ?? { label: movement.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowRightLeft }
   const Icon = cfg.icon
 
   return (
