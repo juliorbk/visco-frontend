@@ -120,35 +120,52 @@ export function ReceiveGoodsModal({
               </SelectContent>
             </Select>
           </div>
-          {order.items.map((it) => (
-            <div
-              key={it.productId}
-              className="rounded-md border border-border bg-[#fafafa] p-3 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center"
-            >
-              <div className="min-w-0">
-                <div className="font-medium text-foreground truncate">{it.productName}</div>
-                <div className="text-xs text-muted-foreground">
-                  SKU: {it.productSku} · Esperado: <span className="font-medium text-foreground">{it.quantity}</span>
+          {order.items.map((it) => {
+            const rcv = received[it.productId] ?? 0
+            const pending = it.quantity - rcv
+            const isPartial = pending > 0
+            const isComplete = pending === 0 && rcv > 0
+
+            return (
+              <div
+                key={it.productId}
+                className="rounded-md border border-border bg-[#fafafa] p-3"
+              >
+                <div className="min-w-0 mb-2">
+                  <div className="font-medium text-foreground truncate">{it.productName}</div>
+                  <div className="text-xs text-muted-foreground">SKU: {it.productSku}</div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-[#6b7280] font-medium shrink-0 w-[90px]">
+                    Esperado: {it.quantity}
+                  </span>
+                  <Input
+                    type="number"
+                    value={rcv}
+                    onChange={(e) =>
+                      setReceived((prev) => ({
+                        ...prev,
+                        [it.productId]: Number(e.target.value) || 0,
+                      }))
+                    }
+                    className="w-20 text-center"
+                    disabled={saving}
+                  />
+                  <span
+                    className={`text-xs font-semibold shrink-0 w-[110px] text-right ${
+                      isComplete
+                        ? "text-green-700"
+                        : isPartial
+                          ? "text-orange-600"
+                          : "text-[#6b7280]"
+                    }`}
+                  >
+                    {isComplete ? "✓ Completo" : `Pendiente: ${pending}`}
+                  </span>
                 </div>
               </div>
-              <div className="w-24 sm:w-28">
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Recibido
-                </Label>
-                <Input
-                  type="number"
-                  value={received[it.productId] ?? 0}
-                  onChange={(e) =>
-                    setReceived((prev) => ({
-                      ...prev,
-                      [it.productId]: Number(e.target.value) || 0,
-                    }))
-                  }
-                  disabled={saving}
-                />
-              </div>
-            </div>
-          ))}
+            )
+          })}
 
           <div className="space-y-1.5">
             <Label htmlFor="notes">Notas</Label>

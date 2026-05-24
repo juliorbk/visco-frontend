@@ -178,8 +178,9 @@ export function NuevaRecepcionModal({
                 {selectedPO.items.map((item) => {
                   const received = receivedQuantities[item.productId] || 0
                   const expected = item.quantity
-                  const diff = received - expected
-                  const isComplete = diff === 0
+                  const pending = expected - received
+                  const isPartial = pending > 0
+                  const isComplete = pending === 0 && received > 0
 
                   return (
                     <div key={item.productId} className="border border-[#f3f4f6] rounded-lg p-4">
@@ -191,21 +192,30 @@ export function NuevaRecepcionModal({
                       </div>
 
                       <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <label className="text-xs text-[#6b7280] font-medium">
-                            Esperado: {expected}
-                          </label>
-                        </div>
+                        <span className="text-xs text-[#6b7280] font-medium shrink-0 w-[90px]">
+                          Esperado: {expected}
+                        </span>
                         <input
                           type="number"
                           value={received}
                           onChange={(e) =>
                             handleQuantityChange(item.productId, parseInt(e.target.value) || 0)
                           }
-                          className="w-24 px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                          className="w-20 text-center px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                           min="0"
                           disabled={saving}
                         />
+                        <span
+                          className={`text-xs font-semibold shrink-0 w-[110px] text-right ${
+                            isComplete
+                              ? "text-green-700"
+                              : isPartial
+                                ? "text-orange-600"
+                                : "text-[#6b7280]"
+                          }`}
+                        >
+                          {isComplete ? "✓ Completo" : `Pendiente: ${pending}`}
+                        </span>
                       </div>
                     </div>
                   )
