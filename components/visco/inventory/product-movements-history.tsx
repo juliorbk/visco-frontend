@@ -78,7 +78,7 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
 
       <div className="rounded-xl border bg-card divide-y">
         {movements.map((m) => {
-          const cfg = typeConfig[m.type]
+          const cfg = typeConfig[m.type] ?? { label: m.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowRightLeft }
           const Icon = cfg.icon
           return (
             <div
