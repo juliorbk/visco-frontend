@@ -164,7 +164,7 @@ export function MovementsTable({
                 {m.toWarehouseName && (
                   <span>Destino: <span className="font-medium text-foreground">{m.toWarehouseName}</span></span>
                 )}
-                <span>Por: <span className="font-medium text-foreground">{m.createdBy}</span></span>
+                <span>Por: <span className="font-medium text-foreground">{m.createdByName}</span></span>
               </div>
 
               {m.reason && (

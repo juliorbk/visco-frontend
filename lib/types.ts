@@ -395,10 +395,13 @@ export interface InventoryMovementResponse {
   toWarehouseId: number | null
   toWarehouseName: string | null
   quantity: number
+  entryUnitPrice: number | null
+  exitUnitPrice: number | null
   stockBefore: number | null
   stockAfter: number | null
   reason: string | null
-  createdBy: string
+  createdByName: string
+  runningBalance: number | null
   createdAt: string
 }
 

@@ -66,7 +66,7 @@ export function MovementDetailModal({
           <div className="grid grid-cols-2 gap-3">
             <DetailItem icon={Package} label="Producto" value={`${movement.productName} (${movement.productSku})`} />
             <DetailItem icon={Calendar} label="Fecha" value={new Date(movement.createdAt).toLocaleString()} />
-            <DetailItem icon={User} label="Realizado por" value={movement.createdBy} />
+            <DetailItem icon={User} label="Realizado por" value={movement.createdByName} />
             <DetailItem
               icon={movement.type === "TRANSFER" ? ArrowDown : movement.type === "ADJUSTMENT" ? Equal : ArrowUp}
               label={movement.type === "TRANSFER" ? "Cantidad" : movement.type === "ADJUSTMENT" ? "Nuevo stock" : "Cantidad recibida"}
