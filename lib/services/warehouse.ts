@@ -11,7 +11,7 @@ import type {
   AdjustStockRequest,
   InventoryMovementResponse,
   PurchaseOrderReceiptSummary,
-  ProductDTO,
+  ProductOnStock,
   Page,
 } from "@/lib/types"
 
@@ -89,10 +89,10 @@ export async function fetchProductsOnStock(
   search?: string,
   page = 0,
   size = 200,
-): Promise<Page<ProductDTO>> {
+): Promise<Page<ProductOnStock>> {
   let url = `/api/warehouse/stock/on-stock?warehouseId=${warehouseId}&page=${page}&size=${size}`
   if (search) url += `&search=${encodeURIComponent(search)}`
-  return api.get<Page<ProductDTO>>(url)
+  return api.get<Page<ProductOnStock>>(url)
 }
 
 export async function exportMovements(

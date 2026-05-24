@@ -96,6 +96,15 @@ export interface ProductDTO {
   categoryName: string | null
 }
 
+export interface ProductOnStock {
+  id: number
+  internalCode: string
+  sku: string
+  name: string
+  sapCode: string
+  uom: string
+}
+
 export interface CreateProductRequest {
   name: string
   sku: string

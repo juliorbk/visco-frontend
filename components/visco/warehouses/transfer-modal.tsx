@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/select"
 import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
-import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, ArrowRightLeft, AlertTriangle } from "lucide-react"
+import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
+import { Loader2, ArrowRightLeft } from "lucide-react"
 import { toast } from "sonner"
 
 export function TransferModal({
@@ -36,7 +36,7 @@ export function TransferModal({
   onDone: () => void
 }) {
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [products, setProducts] = useState<ProductDTO[]>([])
+  const [products, setProducts] = useState<ProductOnStock[]>([])
   const [productId, setProductId] = useState<number>(0)
   const [fromWarehouseId, setFromWarehouseId] = useState<number>(0)
   const [toWarehouseId, setToWarehouseId] = useState<number>(0)
@@ -97,15 +97,6 @@ export function TransferModal({
         reason: reason || null,
       })
       toast.success(`${qty} unidades transferidas`)
-      if (selectedProduct && selectedProduct.totalStock - qty <= selectedProduct.reorderPoint) {
-        toast.warning(
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4" />
-            <span>Stock bajo después de la transferencia. Punto de reorden: {selectedProduct.reorderPoint}</span>
-          </div>,
-          { duration: 6000 }
-        )
-      }
       onDone()
       close()
     } catch (err) {
@@ -114,8 +105,6 @@ export function TransferModal({
       setSaving(false)
     }
   }
-
-  const selectedProduct = products.find((p) => p.id === productId)
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) close(); else onOpenChange(true) }}>
@@ -147,12 +136,6 @@ export function TransferModal({
                   </SelectContent>
                 </Select>
               </div>
-
-              {selectedProduct && (
-                <p className="text-xs text-muted-foreground">
-                  Stock actual: <span className="font-semibold text-foreground">{selectedProduct.totalStock}</span> · Pendiente: <span className="font-semibold text-foreground">{selectedProduct.totalPendingStock}</span>
-                </p>
-              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
