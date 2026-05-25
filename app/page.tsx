@@ -65,7 +65,7 @@ export default function LoginPage() {
 
         <div className="my-auto max-w-md">
           <h2 className="font-serif italic text-4xl lg:text-5xl leading-tight text-balance">
-            Gestión de compras inteligente y eficiente.
+            Visco Orinoco Nexus - Gestión de compras inteligente y eficiente.
           </h2>
           <p className="mt-6 text-white/80 leading-relaxed text-pretty">
             Centraliza inventario, procurement y proveedores en una sola plataforma.
