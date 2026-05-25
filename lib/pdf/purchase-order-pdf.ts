@@ -118,7 +118,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 30
+  const boxH = 38
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -150,6 +150,15 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   by += 5
   doc.text(warehouse?.physicalAddress ?? "—", x1 + 4, by)
   by += 5
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLORS.textMuted)
+  const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
+  const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
+  const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
+  if (extraInfo) doc.text(extraInfo, x1 + 4, by)
+  by += 5
+  doc.setFontSize(9)
+  doc.setTextColor(...COLORS.text)
   if (warehouse?.description) { doc.text(warehouse.description, x1 + 4, by) }
 
   y += boxH + 6

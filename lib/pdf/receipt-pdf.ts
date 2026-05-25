@@ -129,7 +129,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
 
   // ── Supplier & Warehouse Info ──
   const boxW = (contentW - 8) / 2
-  const boxH = 28
+  const boxH = 36
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -158,7 +158,15 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setTextColor(...COLORS.text)
   doc.text(warehouse?.name ?? "—", x1 + 4, y + 12)
   doc.text(warehouseAddress, x1 + 4, y + 18)
-  if (warehouse?.description) doc.text(warehouse.description, x1 + 4, y + 24)
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLORS.textMuted)
+  const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
+  const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
+  const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
+  if (extraInfo) doc.text(extraInfo, x1 + 4, y + 24)
+  doc.setFontSize(9)
+  doc.setTextColor(...COLORS.text)
+  if (warehouse?.description) doc.text(warehouse.description, x1 + 4, y + 30)
 
   y += boxH + 6
 

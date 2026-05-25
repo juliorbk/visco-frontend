@@ -151,6 +151,8 @@ export interface PurchaseOrderResponse {
     name: string
     physicalAddress: string
     description: string
+    sapCenterCode?: string
+    responsibleUserName?: string
   } | null
   items: PurchaseOrderItemResponse[]
 }
@@ -199,6 +201,8 @@ export interface GoodReceiptResponse {
       name: string
       physicalAddress: string
       description: string
+      sapCenterCode?: string
+      responsibleUserName?: string
     }
     createdAt: string
   } | null
