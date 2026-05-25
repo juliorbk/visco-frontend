@@ -30,7 +30,10 @@ export default function InboundsPage() {
         fetchReceipts(0, 50),
         fetchPOs(0, 200),
       ])
-      setReceipts(recRes.content ?? [])
+      const sorted = (recRes.content ?? []).sort(
+        (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+      )
+      setReceipts(sorted)
       setPurchaseOrders(poRes.content ?? [])
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar datos")

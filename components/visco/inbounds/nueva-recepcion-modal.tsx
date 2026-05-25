@@ -111,7 +111,7 @@ export function NuevaRecepcionModal({
     }).length || 0
 
   const approvableOrders = purchaseOrders.filter(
-    (po) => po.status === "APPROVED" || po.status === "IN_TRANSIT",
+    (po) => po.status === "APPROVED" || po.status === "IN_TRANSIT" || po.status === "PARTIALLY_DELIVERED",
   )
 
   return (
@@ -148,7 +148,7 @@ export function NuevaRecepcionModal({
                 Seleccionar Orden de Compra
               </h3>
               {approvableOrders.length === 0 ? (
-                <p className="text-sm text-[#6b7280]">No hay órdenes aprobadas o en tránsito disponibles.</p>
+                <p className="text-sm text-[#6b7280]">No hay órdenes aprobadas, en tránsito o con recepción parcial disponibles.</p>
               ) : (
                 <div className="space-y-3">
                   {approvableOrders.map((po) => (
@@ -202,6 +202,12 @@ export function NuevaRecepcionModal({
                           <p className="text-xs text-[#6b7280] font-mono">SKU: {item.productSku}</p>
                         </div>
                       </div>
+
+                      {summaryItem && summaryItem.receivedQuantity > 0 && (
+                        <div className="mb-2 text-xs text-blue-700 font-medium">
+                          Ya recibido anteriormente: {summaryItem.receivedQuantity} uds.
+                        </div>
+                      )}
 
                       <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                         <span className="text-xs text-[#6b7280] font-medium whitespace-nowrap">

@@ -193,7 +193,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
       item.productName,
       item.productSku,
       String(item.expectedQuantity),
-      String(item.difference),
+      String(item.expectedQuantity - item.receivedQuantity),
     ]
   })
 
