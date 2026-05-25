@@ -11,7 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react"
+import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight, ArrowUpDown, Package } from "lucide-react"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, Category } from "@/lib/types"
@@ -34,6 +34,7 @@ export default function InventoryPage() {
   const [category, setCategory] = useState<string>("all")
   const [categories, setCategories] = useState<Category[]>([])
   const [stockSort, setStockSort] = useState<"none" | "asc" | "desc">("none")
+  const [hasStockOnly, setHasStockOnly] = useState(false)
   
   // UI states
   const [selected, setSelected] = useState<ProductDTO | null>(null)
@@ -73,7 +74,7 @@ export default function InventoryPage() {
         const apiSortBy = stockSort === "none" ? "" : "stock"
         const apiSortDir = stockSort === "none" ? "" : stockSort
 
-        const res = await fetchProducts(page, 20, debouncedSearch, apiCategory, apiSortBy, apiSortDir)
+        const res = await fetchProducts(page, 20, debouncedSearch, apiCategory, apiSortBy, apiSortDir, hasStockOnly)
         setProducts(res.content ?? [])
         setTotalPages(res.page.totalPages)
         setTotalElements(res.page.totalElements)
@@ -85,7 +86,7 @@ export default function InventoryPage() {
     }
 
     fetchData()
-  }, [page, debouncedSearch, category, stockSort, refreshTick])
+  }, [page, debouncedSearch, category, stockSort, hasStockOnly, refreshTick])
 
   const mainCategories = useMemo(
     () => categories.filter((c) => c.parentId === null),
@@ -166,6 +167,16 @@ export default function InventoryPage() {
             >
               <ArrowUpDown className="size-4 mr-2" /> 
               Sort by Stock {stockSort === "desc" ? "(Desc)" : stockSort === "asc" ? "(Asc)" : ""}
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => { setHasStockOnly((prev) => !prev); setPage(0) }}
+              className={cn("bg-card", hasStockOnly && "border-primary text-primary")}
+            >
+              <Package className="size-4 mr-2" /> 
+              {hasStockOnly ? "Con stock" : "Solo stock"}
             </Button>
 
             <Button variant="outline" size="sm" className="bg-card">
