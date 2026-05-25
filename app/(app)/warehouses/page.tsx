@@ -13,7 +13,7 @@ import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
 import { fetchStockSummary, fetchWarehouses, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
 import type { WarehouseResponse, WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
-import { Plus, ArrowRightLeft, Equal, Warehouse, Loader2, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, ArrowRightLeft, Equal, Warehouse, Loader2, ChevronLeft, ChevronRight, Package } from "lucide-react"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 20
