@@ -1,11 +1,12 @@
 "use client"
 
-import { Copy, ExternalLink, FileDown, X } from "lucide-react"
-import type { GoodReceiptResponse } from "@/lib/types"
-import { useState } from "react"
+import { Copy, ExternalLink, FileDown, X, AlertTriangle, CheckCircle2 } from "lucide-react"
+import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 import { generateReceiptPDF } from "@/lib/pdf/receipt-pdf"
+import { fetchReceiptSummary } from "@/lib/services/warehouse"
 
 export function ReceiptDetailPanel({
   receipt,
@@ -15,6 +16,20 @@ export function ReceiptDetailPanel({
   onClose: () => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [summary, setSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+
+  useEffect(() => {
+    if (receipt?.updatedStatus === "PARTIALLY_DELIVERED") {
+      setSummaryLoading(true)
+      fetchReceiptSummary(receipt.purchaseOrderId)
+        .then(setSummary)
+        .catch(() => setSummary(null))
+        .finally(() => setSummaryLoading(false))
+    } else {
+      setSummary(null)
+    }
+  }, [receipt])
 
   if (!receipt) return null
 
@@ -128,6 +143,53 @@ export function ReceiptDetailPanel({
           </table>
         </div>
       </div>
+
+      {summary && (
+        <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
+          <h4 className="font-semibold text-[#111827] mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            Estado acumulado de la OC ({summary.totalReceipts} recepciones)
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#f3f4f6]">
+                  <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCTO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">ORDENADO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">RECIBIDO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">PENDIENTE</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">ESTADO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.items.map((item) => (
+                  <tr key={item.productId} className="border-b border-[#f3f4f6] hover:bg-[#f5f5f7]">
+                    <td className="py-3 px-0 text-[#111827]">{item.productName}</td>
+                    <td className="py-3 px-0 text-right text-[#111827]">{item.orderedQuantity}</td>
+                    <td className="py-3 px-0 text-right text-[#111827]">{item.receivedQuantity}</td>
+                    <td className="py-3 px-0 text-right text-[#111827]">{item.pendingQuantity}</td>
+                    <td className="py-3 px-0 text-right">
+                      {item.fullyReceived ? (
+                        <span className="text-green-700 flex items-center justify-end gap-1">
+                          <CheckCircle2 className="w-4 h-4" /> Completo
+                        </span>
+                      ) : (
+                        <span className="text-orange-600 flex items-center justify-end gap-1">
+                          <AlertTriangle className="w-4 h-4" /> Pendiente
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-[#6b7280] mt-3">
+            Esta OC tiene {summary.totalReceipts} recepción{summary.totalReceipts !== 1 ? "es" : ""}.
+            Los valores mostrados son el acumulado de todas las recepciones.
+          </p>
+        </div>
+      )}
 
       {receipt.notes && (
         <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
