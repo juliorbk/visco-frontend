@@ -17,10 +17,9 @@ const lora = Lora({
 })
 
 export const metadata: Metadata = {
-  title: "Visco Orinoco — Enterprise Tier",
+  title: "Visco Orinoco — Nexus",
   description:
     "Procurement, inventory and supplier management platform for enterprise operations.",
-  generator: "v0.app",
   icons: {
     icon: "/visco-logo.png",
   },
