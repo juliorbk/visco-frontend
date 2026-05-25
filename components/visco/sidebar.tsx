@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, FileText, Plus, X, Shield, Settings, Warehouse } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, FileText, Plus, X, Shield, Settings, Warehouse, LogOut } from "lucide-react"
 import { Logo } from "./logo"
 import { getCachedUser, fetchUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -16,6 +16,7 @@ const BASE_NAV = [
   { href: "/procurement", label: "Procurement", icon: ShoppingCart },
   { href: "/inbounds", label: "Inbounds", icon: Truck },
   { href: "/suppliers", label: "Suppliers", icon: Building2 },
+  { href: "/dispatches", label: "Dispatches", icon: LogOut },
   { href: "/warehouses", label: "Warehouses", icon: Warehouse },
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ]

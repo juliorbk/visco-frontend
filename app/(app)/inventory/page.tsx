@@ -5,13 +5,13 @@ import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight } from "lucide-react"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight, ArrowUpDown } from "lucide-react"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, Category } from "@/lib/types"
@@ -29,10 +29,11 @@ export default function InventoryPage() {
   // Búsqueda con debounce
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
+  
+  // Filtros y Ordenamiento refactorizados
   const [category, setCategory] = useState<string>("all")
   const [categories, setCategories] = useState<Category[]>([])
-  const [sortBy, setSortBy] = useState<string>("none")
-  const [sortDir, setSortDir] = useState<string>("asc")
+  const [stockSort, setStockSort] = useState<"none" | "asc" | "desc">("none")
   
   // UI states
   const [selected, setSelected] = useState<ProductDTO | null>(null)
@@ -61,12 +62,18 @@ export default function InventoryPage() {
     return () => clearTimeout(timer)
   }, [search])
 
-  // 2. Efecto Fetch Unificado
+  // 2. Efecto Fetch Unificado con parámetros limpios
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const res = await fetchProducts(page, 20, debouncedSearch, category, sortBy, sortDir)
+        
+        // Formatear parámetros para evitar enviar "all" o "none" al backend
+        const apiCategory = category === "all" ? "" : category
+        const apiSortBy = stockSort === "none" ? "" : "stock"
+        const apiSortDir = stockSort === "none" ? "" : stockSort
+
+        const res = await fetchProducts(page, 20, debouncedSearch, apiCategory, apiSortBy, apiSortDir)
         setProducts(res.content ?? [])
         setTotalPages(res.page.totalPages)
         setTotalElements(res.page.totalElements)
@@ -78,7 +85,7 @@ export default function InventoryPage() {
     }
 
     fetchData()
-  }, [page, debouncedSearch, category, sortBy, sortDir, refreshTick])
+  }, [page, debouncedSearch, category, stockSort, refreshTick])
 
   const mainCategories = useMemo(
     () => categories.filter((c) => c.parentId === null),
@@ -102,6 +109,15 @@ export default function InventoryPage() {
     return "En stock"
   }
 
+  const toggleStockSort = () => {
+    setStockSort((current) => {
+      if (current === "none") return "desc" // Por defecto al clickear, mostrar mayor stock primero
+      if (current === "desc") return "asc"
+      return "none"
+    })
+    setPage(0)
+  }
+
   return (
     <div>
       <PageHeader
@@ -109,9 +125,49 @@ export default function InventoryPage() {
         subtitle="Gestiona productos, niveles de stock y puntos de reorden en todos los almacenes."
         actions={
           <>
-            <Button variant="outline" size="sm" className="bg-card">
-              <Filter className="size-4 mr-2" /> Filters
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className={cn("bg-card", category !== "all" && "border-primary text-primary")}
+                >
+                  <Filter className="size-4 mr-2" /> 
+                  {category === "all" ? "Filters" : "Category Active"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 max-h-[300px] overflow-y-auto">
+                <DropdownMenuRadioGroup value={category} onValueChange={(v) => { setCategory(v); setPage(0) }}>
+                  <DropdownMenuRadioItem value="all">Todas las categorías</DropdownMenuRadioItem>
+                  {mainCategories.map((main) => {
+                    const subs = subCategoriesByParent.get(main.id) ?? []
+                    return (
+                      <div key={main.id}>
+                        <DropdownMenuRadioItem value={String(main.id)}>
+                          {main.name}
+                        </DropdownMenuRadioItem>
+                        {subs.map((sub) => (
+                          <DropdownMenuRadioItem key={sub.id} value={String(sub.id)} className="pl-6 text-muted-foreground">
+                            └ {sub.name}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={toggleStockSort}
+              className={cn("bg-card", stockSort !== "none" && "border-primary text-primary")}
+            >
+              <ArrowUpDown className="size-4 mr-2" /> 
+              Sort by Stock {stockSort === "desc" ? "(Desc)" : stockSort === "asc" ? "(Asc)" : ""}
             </Button>
+
             <Button variant="outline" size="sm" className="bg-card">
               <Download className="size-4 mr-2" /> Export
             </Button>
@@ -147,49 +203,6 @@ export default function InventoryPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={category} onValueChange={(v) => { setCategory(v); setPage(0) }}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Todas las categorías" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
-            {mainCategories.map((main) => {
-              const subs = subCategoriesByParent.get(main.id) ?? []
-              return (
-                <div key={main.id}>
-                  <SelectItem value={String(main.id)}>
-                    {main.name}
-                  </SelectItem>
-                  {subs.map((sub) => (
-                    <SelectItem key={sub.id} value={String(sub.id)} className="pl-6">
-                      └ {sub.name}
-                    </SelectItem>
-                  ))}
-                </div>
-              )
-            })}
-          </SelectContent>
-        </Select>
-        <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setSortDir("asc"); setPage(0) }}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Ordenar por" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">Por defecto</SelectItem>
-            <SelectItem value="stock">Stock</SelectItem>
-          </SelectContent>
-        </Select>
-        {sortBy !== "none" && sortBy !== "" && (
-          <Select value={sortDir} onValueChange={(v) => { setSortDir(v); setPage(0) }}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="asc">Ascendente</SelectItem>
-              <SelectItem value="desc">Descendente</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
@@ -292,8 +305,8 @@ export default function InventoryPage() {
         }}
         editing={editing}
         onSave={() => {
-          setPage(0) // Regresamos al inicio para ver el producto recién creado
-          setRefreshTick((prev) => prev + 1) // Forzamos al useEffect a disparar fetchProducts
+          setPage(0) 
+          setRefreshTick((prev) => prev + 1) 
         }}
       />
 

@@ -12,6 +12,8 @@ import type {
   InventoryMovementResponse,
   PurchaseOrderReceiptSummary,
   ProductOnStock,
+  DispatchRequest,
+  DispatchResponse,
   Page,
 } from "@/lib/types"
 
@@ -129,4 +131,16 @@ export async function exportMovements(
   a.click()
   a.remove()
   window.URL.revokeObjectURL(downloadUrl)
+}
+
+export async function createDispatch(data: DispatchRequest): Promise<DispatchResponse> {
+  return api.post<DispatchResponse>("/api/warehouse/dispatch", data)
+}
+
+export async function fetchDispatches(page = 0, size = 20): Promise<Page<DispatchResponse>> {
+  return api.get<Page<DispatchResponse>>(`/api/warehouse/dispatches?page=${page}&size=${size}`)
+}
+
+export async function fetchDispatchById(id: number): Promise<DispatchResponse> {
+  return api.get<DispatchResponse>(`/api/warehouse/dispatches/${id}`)
 }

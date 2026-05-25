@@ -396,9 +396,40 @@ export interface CreateRequisitionRequest {
   items: { productId: number; quantity: number; notes?: string }[]
 }
 
+// ── Dispatch ──
+
+export interface DispatchItemRequest {
+  productId: number
+  quantity: number
+}
+
+export interface DispatchRequest {
+  items: DispatchItemRequest[]
+  notes: string
+  warehouseId: number
+}
+
+export interface DispatchItemResponse {
+  productId: number
+  productName: string
+  productSku: string
+  quantity: number
+}
+
+export interface DispatchResponse {
+  id: number
+  dispatchNumber: string
+  warehouseId: number
+  warehouseName: string
+  items: DispatchItemResponse[]
+  notes: string
+  createdByName: string
+  createdAt: string
+}
+
 // ── Inventory Movements ──
 
-export type MovementType = "TRANSFER" | "ADJUSTMENT" | "RECEIPT"
+export type MovementType = "TRANSFER" | "ADJUSTMENT" | "RECEIPT" | "DISPATCH"
 
 export interface InventoryMovementResponse {
   id: number
