@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,9 +46,11 @@ export default function InventoryPage() {
   const [totalElements, setTotalElements] = useState(0)
   const [refreshTick, setRefreshTick] = useState(0)
 
-  useEffect(() => {
+  const loadCategories = useCallback(() => {
     fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
   }, [])
+
+  useEffect(() => { loadCategories() }, [loadCategories])
 
   // 1. Efecto Debounce
   useEffect(() => {
@@ -157,11 +159,11 @@ export default function InventoryPage() {
               const subs = subCategoriesByParent.get(main.id) ?? []
               return (
                 <div key={main.id}>
-                  <SelectItem value={main.name}>
+                  <SelectItem value={String(main.id)}>
                     {main.name}
                   </SelectItem>
                   {subs.map((sub) => (
-                    <SelectItem key={sub.id} value={sub.name} className="pl-6">
+                    <SelectItem key={sub.id} value={String(sub.id)} className="pl-6">
                       └ {sub.name}
                     </SelectItem>
                   ))}
@@ -299,7 +301,10 @@ export default function InventoryPage() {
 
       <CategoryManagerModal
         open={categoryManagerOpen}
-        onOpenChange={setCategoryManagerOpen}
+        onOpenChange={(o) => {
+          setCategoryManagerOpen(o)
+          if (!o) loadCategories()
+        }}
       />
     </div>
   )
