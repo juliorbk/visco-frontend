@@ -208,7 +208,7 @@ export function ReceiptDetailPanel({
         <button
           className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2"
           onClick={() => {
-            const doc = generateReceiptPDF(receipt)
+            const doc = generateReceiptPDF(receipt, summary)
             downloadPDF(doc, `NOTA_ENTREGA_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
         >

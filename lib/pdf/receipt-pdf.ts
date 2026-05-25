@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf"
-import type { GoodReceiptResponse } from "@/lib/types"
+import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import {
   COLORS,
   addLogoPlaceholder,
@@ -72,7 +72,7 @@ function addTable(
   return cy
 }
 
-export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
+export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): jsPDF {
   const doc = new jsPDF("p", "mm", "a4")
   const pageW = 210
   const margin = 20
@@ -108,7 +108,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
   doc.text("RECEIPT DATE", x0, y)
-  doc.text("CITY", x0 + 70, y)
+  doc.text(`CITY`, x0 + 70, y)
   doc.text("STATUS", x0 + 140, y)
 
   doc.setFont("helvetica", "normal")
@@ -170,11 +170,19 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
     ? receipt.items.reduce((s, i) => s + (i.totalPrice ?? i.receivedQuantity * (i.unitPrice ?? 0)), 0)
     : 0
 
+  const summaryMap = summary
+    ? new Map(summary.items.map((s) => [s.productId, s]))
+    : null
+
   const columns = hasUnitPrices
     ? ["QTY.", "PRODUCT", "REFERENCE", "U/P", "TOTAL"]
-    : ["QTY.", "PRODUCT", "REFERENCE", "EXP. QTY", "DIF."]
+    : summary
+      ? ["RECIBIDO", "PRODUCTO", "SKU", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
+      : ["QTY.", "PRODUCT", "REFERENCE", "EXP. QTY", "DIF."]
 
   const bodyRows = receipt.items.map((item) => {
+    const sm = summaryMap?.get(item.productId)
+
     if (hasUnitPrices) {
       return [
         String(item.receivedQuantity),
@@ -188,6 +196,19 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
             : "—",
       ]
     }
+
+    if (sm) {
+      const recibidoAntes = sm.receivedQuantity - item.receivedQuantity
+      return [
+        String(item.receivedQuantity),
+        item.productName,
+        item.productSku,
+        String(sm.orderedQuantity),
+        String(Math.max(0, recibidoAntes)),
+        String(sm.pendingQuantity),
+      ]
+    }
+
     return [
       String(item.receivedQuantity),
       item.productName,
@@ -199,7 +220,9 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
 
   const colWidths = hasUnitPrices
     ? [18, contentW - 18 - 28 - 22 - 22, 28, 22, 22]
-    : [18, contentW - 18 - 28 - 22 - 22, 28, 22, 22]
+    : summary
+      ? [18, contentW - 18 - 28 - 22 - 22 - 22, 22, 22, 22, 22]
+      : [18, contentW - 18 - 28 - 22 - 22, 28, 22, 22]
 
   y = addTable(doc, x0, y, contentW, columns, bodyRows, colWidths)
   y += 6
@@ -226,6 +249,23 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse): jsPDF {
     doc.text("Total $", sumX, y)
     doc.text(formatCurrency(grandTotal), sumX + 68, y, { align: "right" })
     y += 12
+  } else if (summary) {
+    const sumTotalOrdered = summary.items.reduce((s, i) => s + i.orderedQuantity, 0)
+    const sumTotalReceived = summary.items.reduce((s, i) => s + i.receivedQuantity, 0)
+    const sumTotalPending = summary.items.reduce((s, i) => s + i.pendingQuantity, 0)
+    const sumX = pageW - margin - 70
+    doc.setFontSize(8)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...COLORS.text)
+    doc.text("Total ordenado", sumX, y)
+    doc.text(`${sumTotalOrdered} uds.`, sumX + 68, y, { align: "right" })
+    y += 5
+    doc.text("Total recibido", sumX, y)
+    doc.text(`${sumTotalReceived} uds.`, sumX + 68, y, { align: "right" })
+    y += 5
+    doc.text("Pendiente", sumX, y)
+    doc.text(`${sumTotalPending} uds.`, sumX + 68, y, { align: "right" })
+    y += 10
   } else {
     doc.setFontSize(8)
     doc.setFont("helvetica", "normal")
