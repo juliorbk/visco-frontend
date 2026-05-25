@@ -103,6 +103,9 @@ export interface ProductOnStock {
   name: string
   sapCode: string
   uom: string
+  currentStock: number
+  reorderPoint: number
+  categoryName: string | null
 }
 
 export interface CreateProductRequest {

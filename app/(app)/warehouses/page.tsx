@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { WarehouseCard } from "@/components/visco/warehouses/warehouse-card"
 import { WarehouseDetail, WarehouseDetailSkeleton } from "@/components/visco/warehouses/warehouse-detail"
 import { MovementsTable } from "@/components/visco/warehouses/movements-table"
+import { WarehouseInventoryTable } from "@/components/visco/warehouses/warehouse-inventory"
 import { TransferModal } from "@/components/visco/warehouses/transfer-modal"
 import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
@@ -138,6 +139,9 @@ export default function WarehousesPage() {
           <TabsTrigger value="warehouses">
             <Warehouse className="size-4 mr-1.5" /> Almacenes
           </TabsTrigger>
+          <TabsTrigger value="inventory">
+            <Package className="size-4 mr-1.5" /> Inventario
+          </TabsTrigger>
           <TabsTrigger value="movements">
             <ArrowRightLeft className="size-4 mr-1.5" /> Movimientos
           </TabsTrigger>
@@ -175,6 +179,19 @@ export default function WarehousesPage() {
               )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="inventory" className="mt-2">
+          {selectedWhId === null ? (
+            <div className="rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
+              Selecciona un almacén para ver su inventario
+            </div>
+          ) : (
+            <WarehouseInventoryTable
+              warehouseId={selectedWhId}
+              warehouseName={selectedSummary?.warehouseName ?? ""}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="movements" className="mt-2">

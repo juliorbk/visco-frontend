@@ -52,18 +52,16 @@ export default function InventoryPage() {
 
   useEffect(() => { loadCategories() }, [loadCategories])
 
-  // 1. Efecto Debounce
+  // 1. Efecto Debounce (también reinicia página)
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 500)
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(0)
+    }, 500)
     return () => clearTimeout(timer)
   }, [search])
 
-  // 2. Efecto Filtros: Reinicia a la página 0 si la búsqueda o categoría cambian
-  useEffect(() => {
-    setPage(0)
-  }, [debouncedSearch, category, sortBy, sortDir])
-
-  // 3. Efecto Fetch Unificado
+  // 2. Efecto Fetch Unificado
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,7 +78,7 @@ export default function InventoryPage() {
     }
 
     fetchData()
-  }, [page, debouncedSearch, category, refreshTick])
+  }, [page, debouncedSearch, category, sortBy, sortDir, refreshTick])
 
   const mainCategories = useMemo(
     () => categories.filter((c) => c.parentId === null),
@@ -149,7 +147,7 @@ export default function InventoryPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={category} onValueChange={(v) => { setCategory(v); setPage(0) }}>
           <SelectTrigger className="w-48">
             <SelectValue placeholder="Todas las categorías" />
           </SelectTrigger>
@@ -172,7 +170,7 @@ export default function InventoryPage() {
             })}
           </SelectContent>
         </Select>
-        <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setSortDir("asc") }}>
+        <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setSortDir("asc"); setPage(0) }}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
@@ -182,7 +180,7 @@ export default function InventoryPage() {
           </SelectContent>
         </Select>
         {sortBy !== "none" && sortBy !== "" && (
-          <Select value={sortDir} onValueChange={setSortDir}>
+          <Select value={sortDir} onValueChange={(v) => { setSortDir(v); setPage(0) }}>
             <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>

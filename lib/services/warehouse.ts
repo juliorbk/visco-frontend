@@ -84,6 +84,17 @@ export async function fetchReceiptSummary(orderId: number): Promise<PurchaseOrde
   return api.get<PurchaseOrderReceiptSummary>(`/api/warehouse/orders/${orderId}/receipt-summary`)
 }
 
+export async function fetchWarehouseProducts(
+  warehouseId: number,
+  search?: string,
+  page = 0,
+  size = 20,
+): Promise<Page<ProductOnStock>> {
+  let url = `/api/warehouse/${warehouseId}/products?page=${page}&size=${size}`
+  if (search) url += `&search=${encodeURIComponent(search)}`
+  return api.get<Page<ProductOnStock>>(url)
+}
+
 export async function fetchProductsOnStock(
   warehouseId: number,
   search?: string,
