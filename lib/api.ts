@@ -13,7 +13,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   const url = `${BASE_URL}${endpoint}`
-  console.log(`[API] ${options.method || "GET"} ${url}`) // Debug
+  if (process.env.NODE_ENV === 'development') console.log(`[API] ${options.method || "GET"} ${url}`)
   
   const res = await fetch(url, { 
     ...options, 

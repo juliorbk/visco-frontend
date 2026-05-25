@@ -35,12 +35,15 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 interface LineItem {
+  id: number
   productId: number
   productName: string
   quantity: number
   unitPrice: number
   sku: string
 }
+
+let nextLineId = 1
 
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
@@ -77,6 +80,12 @@ export function CreatePOModal({
   const user = getCachedUser()
   const canCreateSupplier = canCreateSupplierFromPo(user)
   const [selectedRequisitionId, setSelectedRequisitionId] = useState<number | null>(null)
+
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    return () => clearTimeout(closeTimerRef.current)
+  }, [])
 
   // Product finder state
   const [finderOpen, setFinderOpen] = useState(false)
@@ -157,7 +166,8 @@ export function CreatePOModal({
 
   const close = () => {
     onOpenChange(false)
-    setTimeout(reset, 200)
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(reset, 200)
   }
 
   const handleRequisitionChange = (idStr: string) => {
@@ -212,7 +222,7 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
+      { id: nextLineId++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
     ])
     setPickProduct(null)
     setPickQty("1")
@@ -532,9 +542,9 @@ export function CreatePOModal({
                 </div>
               ) : (
                 <ul>
-                  {lines.map((l, i) => (
+                  {lines.map((l) => (
                     <li
-                      key={i}
+                      key={l.id}
                       className="flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
                     >
                       <div className="flex-1 min-w-0">
@@ -551,8 +561,8 @@ export function CreatePOModal({
                           onChange={(e) => {
                             if (e.target.value === "") {
                               setLines((prev) =>
-                                prev.map((line, idx) =>
-                                  idx === i ? { ...line, quantity: 0 } : line,
+                                prev.map((line) =>
+                                  line.id === l.id ? { ...line, quantity: 0 } : line,
                                 ),
                               )
                               return
@@ -560,8 +570,8 @@ export function CreatePOModal({
                             const v = parseInt(e.target.value, 10)
                             if (!isNaN(v) && v >= 0) {
                               setLines((prev) =>
-                                prev.map((line, idx) =>
-                                  idx === i ? { ...line, quantity: v } : line,
+                                prev.map((line) =>
+                                  line.id === l.id ? { ...line, quantity: v } : line,
                                 ),
                               )
                             }
@@ -578,8 +588,8 @@ export function CreatePOModal({
                           onChange={(e) => {
                             if (e.target.value === "") {
                               setLines((prev) =>
-                                prev.map((line, idx) =>
-                                  idx === i ? { ...line, unitPrice: 0 } : line,
+                                prev.map((line) =>
+                                  line.id === l.id ? { ...line, unitPrice: 0 } : line,
                                 ),
                               )
                               return
@@ -587,8 +597,8 @@ export function CreatePOModal({
                             const v = parseFloat(e.target.value)
                             if (!isNaN(v)) {
                               setLines((prev) =>
-                                prev.map((line, idx) =>
-                                  idx === i ? { ...line, unitPrice: v } : line,
+                                prev.map((line) =>
+                                  line.id === l.id ? { ...line, unitPrice: v } : line,
                                 ),
                               )
                             }
@@ -599,7 +609,7 @@ export function CreatePOModal({
                         </span>
                       </div>
                       <button
-                        onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
+                        onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
                         className="text-muted-foreground hover:text-red-600 shrink-0"
                         aria-label="Eliminar línea"
                       >

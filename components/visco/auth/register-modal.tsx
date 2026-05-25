@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -48,8 +48,13 @@ export function RegisterModal({
   const [role, setRole] = useState<UserRole>("WAREHOUSEMAN")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [showPwd, setShowPwd] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [saving, setSaving] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+
+  useEffect(() => {
+    return () => clearTimeout(closeTimerRef.current)
+  }, [])
 
 useEffect(() => {
   if (!open) return
@@ -74,7 +79,8 @@ useEffect(() => {
 
   const close = () => {
     onOpenChange(false)
-    setTimeout(reset, 200)
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(reset, 200)
   }
 
   const submit = async (e: React.FormEvent) => {

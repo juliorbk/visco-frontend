@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, FileText, Plus, X, Shield, Settings, Warehouse, LogOut } from "lucide-react"
 import { Logo } from "./logo"
 import { getCachedUser, fetchUser } from "@/lib/auth-client"
@@ -24,14 +24,10 @@ const BASE_NAV = [
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const [user, setUser] = useState<UserDTO | null | undefined>(getCachedUser())
-  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (!user && !fetchedRef.current) {
-      fetchedRef.current = true
-      fetchUser().then(setUser)
-    }
-  }, [user])
+    fetchUser().then(setUser)
+  }, [])
 
   const NAV = user?.role === "ADMIN"
     ? [...BASE_NAV, { href: "/admin", label: "Admin", icon: Shield }]

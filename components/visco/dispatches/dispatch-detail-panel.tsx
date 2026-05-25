@@ -1,7 +1,7 @@
 "use client"
 
 import { Copy, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { DispatchResponse } from "@/lib/types"
 
 export function DispatchDetailPanel({
@@ -13,12 +13,17 @@ export function DispatchDetailPanel({
 }) {
   const [copied, setCopied] = useState(false)
 
+  useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
+
   if (!dispatch) return null
 
   const handleCopy = () => {
     navigator.clipboard.writeText(dispatch.dispatchNumber)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (

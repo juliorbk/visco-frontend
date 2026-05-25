@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,12 @@ export function CreateWarehouseModal({
   const [sapCenterCode, setSapCenterCode] = useState("")
   const [saving, setSaving] = useState(false)
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    return () => clearTimeout(closeTimerRef.current)
+  }, [])
+
   const reset = () => {
     setName("")
     setPhysicalAddress("")
@@ -42,7 +48,8 @@ export function CreateWarehouseModal({
 
   const close = () => {
     onOpenChange(false)
-    setTimeout(reset, 200)
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(reset, 200)
   }
 
   const submit = async (e: React.FormEvent) => {

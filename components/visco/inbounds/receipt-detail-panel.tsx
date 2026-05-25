@@ -20,6 +20,13 @@ export function ReceiptDetailPanel({
   const [summaryLoading, setSummaryLoading] = useState(false)
 
   useEffect(() => {
+    if (!copied) return
+    const timer = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(timer)
+  }, [copied])
+
+
+  useEffect(() => {
     if (receipt?.updatedStatus === "PARTIALLY_DELIVERED") {
       setSummaryLoading(true)
       fetchReceiptSummary(receipt.purchaseOrderId)
@@ -36,7 +43,6 @@ export function ReceiptDetailPanel({
   const handleCopy = () => {
     navigator.clipboard.writeText(receipt.receiptNumber)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (

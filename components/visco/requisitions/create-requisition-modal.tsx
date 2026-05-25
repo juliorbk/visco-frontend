@@ -29,12 +29,15 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 interface LineItem {
+  id: number
   productId: number
   productName: string
   quantity: number
   sku: string
   notes: string
 }
+
+let nextLineId = 1
 
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
@@ -59,11 +62,17 @@ export function CreateRequisitionModal({
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
 
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
   const [finderOpen, setFinderOpen] = useState(false)
   const [finderQuery, setFinderQuery] = useState("")
   const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
   const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    return () => clearTimeout(closeTimerRef.current)
+  }, [])
 
   useEffect(() => {
     if (open) {
@@ -120,7 +129,8 @@ export function CreateRequisitionModal({
 
   const close = () => {
     onOpenChange(false)
-    setTimeout(reset, 200)
+    clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(reset, 200)
   }
 
   const addLine = () => {
@@ -139,7 +149,7 @@ export function CreateRequisitionModal({
     }
     setLines((prev) => [
       ...prev,
-      { productId: pickProduct.id, productName: pickProduct.name, quantity: qty, sku: pickProduct.sku, notes: pickNotes },
+      { id: nextLineId++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, sku: pickProduct.sku, notes: pickNotes },
     ])
     setPickProduct(null)
     setPickQty("1")
@@ -351,9 +361,9 @@ export function CreateRequisitionModal({
                 </div>
               ) : (
                 <ul>
-                  {lines.map((l, i) => (
+                    {lines.map((l) => (
                     <li
-                      key={i}
+                      key={l.id}
                       className="flex items-center justify-between gap-3 px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
                     >
                       <div className="flex-1 min-w-0">
@@ -364,7 +374,7 @@ export function CreateRequisitionModal({
                         </div>
                       </div>
                       <button
-                        onClick={() => setLines((prev) => prev.filter((_, idx) => idx !== i))}
+                        onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
                         className="text-muted-foreground hover:text-red-600 shrink-0"
                         aria-label="Eliminar línea"
                       >

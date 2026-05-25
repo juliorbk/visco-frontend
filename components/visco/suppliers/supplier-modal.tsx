@@ -239,16 +239,16 @@ function TagList({
         </Button>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-1">
-        {value.map((v, i) => (
+        {value.map((v) => (
           <span
-            key={i}
+            key={v}
             className="inline-flex items-center gap-1 rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs"
           >
             {v}
             <button
               type="button"
               aria-label={`Eliminar ${v}`}
-              onClick={() => setValue(value.filter((_, idx) => idx !== i))}
+              onClick={() => setValue(value.filter((item) => item !== v))}
               className="hover:text-red-600"
               disabled={disabled}
             >

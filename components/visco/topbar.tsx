@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { Bell, Settings, Info, Search, LogOut, User, Menu } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -21,14 +21,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
   const [user, setUser] = useState(() => getCachedUser())
-  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    if (!user && !fetchedRef.current) {
-      fetchedRef.current = true
-      fetchUser().then(setUser)
-    }
-  }, [user])
+    fetchUser().then(setUser)
+  }, [])
 
   const initials = user
     ? user.name
