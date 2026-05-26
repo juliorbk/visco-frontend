@@ -21,7 +21,13 @@ import {
 } from "@/components/ui/select"
 import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react"
 import { toast } from "sonner"
-import type { RegisterRequest, UserRole, CostCenter } from "@/lib/types"
+import type {
+  RegisterRequest,
+  UserRole,
+  CostCenter,
+  ManagementDTO,
+  GeneralManagementDTO,
+} from "@/lib/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -47,26 +53,50 @@ export function RegisterModal({
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<UserRole>("WAREHOUSEMAN")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
+  const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
+  const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
   const [showPwd, setShowPwd] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const [saving, setSaving] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+  const [managements, setManagements] = useState<ManagementDTO[]>([])
+  const [generalManagements, setGeneralManagements] = useState<GeneralManagementDTO[]>([])
 
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current)
   }, [])
 
-useEffect(() => {
-  if (!open) return
-  // Usamos fetch directo para evitar el redirect por 401 del api client
-  fetch(`${BASE_URL}/api/cost-centers/all`, { credentials: "include" })
-    .then((res) => {
-      if (!res.ok) throw new Error()
-      return res.json() as Promise<CostCenter[]>
-    })
-    .then((data) => setCostCenters(data.filter((c) => c.isActive)))
-    .catch(() => toast.error("Error al cargar centros de costo"))
-}, [open])
+  useEffect(() => {
+    if (!open) return
+    Promise.all([
+      fetch(`${BASE_URL}/api/cost-centers/all`, { credentials: "include" }).then((r) => {
+        if (!r.ok) throw new Error()
+        return r.json() as Promise<CostCenter[]>
+      }),
+      fetch(`${BASE_URL}/api/management`, { credentials: "include" }).then((r) => {
+        if (!r.ok) throw new Error()
+        return r.json() as Promise<ManagementDTO[]>
+      }),
+      fetch(`${BASE_URL}/api/general-management`, { credentials: "include" }).then((r) => {
+        if (!r.ok) throw new Error()
+        return r.json() as Promise<GeneralManagementDTO[]>
+      }),
+    ])
+      .then(([cc, mgmt, gg]) => {
+        setCostCenters(cc.filter((c) => c.isActive))
+        setManagements(mgmt)
+        setGeneralManagements(gg)
+      })
+      .catch(() => toast.error("Error al cargar datos"))
+  }, [open])
+
+  const filteredManagements = managements.filter(
+    (m) => !selectedGgId || m.generalManagementId === selectedGgId,
+  )
+
+  const filteredCostCenters = costCenters.filter(
+    (cc) => !selectedMgmtId || cc.managementId === selectedMgmtId,
+  )
 
   const reset = () => {
     setName("")
@@ -74,6 +104,8 @@ useEffect(() => {
     setPassword("")
     setRole("WAREHOUSEMAN")
     setCostCenterId(null)
+    setSelectedGgId(null)
+    setSelectedMgmtId(null)
     setShowPwd(false)
   }
 
@@ -227,21 +259,64 @@ useEffect(() => {
 
             <div className="space-y-1.5">
               <Label>Centro de costo</Label>
-              <Select
-                value={costCenterId ? String(costCenterId) : ""}
-                onValueChange={(v) => setCostCenterId(Number(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {costCenters.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.fullDescription}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <Select
+                  value={selectedGgId ? String(selectedGgId) : ""}
+                  onValueChange={(v) => {
+                    setSelectedGgId(Number(v))
+                    setSelectedMgmtId(null)
+                    setCostCenterId(null)
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Gerencia General…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generalManagements.map((gg) => (
+                      <SelectItem key={gg.id} value={String(gg.id)}>
+                        {gg.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={selectedMgmtId ? String(selectedMgmtId) : ""}
+                  onValueChange={(v) => {
+                    setSelectedMgmtId(Number(v))
+                    setCostCenterId(null)
+                  }}
+                  disabled={!selectedGgId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Gerencia…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredManagements.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={costCenterId ? String(costCenterId) : ""}
+                  onValueChange={(v) => setCostCenterId(Number(v))}
+                  disabled={!selectedMgmtId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Centro de Costo…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCostCenters.map((cc) => (
+                      <SelectItem key={cc.id} value={String(cc.id)}>
+                        {cc.fullDescription}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
