@@ -362,6 +362,26 @@ export interface SupplierPerformanceMonthlyDTO {
   b: number
 }
 
+// ── Employee ──
+
+export interface EmployeeDTO {
+  id: number
+  fullName: string
+  documentNumber: string
+  phone: string | null
+  costCenterId: number | null
+  costCenterDescription: string | null
+  isActive: boolean
+}
+
+export interface EmployeeRequest {
+  fullName: string
+  documentNumber: string
+  phone?: string | null
+  costCenterId?: number | null
+  isActive?: boolean | null
+}
+
 // ── Admin / User Management ──
 
 export interface UpdateUserRequest {
