@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -28,7 +27,14 @@ import {
   activateEmployee,
 } from "@/lib/services/employees"
 import { fetchCostCenters } from "@/lib/services/requisitions"
-import type { EmployeeDTO, EmployeeRequest, CostCenter } from "@/lib/types"
+import { fetchAllManagements, fetchAllGeneralManagements } from "@/lib/services/admin"
+import type {
+  EmployeeDTO,
+  EmployeeRequest,
+  CostCenter,
+  ManagementDTO,
+  GeneralManagementDTO,
+} from "@/lib/types"
 import { Loader2, Plus, ShieldCheck, ShieldX } from "lucide-react"
 import { toast } from "sonner"
 
@@ -36,7 +42,13 @@ export function EmployeeManager() {
   const [employees, setEmployees] = useState<EmployeeDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const [generalManagements, setGeneralManagements] = useState<GeneralManagementDTO[]>([])
+  const [managements, setManagements] = useState<ManagementDTO[]>([])
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+
+  const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
+  const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<EmployeeDTO | null>(null)
@@ -51,14 +63,18 @@ export function EmployeeManager() {
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const [empRes, ccRes] = await Promise.all([
+      const [empRes, ccRes, mgmtRes, ggRes] = await Promise.all([
         fetchEmployees(0, 200),
         fetchCostCenters(),
+        fetchAllManagements(),
+        fetchAllGeneralManagements(),
       ])
       setEmployees(empRes.content ?? [])
       setCostCenters(ccRes)
+      setManagements(mgmtRes)
+      setGeneralManagements(ggRes)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar empleados")
+      toast.error(err instanceof Error ? err.message : "Error al cargar datos")
     } finally {
       setLoading(false)
     }
@@ -68,9 +84,19 @@ export function EmployeeManager() {
     load()
   }, [load])
 
+  const filteredManagements = managements.filter(
+    (m) => !selectedGgId || m.generalManagementId === selectedGgId,
+  )
+
+  const filteredCostCenters = costCenters.filter(
+    (cc) => !selectedMgmtId || cc.managementId === selectedMgmtId,
+  )
+
   const openCreate = () => {
     setEditingEmployee(null)
     setFormData({ fullName: "", documentNumber: "", phone: "", costCenterId: null, isActive: true })
+    setSelectedGgId(null)
+    setSelectedMgmtId(null)
     setModalOpen(true)
   }
 
@@ -83,6 +109,19 @@ export function EmployeeManager() {
       costCenterId: emp.costCenterId,
       isActive: emp.isActive,
     })
+    if (emp.costCenterId) {
+      const cc = costCenters.find((c) => c.id === emp.costCenterId)
+      if (cc) {
+        setSelectedGgId(cc.generalManagementId)
+        setSelectedMgmtId(cc.managementId)
+      } else {
+        setSelectedGgId(null)
+        setSelectedMgmtId(null)
+      }
+    } else {
+      setSelectedGgId(null)
+      setSelectedMgmtId(null)
+    }
     setModalOpen(true)
   }
 
@@ -169,10 +208,7 @@ export function EmployeeManager() {
                 </tr>
               ) : (
                 employees.map((emp) => (
-                  <tr
-                    key={emp.id}
-                    className="border-t border-border"
-                  >
+                  <tr key={emp.id} className="border-t border-border">
                     <td className="px-5 py-3">
                       <div className="font-medium text-foreground">{emp.fullName}</div>
                     </td>
@@ -261,18 +297,61 @@ export function EmployeeManager() {
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
+
+            <div className="space-y-3">
               <Label>Centro de Costo</Label>
+
+              <Select
+                value={selectedGgId ? String(selectedGgId) : ""}
+                onValueChange={(v) => {
+                  setSelectedGgId(Number(v))
+                  setSelectedMgmtId(null)
+                  setFormData((p) => ({ ...p, costCenterId: null }))
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Gerencia General…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {generalManagements.map((gg) => (
+                    <SelectItem key={gg.id} value={String(gg.id)}>
+                      {gg.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={selectedMgmtId ? String(selectedMgmtId) : ""}
+                onValueChange={(v) => {
+                  setSelectedMgmtId(Number(v))
+                  setFormData((p) => ({ ...p, costCenterId: null }))
+                }}
+                disabled={!selectedGgId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Gerencia…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredManagements.map((m) => (
+                    <SelectItem key={m.id} value={String(m.id)}>
+                      {m.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Select
                 value={formData.costCenterId ? String(formData.costCenterId) : ""}
                 onValueChange={(v) => setFormData((p) => ({ ...p, costCenterId: Number(v) }))}
+                disabled={!selectedMgmtId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
+                  <SelectValue placeholder="Centro de Costo…" />
                 </SelectTrigger>
                 <SelectContent>
-                  {costCenters
-                    .filter((c) => c.isActive)
+                  {filteredCostCenters
+                    .filter((cc) => cc.isActive)
                     .map((cc) => (
                       <SelectItem key={cc.id} value={String(cc.id)}>
                         {cc.fullDescription}

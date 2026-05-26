@@ -305,6 +305,7 @@ export interface CostCenter {
   isActive: boolean
   managementId: number | null
   managementCode: string | null
+  generalManagementId: number | null
   generalManagementCode: string | null
   generalManagementDescription: string | null
 }
@@ -313,6 +314,7 @@ export interface ManagementDTO {
   id: number
   code: string
   description: string
+  generalManagementId: number
 }
 
 export interface GeneralManagementDTO {
