@@ -302,8 +302,23 @@ export interface CostCenter {
   fullDescription: string
   divisionDescription: string | null
   managementDescription: string | null
-  internalCc: string | null
-  active: boolean
+  isActive: boolean
+  managementId: number | null
+  managementCode: string | null
+  generalManagementCode: string | null
+  generalManagementDescription: string | null
+}
+
+export interface ManagementDTO {
+  id: number
+  code: string
+  description: string
+}
+
+export interface GeneralManagementDTO {
+  id: number
+  code: string
+  description: string
 }
 
 // ── Dashboard ──

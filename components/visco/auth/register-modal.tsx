@@ -64,7 +64,7 @@ useEffect(() => {
       if (!res.ok) throw new Error()
       return res.json() as Promise<CostCenter[]>
     })
-    .then((data) => setCostCenters(data.filter((c) => c.active)))
+    .then((data) => setCostCenters(data.filter((c) => c.isActive)))
     .catch(() => toast.error("Error al cargar centros de costo"))
 }, [open])
 

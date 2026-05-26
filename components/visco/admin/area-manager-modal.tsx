@@ -57,10 +57,20 @@ export function AreaManagerModal({
             <p className="text-sm text-muted-foreground text-center py-4">Sin centros de costo registrados.</p>
           ) : (
             costCenters.map((cc) => (
-              <div key={cc.id} className="flex items-center justify-between rounded-md border border-border px-3 py-2.5">
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium">{cc.fullDescription}</span>
-                  <span className="text-xs text-muted-foreground ml-2">({cc.code})</span>
+              <div key={cc.id} className="rounded-md border border-border px-3 py-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium">{cc.fullDescription}</span>
+                    <span className="text-xs text-muted-foreground ml-2">({cc.code})</span>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground space-x-2">
+                  {cc.managementDescription && (
+                    <span>Gerencia: {cc.managementDescription}</span>
+                  )}
+                  {cc.generalManagementDescription && (
+                    <span>· GG: {cc.generalManagementDescription}</span>
+                  )}
                 </div>
               </div>
             ))
