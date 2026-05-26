@@ -165,7 +165,7 @@ export function RegisterModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif flex items-center gap-2">
             <UserPlus className="size-5" />
@@ -240,7 +240,7 @@ export function RegisterModal({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Rol</Label>
               <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
