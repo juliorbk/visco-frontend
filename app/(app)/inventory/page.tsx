@@ -11,7 +11,18 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, Filter, Plus, Search, Loader2, Tags, ChevronLeft, ChevronRight, ArrowUpDown, Package } from "lucide-react"
+import {
+  Download,
+  Filter,
+  Plus,
+  Search,
+  Loader2,
+  Tags,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Package,
+} from "lucide-react"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, Category } from "@/lib/types"
@@ -25,17 +36,17 @@ import { toast } from "sonner"
 export default function InventoryPage() {
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Búsqueda con debounce
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
-  
-  // Filtros y Ordenamiento refactorizados
+
+  // Filtros y ordenamiento
   const [category, setCategory] = useState<string>("all")
   const [categories, setCategories] = useState<Category[]>([])
   const [stockSort, setStockSort] = useState<"none" | "asc" | "desc">("none")
   const [hasStockOnly, setHasStockOnly] = useState(false)
-  
+
   // UI states
   const [selected, setSelected] = useState<ProductDTO | null>(null)
   const [addOpen, setAddOpen] = useState(false)
@@ -49,12 +60,16 @@ export default function InventoryPage() {
   const [refreshTick, setRefreshTick] = useState(0)
 
   const loadCategories = useCallback(() => {
-    fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
+    fetchCategories(0, 200)
+      .then((res) => setCategories(res.content ?? []))
+      .catch(() => {})
   }, [])
 
-  useEffect(() => { loadCategories() }, [loadCategories])
+  useEffect(() => {
+    loadCategories()
+  }, [loadCategories])
 
-  // 1. Efecto Debounce (también reinicia página)
+  // Debounce: reinicia página al cambiar búsqueda
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search)
@@ -63,34 +78,57 @@ export default function InventoryPage() {
     return () => clearTimeout(timer)
   }, [search])
 
-  // 2. Efecto Fetch Unificado con parámetros limpios
+  // Fetch unificado con AbortController:
+  // - Cancela el request anterior si el usuario cambia filtros
+  //   antes de que llegue la respuesta, evitando race conditions
+  //   y setState sobre componente desmontado.
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchData = async () => {
       try {
         setLoading(true)
-        
-        // Formatear parámetros para evitar enviar "all" o "none" al backend
+
         const apiCategory = category === "all" ? "" : category
         const apiSortBy = stockSort === "none" ? "" : "stock"
         const apiSortDir = stockSort === "none" ? "" : stockSort
 
-        const res = await fetchProducts(page, 20, debouncedSearch, apiCategory, apiSortBy, apiSortDir, hasStockOnly)
-        setProducts(res.content ?? [])
-        setTotalPages(res.page.totalPages)
-        setTotalElements(res.page.totalElements)
+        const res = await fetchProducts(
+          page,
+          20,
+          debouncedSearch,
+          apiCategory,
+          apiSortBy,
+          apiSortDir,
+          hasStockOnly,
+          controller.signal
+        )
+
+        if (!controller.signal.aborted) {
+          setProducts(res.content ?? [])
+          setTotalPages(res.page.totalPages)
+          setTotalElements(res.page.totalElements)
+        }
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Error al cargar productos")
+        if (!controller.signal.aborted) {
+          toast.error(
+            err instanceof Error ? err.message : "Error al cargar productos"
+          )
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchData()
+    return () => controller.abort()
   }, [page, debouncedSearch, category, stockSort, hasStockOnly, refreshTick])
 
   const mainCategories = useMemo(
     () => categories.filter((c) => c.parentId === null),
-    [categories],
+    [categories]
   )
 
   const subCategoriesByParent = useMemo(() => {
@@ -112,7 +150,7 @@ export default function InventoryPage() {
 
   const toggleStockSort = () => {
     setStockSort((current) => {
-      if (current === "none") return "desc" // Por defecto al clickear, mostrar mayor stock primero
+      if (current === "none") return "desc"
       if (current === "desc") return "asc"
       return "none"
     })
@@ -128,18 +166,32 @@ export default function InventoryPage() {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className={cn("bg-card", category !== "all" && "border-primary text-primary")}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "bg-card",
+                    category !== "all" && "border-primary text-primary"
+                  )}
                 >
-                  <Filter className="size-4 mr-2" /> 
+                  <Filter className="size-4 mr-2" />
                   {category === "all" ? "Filters" : "Category Active"}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 max-h-[300px] overflow-y-auto">
-                <DropdownMenuRadioGroup value={category} onValueChange={(v) => { setCategory(v); setPage(0) }}>
-                  <DropdownMenuRadioItem value="all">Todas las categorías</DropdownMenuRadioItem>
+              <DropdownMenuContent
+                align="end"
+                className="w-56 max-h-[300px] overflow-y-auto"
+              >
+                <DropdownMenuRadioGroup
+                  value={category}
+                  onValueChange={(v) => {
+                    setCategory(v)
+                    setPage(0)
+                  }}
+                >
+                  <DropdownMenuRadioItem value="all">
+                    Todas las categorías
+                  </DropdownMenuRadioItem>
                   {mainCategories.map((main) => {
                     const subs = subCategoriesByParent.get(main.id) ?? []
                     return (
@@ -148,7 +200,11 @@ export default function InventoryPage() {
                           {main.name}
                         </DropdownMenuRadioItem>
                         {subs.map((sub) => (
-                          <DropdownMenuRadioItem key={sub.id} value={String(sub.id)} className="pl-6 text-muted-foreground">
+                          <DropdownMenuRadioItem
+                            key={sub.id}
+                            value={String(sub.id)}
+                            className="pl-6 text-muted-foreground"
+                          >
                             └ {sub.name}
                           </DropdownMenuRadioItem>
                         ))}
@@ -159,23 +215,37 @@ export default function InventoryPage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={toggleStockSort}
-              className={cn("bg-card", stockSort !== "none" && "border-primary text-primary")}
+              className={cn(
+                "bg-card",
+                stockSort !== "none" && "border-primary text-primary"
+              )}
             >
-              <ArrowUpDown className="size-4 mr-2" /> 
-              Sort by Stock {stockSort === "desc" ? "(Desc)" : stockSort === "asc" ? "(Asc)" : ""}
+              <ArrowUpDown className="size-4 mr-2" />
+              Sort by Stock{" "}
+              {stockSort === "desc"
+                ? "(Desc)"
+                : stockSort === "asc"
+                  ? "(Asc)"
+                  : ""}
             </Button>
 
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => { setHasStockOnly((prev) => !prev); setPage(0) }}
-              className={cn("bg-card", hasStockOnly && "border-primary text-primary")}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setHasStockOnly((prev) => !prev)
+                setPage(0)
+              }}
+              className={cn(
+                "bg-card",
+                hasStockOnly && "border-primary text-primary"
+              )}
             >
-              <Package className="size-4 mr-2" /> 
+              <Package className="size-4 mr-2" />
               {hasStockOnly ? "Con stock" : "Solo stock"}
             </Button>
 
@@ -232,13 +302,19 @@ export default function InventoryPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-5 py-10 text-center text-sm text-muted-foreground"
+                  >
                     <Loader2 className="size-6 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  <td
+                    colSpan={6}
+                    className="px-5 py-10 text-center text-sm text-muted-foreground"
+                  >
                     No hay productos que coincidan con tu búsqueda.
                   </td>
                 </tr>
@@ -249,16 +325,28 @@ export default function InventoryPage() {
                     onClick={() => setSelected(p)}
                     className={cn(
                       "border-t border-border cursor-pointer transition-colors",
-                      selected?.id === p.id ? "bg-[#fde8e8]/60" : "hover:bg-[#fafafa]",
+                      selected?.id === p.id
+                        ? "bg-[#fde8e8]/60"
+                        : "hover:bg-[#fafafa]"
                     )}
                   >
-                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.internalCode}</td>
-                    <td className="px-5 py-3 font-medium text-foreground">{p.name}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{p.categoryName ?? "-"}</td>
-                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
+                      {p.internalCode}
+                    </td>
+                    <td className="px-5 py-3 font-medium text-foreground">
+                      {p.name}
+                    </td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      {p.categoryName ?? "-"}
+                    </td>
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
+                      {p.sku}
+                    </td>
                     <td className="px-5 py-3 tabular-nums">
                       {p.totalStock}{" "}
-                      <span className="text-xs text-muted-foreground">{p.uom}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {p.uom}
+                      </span>
                     </td>
                     <td className="px-5 py-3">
                       <InventoryStatusBadge status={computeStatus(p)} />
@@ -281,11 +369,11 @@ export default function InventoryPage() {
             >
               <ChevronLeft className="size-4 mr-1" /> Anterior
             </Button>
-            
+
             <span className="text-sm font-medium text-muted-foreground">
               Página {page + 1} de {totalPages} · {totalElements} productos
             </span>
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -316,8 +404,8 @@ export default function InventoryPage() {
         }}
         editing={editing}
         onSave={() => {
-          setPage(0) 
-          setRefreshTick((prev) => prev + 1) 
+          setPage(0)
+          setRefreshTick((prev) => prev + 1)
         }}
       />
 

@@ -4,7 +4,10 @@ if (!BASE_URL) {
   console.error("[API] NEXT_PUBLIC_API_URL no está definida. Las llamadas fallarán.")
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   }
@@ -13,12 +16,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   const url = `${BASE_URL}${endpoint}`
-  if (process.env.NODE_ENV === 'development') console.log(`[API] ${options.method || "GET"} ${url}`)
-  
-  const res = await fetch(url, { 
-    ...options, 
-    headers, 
-    credentials: "include" 
+  if (process.env.NODE_ENV === "development")
+    console.log(`[API] ${options.method || "GET"} ${url}`)
+
+  const res = await fetch(url, {
+    ...options,
+    headers,
+    credentials: "include",
+    // signal ya viene dentro de options si se pasó
   })
 
   if (res.status === 401 || res.status === 403) {
@@ -49,12 +54,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 }
 
 export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint),
-  post: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: "POST", body: body ? JSON.stringify(body) : undefined }),
-  put: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: "PUT", body: body ? JSON.stringify(body) : undefined }),
-  patch: <T>(endpoint: string, body?: unknown) =>
-    request<T>(endpoint, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
-  delete: <T>(endpoint: string) => request<T>(endpoint, { method: "DELETE" }),
+  get: <T>(endpoint: string, signal?: AbortSignal) =>
+    request<T>(endpoint, { signal }),
+  post: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>(endpoint, {
+      method: "POST",
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    }),
+  put: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>(endpoint, {
+      method: "PUT",
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    }),
+  patch: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>(endpoint, {
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    }),
+  delete: <T>(endpoint: string, signal?: AbortSignal) =>
+    request<T>(endpoint, { method: "DELETE", signal }),
 }

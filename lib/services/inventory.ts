@@ -8,7 +8,8 @@ export async function fetchProducts(
   category?: string,
   sortBy?: string,
   sortDir?: string,
-  hasStock?: boolean
+  hasStock?: boolean,
+  signal?: AbortSignal
 ): Promise<Page<ProductDTO>> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -23,18 +24,26 @@ export async function fetchProducts(
   }
   if (hasStock) params.append("hasStock", "true")
 
-  return api.get<Page<ProductDTO>>(`/api/inventory/products?${params.toString()}`)
+  return api.get<Page<ProductDTO>>(
+    `/api/inventory/products?${params.toString()}`,
+    signal
+  )
 }
 
 export async function fetchProduct(id: number): Promise<ProductDTO> {
   return api.get<ProductDTO>(`/api/inventory/products/${id}`)
 }
 
-export async function createProduct(data: Partial<ProductDTO>): Promise<ProductDTO> {
+export async function createProduct(
+  data: Partial<ProductDTO>
+): Promise<ProductDTO> {
   return api.post<ProductDTO>("/api/inventory/products", data)
 }
 
-export async function updateProduct(id: number, data: Partial<ProductDTO>): Promise<ProductDTO> {
+export async function updateProduct(
+  id: number,
+  data: Partial<ProductDTO>
+): Promise<ProductDTO> {
   return api.put<ProductDTO>(`/api/inventory/products/${id}`, data)
 }
 
