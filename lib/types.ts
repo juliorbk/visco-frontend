@@ -87,6 +87,7 @@ export interface ProductDTO {
   sapCode: string
   uom: Uom
   reorderPoint: number
+  maxStock: number | null
   totalStock: number
   totalPendingStock: number
   active: boolean
@@ -104,7 +105,9 @@ export interface ProductOnStock {
   sapCode: string
   uom: string
   currentStock: number
+  pendingStock: number
   reorderPoint: number
+  maxStock: number | null
   categoryName: string | null
 }
 
@@ -117,6 +120,16 @@ export interface CreateProductRequest {
   reorderPoint: number
   supplierId?: number | null
   categoryId?: number | null
+}
+
+// ── Location ──
+
+export interface LocationDTO {
+  id: number
+  code: string
+  active: boolean
+  warehouseId: number | null
+  warehouseName: string | null
 }
 
 // ── Purchase Order ──
@@ -220,12 +233,15 @@ export interface GoodReceiptItemResponse {
   difference: number
   unitPrice?: number | null
   totalPrice?: number | null
+  locationId?: number | null
+  locationCode?: string | null
 }
 
 export interface ReceiveGoodsRequest {
   items: { productId: number; receivedQuantity: number }[]
   notes: string
   destinationWarehouseId: number
+  locationId: number
 }
 
 // ── Warehouse ──
@@ -353,7 +369,8 @@ export interface CriticalInventoryItemDTO {
   sku: string
   currentStock: number
   reorderPoint: number
-  severity: "CRITICAL" | "WARNING"
+  maxStock: number | null
+  severity: "CRITICAL" | "WARNING" | "OVERSTOCK"
 }
 
 // ── Supplier Performance ──

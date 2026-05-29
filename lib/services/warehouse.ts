@@ -14,6 +14,7 @@ import type {
   ProductOnStock,
   DispatchRequest,
   DispatchResponse,
+  LocationDTO,
   Page,
 } from "@/lib/types"
 
@@ -143,4 +144,15 @@ export async function fetchDispatches(page = 0, size = 20): Promise<Page<Dispatc
 
 export async function fetchDispatchById(id: number): Promise<DispatchResponse> {
   return api.get<DispatchResponse>(`/api/warehouse/dispatches/${id}`)
+}
+
+export async function fetchLocationsByWarehouse(
+  warehouseId: number,
+  search?: string,
+  page = 0,
+  size = 20,
+): Promise<Page<LocationDTO>> {
+  let url = `/api/warehouse/locations/warehouse/${warehouseId}?page=${page}&size=${size}`
+  if (search) url += `&search=${encodeURIComponent(search)}`
+  return api.get<Page<LocationDTO>>(url)
 }

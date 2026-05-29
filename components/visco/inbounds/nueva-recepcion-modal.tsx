@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { X, Plus, ChevronRight } from "lucide-react"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
+import { LocationPicker } from "@/components/visco/warehouses/location-picker"
 import { toast } from "sonner"
 
 interface NuevaRecepcionModalProps {
@@ -27,6 +28,7 @@ export function NuevaRecepcionModal({
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
+  const [locationId, setLocationId] = useState<number | null>(null)
 
   const reset = () => {
     setStep(1)
@@ -35,6 +37,7 @@ export function NuevaRecepcionModal({
     setReceiptSummary(null)
     setNotes("")
     setDestinationWarehouseId(null)
+    setLocationId(null)
   }
 
   useEffect(() => {
@@ -81,6 +84,10 @@ export function NuevaRecepcionModal({
       toast.error("Selecciona un almacén destino")
       return
     }
+    if (!locationId) {
+      toast.error("Selecciona una ubicación destino")
+      return
+    }
     setSaving(true)
     try {
       await receiveGoods(selectedPO.id, {
@@ -90,6 +97,7 @@ export function NuevaRecepcionModal({
         })),
         notes,
         destinationWarehouseId,
+        locationId,
       })
       toast.success("Recepción registrada correctamente")
       await onSubmit?.()
@@ -255,6 +263,16 @@ export function NuevaRecepcionModal({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-[#111827] mb-2">Ubicación destino</label>
+                <LocationPicker
+                  warehouseId={destinationWarehouseId}
+                  value={locationId}
+                  onChange={setLocationId}
+                  disabled={saving}
+                />
               </div>
 
               <div className="mb-6">

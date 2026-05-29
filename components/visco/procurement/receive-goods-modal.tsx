@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
+import { LocationPicker } from "@/components/visco/warehouses/location-picker"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -41,6 +42,7 @@ export function ReceiveGoodsModal({
   const [saving, setSaving] = useState(false)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
+  const [locationId, setLocationId] = useState<number | null>(null)
   const [receiptSummary, setReceiptSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export function ReceiveGoodsModal({
       setReceived(init)
       setNotes("")
       setDestinationWarehouseId(null)
+      setLocationId(null)
       setReceiptSummary(null)
       fetchReceiptSummary(order.id).then(setReceiptSummary).catch(() => {})
     }
@@ -73,6 +76,10 @@ export function ReceiveGoodsModal({
       toast.error("Selecciona un almacén destino")
       return
     }
+    if (!locationId) {
+      toast.error("Selecciona una ubicación destino")
+      return
+    }
     if (order.items.every((it) => (received[it.productId] ?? 0) === 0)) {
       toast.error("Debes ingresar al menos una cantidad recibida")
       return
@@ -86,6 +93,7 @@ export function ReceiveGoodsModal({
         })),
         notes,
         destinationWarehouseId,
+        locationId,
       })
       toast.success("Recepción registrada correctamente")
       onReceived()
@@ -122,6 +130,15 @@ export function ReceiveGoodsModal({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Ubicación destino</Label>
+            <LocationPicker
+              warehouseId={destinationWarehouseId}
+              value={locationId}
+              onChange={setLocationId}
+              disabled={saving}
+            />
           </div>
           {order.items.map((it) => {
             const rcv = received[it.productId] ?? 0

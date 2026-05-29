@@ -111,6 +111,7 @@ export function ReceiptDetailPanel({
               <tr className="border-b border-[#f3f4f6]">
                 <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCTO</th>
                 <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">SKU</th>
+                <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">UBICACIÓN</th>
                 <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">ESPERADO</th>
                 <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">RECIBIDO</th>
                 <th className="text-right py-2 px-0 font-semibold text-[#6b7280]">DIFERENCIA</th>
@@ -128,6 +129,9 @@ export function ReceiptDetailPanel({
                   <tr key={item.productId} className="border-b border-[#f3f4f6] hover:bg-[#f5f5f7]">
                     <td className="py-3 px-0 text-[#111827]">{item.productName}</td>
                     <td className="py-3 px-0 text-[#6b7280] font-mono">{item.productSku}</td>
+                    <td className="py-3 px-0 text-[#7b1a1a] font-mono text-xs">
+                      {item.locationCode ?? "-"}
+                    </td>
                     <td className="py-3 px-0 text-right text-[#111827]">{item.expectedQuantity}</td>
                     <td className="py-3 px-0 text-right text-[#111827]">{item.receivedQuantity}</td>
                     <td className="py-3 px-0 text-right font-semibold">
