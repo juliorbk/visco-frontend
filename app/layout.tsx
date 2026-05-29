@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
-import { Inter, Lora } from "next/font/google"
+import { Rethink_Sans, Lora } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 import { Analytics } from "@vercel/analytics/next"
 
-const inter = Inter({
+const rethinkSans = Rethink_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-rethink-sans",
   display: "swap",
 })
 
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} ${lora.variable} bg-background`}>
+    <html lang="es" className={`${rethinkSans.variable} ${lora.variable} bg-background`}>
       <body className="font-sans antialiased text-foreground">
         {children}
         <Toaster position="top-right" richColors />

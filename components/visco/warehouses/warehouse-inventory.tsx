@@ -53,6 +53,7 @@ export function WarehouseInventoryTable({
   const computeStatus = (p: ProductOnStock) => {
     if (p.currentStock <= 0) return "Sin stock"
     if (p.currentStock < p.reorderPoint) return "Bajo stock"
+    if (p.maxStock != null && p.currentStock >= p.maxStock) return "Stock excedido"
     return "En stock"
   }
 

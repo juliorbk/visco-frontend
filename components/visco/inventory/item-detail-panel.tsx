@@ -24,6 +24,7 @@ export function ItemDetailPanel({
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
     if (p.totalStock < p.reorderPoint) return "Bajo stock"
+    if (p.maxStock != null && p.totalStock >= p.maxStock) return "Stock excedido"
     return "En stock"
   }
 
@@ -70,6 +71,7 @@ export function ItemDetailPanel({
                   <Stat label="Total Stock" value={`${product.totalStock} ${product.uom}`} />
                   <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
                   <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
+                  <Stat label="Max Stock" value={product.maxStock != null ? `${product.maxStock}` : "—"} />
                   <Stat label="Supplier" value={product.supplierName ?? "-"} />
                   <Stat label="Category" value={product.categoryName ?? "-"} />
                   <Stat label="SAP Code" value={product.sapCode} />

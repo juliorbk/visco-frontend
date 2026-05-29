@@ -15,6 +15,7 @@ type Variant =
   | "in-stock"
   | "low-stock"
   | "out-of-stock"
+  | "overstock"
   | "compliance-total"
   | "compliance-review"
   | "compliance-critical"
@@ -33,6 +34,7 @@ const styles: Record<Variant, string> = {
   "held-customs": "bg-orange-100 text-orange-700 ring-orange-200",
   "low-stock": "bg-[#fde8e8] text-[#7b1a1a] ring-[#f4c0c0]",
   "out-of-stock": "bg-gray-900 text-white ring-gray-900",
+  "overstock": "bg-rose-100 text-rose-700 ring-rose-200",
   "compliance-total": "bg-emerald-100 text-emerald-700 ring-emerald-200",
   "compliance-review": "bg-amber-100 text-amber-800 ring-amber-200",
   "compliance-critical": "bg-red-100 text-red-700 ring-red-200",
@@ -93,6 +95,7 @@ export function OrderStatusBadge({ status }: { status: PurchaseOrderStatus | str
 export function InventoryStatusBadge({ status }: { status: string }) {
   if (status === "Sin stock") return <StatusBadge variant="out-of-stock">Sin stock</StatusBadge>
   if (status === "Bajo stock") return <StatusBadge variant="low-stock">Bajo stock</StatusBadge>
+  if (status === "Stock excedido") return <StatusBadge variant="overstock">Stock excedido</StatusBadge>
   return <StatusBadge variant="in-stock">En stock</StatusBadge>
 }
 

@@ -16,3 +16,7 @@ export async function fetchSpending(): Promise<SpendingStatsDTO> {
 export async function fetchCriticalInventory(): Promise<CriticalInventoryItemDTO[]> {
   return api.get<CriticalInventoryItemDTO[]>("/api/dashboard/critical-inventory")
 }
+
+export async function fetchOverstockInventory(): Promise<CriticalInventoryItemDTO[]> {
+  return api.get<CriticalInventoryItemDTO[]>("/api/dashboard/overstock-inventory")
+}

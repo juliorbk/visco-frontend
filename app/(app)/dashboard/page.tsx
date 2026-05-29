@@ -4,6 +4,7 @@ import { ExpensesChart } from "@/components/visco/dashboard/expenses-chart"
 import { ExpensesBreakdown } from "@/components/visco/dashboard/expenses-breakdown"
 import { RecentOrders } from "@/components/visco/dashboard/recent-orders"
 import { CriticalInventory } from "@/components/visco/dashboard/critical-inventory"
+import { OverstockInventory } from "@/components/visco/dashboard/overstock-inventory"
 import { Button } from "@/components/ui/button"
 import { Download, Calendar } from "lucide-react"
 
@@ -40,8 +41,9 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
           <RecentOrders />
         </div>
-        <div>
+        <div className="space-y-4">
           <CriticalInventory />
+          <OverstockInventory />
         </div>
       </div>
     </div>

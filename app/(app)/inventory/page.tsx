@@ -145,6 +145,7 @@ export default function InventoryPage() {
   const computeStatus = (p: ProductDTO) => {
     if (p.totalStock <= 0) return "Sin stock"
     if (p.totalStock < p.reorderPoint) return "Bajo stock"
+    if (p.maxStock != null && p.totalStock >= p.maxStock) return "Stock excedido"
     return "En stock"
   }
 
