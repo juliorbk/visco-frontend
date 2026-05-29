@@ -13,14 +13,13 @@ import {
   markRequisitionAsConverted,
 } from "@/lib/services/requisitions"
 import {
-  Loader2,
-  Send,
-  CheckCircle,
-  XCircle,
-  ShoppingCart,
-  Ban,
-  Undo2,
-} from "lucide-react"
+  ArrowPathIcon,
+  PaperAirplaneIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ShoppingCartIcon,
+  NoSymbolIcon,
+} from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const statusMap: Record<string, string> = {
@@ -170,9 +169,9 @@ export function RequisitionDetail({
             }
           >
             {loading ? (
-              <Loader2 className="size-4 animate-spin mr-2" />
+              <ArrowPathIcon className="size-4 animate-spin mr-2" />
             ) : (
-              <Send className="size-4 mr-2" />
+              <PaperAirplaneIcon className="size-4 mr-2" />
             )}
             Enviar para Aprobación
           </Button>
@@ -188,7 +187,7 @@ export function RequisitionDetail({
               )
             }
           >
-            <CheckCircle className="size-4 mr-2" />
+            <CheckCircleIcon className="size-4 mr-2" />
             Aprobar
           </Button>
         )}
@@ -206,7 +205,7 @@ export function RequisitionDetail({
               )
             }}
           >
-            <XCircle className="size-4 mr-2" />
+            <XCircleIcon className="size-4 mr-2" />
             Rechazar
           </Button>
         )}
@@ -215,7 +214,7 @@ export function RequisitionDetail({
             className="w-full bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
             onClick={() => onConvert(requisition)}
           >
-            <ShoppingCart className="size-4 mr-2" />
+            <ShoppingCartIcon className="size-4 mr-2" />
             Convertir a Pedido de Compra
           </Button>
         )}
@@ -231,7 +230,7 @@ export function RequisitionDetail({
               )
             }
           >
-            <Ban className="size-4 mr-2" />
+            <NoSymbolIcon className="size-4 mr-2" />
             Cancelar Requisición
           </Button>
         )}

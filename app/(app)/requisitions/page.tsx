@@ -18,7 +18,7 @@ import { RequisitionStepper } from "@/components/visco/requisitions/requisition-
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import type { RequisitionResponse, Page } from "@/lib/types"
-import { FileText, Plus, Loader2, Search } from "lucide-react"
+import { PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -101,14 +101,14 @@ export default function RequisitionsPage() {
             className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
             onClick={() => setCreateOpen(true)}
           >
-            <Plus className="size-4" /> Nueva Requisición
+            <PlusIcon className="size-4" /> Nueva Requisición
           </Button>
         }
       />
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por número, descripción o solicitante…"
             className="pl-9 bg-card"
@@ -160,7 +160,7 @@ export default function RequisitionsPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={5} className="px-5 py-10 text-center">
-                        <Loader2 className="size-5 animate-spin mx-auto" />
+                        <ArrowPathIcon className="size-5 animate-spin mx-auto" />
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (

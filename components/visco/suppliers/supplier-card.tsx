@@ -1,6 +1,6 @@
 "use client"
 
-import { Building2, Mail, Phone, Star, ShoppingCart } from "lucide-react"
+import { BuildingOffice2Icon, EnvelopeIcon, PhoneIcon, StarIcon, ShoppingCartIcon } from "@heroicons/react/24/outline"
 import type { SupplierDTO } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +30,7 @@ export function SupplierCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="size-10 rounded-lg bg-[#fde8e8] grid place-items-center text-[#7b1a1a] shrink-0">
-          <Building2 className="size-5" />
+          <BuildingOffice2Icon className="size-5" />
         </div>
         <span
           className={cn(
@@ -51,12 +51,12 @@ export function SupplierCard({
 
       <div className="mt-4 space-y-1.5 text-xs">
         <div className="flex items-center gap-2 text-muted-foreground truncate">
-          <Mail className="size-3.5 shrink-0" />
+          <EnvelopeIcon className="size-3.5 shrink-0" />
           <span className="truncate">{supplier.contactEmail}</span>
         </div>
         {supplier.phoneNumbers.length > 0 && (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Phone className="size-3.5 shrink-0" />
+            <PhoneIcon className="size-3.5 shrink-0" />
             <span>{supplier.phoneNumbers[0]}</span>
           </div>
         )}
@@ -65,13 +65,13 @@ export function SupplierCard({
       <div className="mt-4 pt-3 border-t border-border flex items-center gap-4 text-xs text-muted-foreground">
         {supplier.rating !== undefined && (
           <span className="flex items-center gap-1">
-            <Star className="size-3.5 text-amber-500" />
+            <StarIcon className="size-3.5 text-amber-500" />
             {supplier.rating.toFixed(1)}
           </span>
         )}
         {supplier.totalOrders !== undefined && (
           <span className="flex items-center gap-1">
-            <ShoppingCart className="size-3.5" />
+            <ShoppingCartIcon className="size-3.5" />
             {supplier.totalOrders}+ Pedidos
           </span>
         )}

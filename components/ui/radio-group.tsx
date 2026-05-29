@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
-import { CircleIcon } from '@heroicons/react/24/outline'
+import { CircleIcon } from '@/components/ui/circle-icon'
 
 import { cn } from '@/lib/utils'
 

@@ -11,7 +11,7 @@ import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } fr
 import type { SupplierDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplier } from "@/lib/permissions"
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 12
@@ -99,7 +99,7 @@ export default function SuppliersPage() {
                 setModalOpen(true)
               }}
             >
-              <Plus className="size-4 mr-2" /> Nuevo Proveedor
+              <PlusIcon className="size-4 mr-2" /> Nuevo Proveedor
             </Button>
           ) : undefined
         }
@@ -114,7 +114,7 @@ export default function SuppliersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {loading ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-                <Loader2 className="size-5 animate-spin" />
+                <ArrowPathIcon className="size-5 animate-spin" />
                 Cargando proveedores…
               </div>
             ) : suppliers.length === 0 ? (
@@ -142,7 +142,7 @@ export default function SuppliersPage() {
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 className={page === 0 ? "opacity-50 cursor-not-allowed" : ""}
               >
-                <ChevronLeft className="size-4 mr-1" />
+                <ChevronLeftIcon className="size-4 mr-1" />
                 Anterior
               </Button>
 
@@ -158,7 +158,7 @@ export default function SuppliersPage() {
                 className={page >= totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""}
               >
                 Siguiente
-                <ChevronRight className="size-4 ml-1" />
+                <ChevronRightIcon className="size-4 ml-1" />
               </Button>
             </div>
           )}

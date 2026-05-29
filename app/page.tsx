@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Mail, Lock, Package, CheckCircle2, Building2 } from "lucide-react"
+import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, CubeIcon, CheckCircleIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
 import { Logo } from "@/components/visco/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -74,9 +74,9 @@ export default function LoginPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10">
-          <StatCard icon={<Package className="size-4" />} label="INVENTARIO ACTIVO" value="45,910" unit="unidades" />
-          <StatCard icon={<CheckCircle2 className="size-4" />} label="TASA DE CUMPLIMIENTO" value="98.2%" unit="objetivo SLA" />
-          <StatCard icon={<Building2 className="size-4" />} label="PROVEEDORES ACTIVOS" value="89" unit="empresas" />
+          <StatCard icon={<CubeIcon className="size-4" />} label="INVENTARIO ACTIVO" value="45,910" unit="unidades" />
+          <StatCard icon={<CheckCircleIcon className="size-4" />} label="TASA DE CUMPLIMIENTO" value="98.2%" unit="objetivo SLA" />
+          <StatCard icon={<BuildingOffice2Icon className="size-4" />} label="PROVEEDORES ACTIVOS" value="89" unit="empresas" />
         </div>
       </section>
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 Correo electrónico
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <EnvelopeIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -112,7 +112,7 @@ export default function LoginPage() {
                 Contraseña
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPwd ? "text" : "password"}
@@ -128,7 +128,7 @@ export default function LoginPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
-                  {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  {showPwd ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
                 </button>
               </div>
             </div>

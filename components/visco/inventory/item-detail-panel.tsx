@@ -9,7 +9,7 @@ import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { StockActionModal } from "@/components/visco/inventory/stock-action-modal"
 import { ProductMovementsHistory } from "@/components/visco/inventory/product-movements-history"
 import { ProductStockBreakdownView } from "@/components/visco/warehouses/product-stock-breakdown"
-import { Image as ImageIcon, Pencil, ShoppingCart, ArrowRightLeft, Equal, RefreshCw, History } from "lucide-react"
+import { PhotoIcon, PencilIcon, ShoppingCartIcon, ArrowsRightLeftIcon, EqualsIcon, ArrowPathIcon, ClockIcon } from "@heroicons/react/24/outline"
 
 export function ItemDetailPanel({
   product,
@@ -38,7 +38,7 @@ export function ItemDetailPanel({
         {product && (
           <div className="px-5 py-5 space-y-5">
             <div className="aspect-[5/3] rounded-lg bg-[#f5f5f7] border border-border grid place-items-center">
-              <ImageIcon className="size-10 text-muted-foreground/50" aria-hidden />
+              <PhotoIcon className="size-10 text-muted-foreground/50" aria-hidden />
             </div>
 
             <div>
@@ -62,7 +62,7 @@ export function ItemDetailPanel({
               <TabsList className="w-full">
                 <TabsTrigger value="info" className="flex-1">Info</TabsTrigger>
                 <TabsTrigger value="history" className="flex-1">
-                  <History className="size-3.5 mr-1" /> Historial
+                  <ClockIcon className="size-3.5 mr-1" /> Historial
                 </TabsTrigger>
               </TabsList>
 
@@ -85,17 +85,17 @@ export function ItemDetailPanel({
                     className="bg-card"
                     onClick={() => onEdit(product)}
                   >
-                    <Pencil className="size-4" /> Edit Item
+                    <PencilIcon className="size-4" /> Edit Item
                   </Button>
                   <Button
                     variant="outline"
                     className="bg-card"
                     onClick={() => setStockActionOpen(true)}
                   >
-                    <RefreshCw className="size-4" /> Stock Actions
+                    <ArrowPathIcon className="size-4" /> Stock Actions
                   </Button>
                   <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-                    <ShoppingCart className="size-4" /> Create PO
+                    <ShoppingCartIcon className="size-4" /> Create PO
                   </Button>
                 </div>
               </TabsContent>

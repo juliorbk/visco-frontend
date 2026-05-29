@@ -13,7 +13,7 @@ import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
 import { fetchStockSummary, fetchWarehouses, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
 import type { WarehouseResponse, WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
-import { Plus, ArrowRightLeft, Equal, Warehouse, Loader2, ChevronLeft, ChevronRight, Package } from "lucide-react"
+import { PlusIcon, ArrowsRightLeftIcon, EqualsIcon, BuildingStorefrontIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 20
@@ -114,21 +114,21 @@ export default function WarehousesPage() {
               variant="outline"
               onClick={() => setTransferModalOpen(true)}
             >
-              <ArrowRightLeft className="size-4 mr-1.5" /> Transferir
+              <ArrowsRightLeftIcon className="size-4 mr-1.5" /> Transferir
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setAdjustModalOpen(true)}
             >
-              <Equal className="size-4 mr-1.5" /> Ajustar
+              <EqualsIcon className="size-4 mr-1.5" /> Ajustar
             </Button>
             <Button
               size="sm"
               className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
               onClick={() => setCreateModalOpen(true)}
             >
-              <Plus className="size-4 mr-1.5" /> Nuevo Almacén
+              <PlusIcon className="size-4 mr-1.5" /> Nuevo Almacén
             </Button>
           </div>
         }
@@ -137,13 +137,13 @@ export default function WarehousesPage() {
       <Tabs defaultValue="warehouses">
         <TabsList>
           <TabsTrigger value="warehouses">
-            <Warehouse className="size-4 mr-1.5" /> Almacenes
+            <BuildingStorefrontIcon className="size-4 mr-1.5" /> Almacenes
           </TabsTrigger>
           <TabsTrigger value="inventory">
-            <Package className="size-4 mr-1.5" /> Inventario
+            <CubeIcon className="size-4 mr-1.5" /> Inventario
           </TabsTrigger>
           <TabsTrigger value="movements">
-            <ArrowRightLeft className="size-4 mr-1.5" /> Movimientos
+            <ArrowsRightLeftIcon className="size-4 mr-1.5" /> Movimientos
           </TabsTrigger>
         </TabsList>
 
@@ -152,7 +152,7 @@ export default function WarehousesPage() {
             <div className="lg:col-span-2">
               {loadingSummary ? (
                 <div className="rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-                  <Loader2 className="size-5 animate-spin" />
+                  <ArrowPathIcon className="size-5 animate-spin" />
                   Cargando almacenes…
                 </div>
               ) : warehousesWithStock.length === 0 ? (

@@ -37,7 +37,7 @@ import { createProduct, updateProduct } from "@/lib/services/inventory"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, SupplierDTO, Category } from "@/lib/types"
-import { Check, ChevronsUpDown, Loader2 } from "lucide-react"
+import { CheckIcon, ChevronUpDownIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -264,7 +264,7 @@ const submit = async (e: React.FormEvent) => {
                   {form.supplierId
                     ? suppliers.find((s) => s.id === form.supplierId)?.name
                     : "Seleccionar proveedor..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[250px] p-0" align="start">
@@ -283,7 +283,7 @@ const submit = async (e: React.FormEvent) => {
                             setOpenSupplier(false)
                           }}
                         >
-                          <Check
+                          <CheckIcon
                             className={cn(
                               "mr-2 h-4 w-4",
                               form.supplierId === s.id ? "opacity-100" : "opacity-0"
@@ -314,7 +314,7 @@ const submit = async (e: React.FormEvent) => {
                   {form.categoryId
                     ? categories.find((c) => c.id === form.categoryId)?.name
                     : "Seleccionar categoría..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[300px] p-0" align="start">
@@ -333,13 +333,13 @@ const submit = async (e: React.FormEvent) => {
                               setOpenCategory(false)
                             }}
                           >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                form.categoryId === main.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {main.name}
+                          <CheckIcon
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              form.categoryId === main.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {main.name}
                           </CommandItem>
                           {subs.map((sub) => (
                             <CommandItem
@@ -351,7 +351,7 @@ const submit = async (e: React.FormEvent) => {
                               }}
                               className="pl-8"
                             >
-                              <Check
+                          <CheckIcon
                                 className={cn(
                                   "mr-2 h-4 w-4",
                                   form.categoryId === sub.id ? "opacity-100" : "opacity-0"
@@ -375,7 +375,7 @@ const submit = async (e: React.FormEvent) => {
             </Button>
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
               {saving ? (
-                <><Loader2 className="size-4 animate-spin mr-2" /> Guardando…</>
+                <><ArrowPathIcon className="size-4 animate-spin mr-2" /> Guardando…</>
               ) : editing ? (
                 "Guardar cambios"
               ) : (

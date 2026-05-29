@@ -24,7 +24,7 @@ import { adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, Equal, AlertTriangle } from "lucide-react"
+import { ArrowPathIcon, EqualsIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function AdjustModal({
@@ -93,7 +93,7 @@ export function AdjustModal({
       if (selectedProduct && ns <= selectedProduct.reorderPoint) {
         toast.warning(
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4" />
+            <ExclamationTriangleIcon className="size-4" />
             <span>Stock por debajo del punto de reorden ({selectedProduct.reorderPoint})</span>
           </div>,
           { duration: 6000 }
@@ -123,7 +123,7 @@ export function AdjustModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {loadingData ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              <ArrowPathIcon className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <>
@@ -179,7 +179,7 @@ export function AdjustModal({
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving || loadingData}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Ajustando…</> : <><Equal className="size-4 mr-1" /> Ajustar</>}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Ajustando…</> : <><EqualsIcon className="size-4 mr-1" /> Ajustar</>}
             </Button>
           </DialogFooter>
         </form>

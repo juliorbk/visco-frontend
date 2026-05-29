@@ -1,7 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
-import { Package } from "lucide-react"
+import { CubeIcon } from "@heroicons/react/24/outline"
 
 interface WarehouseCardData {
   id: number
@@ -33,7 +33,7 @@ export function WarehouseCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="size-10 shrink-0 rounded-lg bg-[#7b1a1a]/10 grid place-items-center">
-            <Package className="size-5 text-[#7b1a1a]" />
+            <CubeIcon className="size-5 text-[#7b1a1a]" />
           </div>
           <div className="min-w-0">
             <p className="font-medium text-sm truncate">{warehouse.name}</p>

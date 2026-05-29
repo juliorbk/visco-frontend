@@ -35,7 +35,7 @@ import type {
   ManagementDTO,
   GeneralManagementDTO,
 } from "@/lib/types"
-import { Loader2, Plus, ShieldCheck, ShieldX } from "lucide-react"
+import { ArrowPathIcon, PlusIcon, ShieldCheckIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function EmployeeManager() {
@@ -176,7 +176,7 @@ export function EmployeeManager() {
           Gestión de empleados, tallas y centros de costo.
         </p>
         <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={openCreate}>
-          <Plus className="size-4" /> Nuevo Empleado
+          <PlusIcon className="size-4" /> Nuevo Empleado
         </Button>
       </div>
 
@@ -197,7 +197,7 @@ export function EmployeeManager() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-10 text-center">
-                    <Loader2 className="size-5 animate-spin mx-auto" />
+                    <ArrowPathIcon className="size-5 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : employees.length === 0 ? (
@@ -218,11 +218,11 @@ export function EmployeeManager() {
                     <td className="px-5 py-3">
                       {emp.isActive ? (
                         <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                          <ShieldCheck className="size-3.5" /> Activo
+                          <ShieldCheckIcon className="size-3.5" /> Activo
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-red-700">
-                          <ShieldX className="size-3.5" /> Inactivo
+                          <ShieldExclamationIcon className="size-3.5" /> Inactivo
                         </span>
                       )}
                     </td>
@@ -368,7 +368,7 @@ export function EmployeeManager() {
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Guardando…</> : "Guardar"}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Guardando…</> : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

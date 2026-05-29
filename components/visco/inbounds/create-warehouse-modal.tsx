@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createWarehouse } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
-import { Loader2 } from "lucide-react"
+import { ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function CreateWarehouseModal({
@@ -114,7 +114,7 @@ export function CreateWarehouseModal({
               Cancelar
             </Button>
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Almacén"}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Creando…</> : "Crear Almacén"}
             </Button>
           </DialogFooter>
         </form>

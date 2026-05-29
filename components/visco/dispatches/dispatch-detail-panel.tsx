@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, X } from "lucide-react"
+import { DocumentDuplicateIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { useEffect, useState } from "react"
 import type { DispatchResponse } from "@/lib/types"
 
@@ -31,7 +31,7 @@ export function DispatchDetailPanel({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-[#111827]">Detalle de Despacho</h3>
         <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-          <X className="w-5 h-5 text-[#6b7280]" />
+          <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
         </button>
       </div>
 
@@ -45,7 +45,7 @@ export function DispatchDetailPanel({
             className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors"
             title="Copiar número"
           >
-            <Copy className="w-4 h-4 text-[#6b7280]" />
+            <DocumentDuplicateIcon className="w-4 h-4 text-[#6b7280]" />
           </button>
         </div>
 

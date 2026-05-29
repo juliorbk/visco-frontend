@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { fetchProductStockBreakdown } from "@/lib/services/warehouse"
 import type { ProductStockBreakdown } from "@/lib/types"
-import { Loader2, Package, Warehouse } from "lucide-react"
+import { ArrowPathIcon, CubeIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline"
 
 export function ProductStockBreakdownView({ productId }: { productId: number }) {
   const [breakdown, setBreakdown] = useState<ProductStockBreakdown | null>(null)
@@ -27,7 +27,7 @@ export function ProductStockBreakdownView({ productId }: { productId: number }) 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-4">
-        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        <ArrowPathIcon className="size-4 animate-spin text-muted-foreground" />
       </div>
     )
   }
@@ -43,14 +43,14 @@ export function ProductStockBreakdownView({ productId }: { productId: number }) 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Package className="size-3.5" />
+        <CubeIcon className="size-3.5" />
         <span>Desglose por almacén</span>
       </div>
       <div className="space-y-1.5">
         {breakdown.warehouses.map((w) => (
           <div key={w.warehouseId} className="flex items-center justify-between text-xs rounded-md bg-muted/30 px-2.5 py-1.5">
             <div className="flex items-center gap-1.5 min-w-0">
-              <Warehouse className="size-3.5 shrink-0 text-muted-foreground" />
+              <BuildingStorefrontIcon className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="truncate">{w.warehouseName}</span>
             </div>
             <div className="flex items-center gap-3 shrink-0">

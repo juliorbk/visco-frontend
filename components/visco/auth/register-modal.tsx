@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react"
+import { EyeIcon, EyeSlashIcon, ArrowPathIcon, UserPlusIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import type {
   RegisterRequest,
@@ -168,7 +168,7 @@ export function RegisterModal({
       <DialogContent className="sm:max-w-lg max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif flex items-center gap-2">
-            <UserPlus className="size-5" />
+            <UserPlusIcon className="size-5" />
             Registrar Usuario
           </DialogTitle>
           <DialogDescription>
@@ -217,7 +217,7 @@ export function RegisterModal({
                 onClick={() => setShowPwd((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {showPwd ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
               </button>
             </div>
             {password.length > 0 && (
@@ -330,7 +330,7 @@ export function RegisterModal({
               disabled={saving}
             >
               {saving ? (
-                <><Loader2 className="size-4 animate-spin" /> Registrando…</>
+                <><ArrowPathIcon className="size-4 animate-spin" /> Registrando…</>
               ) : (
                 "Registrar"
               )}

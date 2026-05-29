@@ -5,7 +5,7 @@ import Link from "next/link"
 import { fetchRecentOrders } from "@/lib/services/dashboard"
 import type { RecentOrderDTO } from "@/lib/types"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export function RecentOrders() {
@@ -30,7 +30,7 @@ export function RecentOrders() {
           href="/procurement"
           className="inline-flex items-center gap-1 text-xs font-medium text-[#7b1a1a] hover:underline"
         >
-          Ver todos <ArrowUpRight className="size-3.5" />
+          Ver todos <ArrowUpRightIcon className="size-3.5" />
         </Link>
       </div>
       {loading ? (

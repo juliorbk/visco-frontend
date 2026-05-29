@@ -24,7 +24,7 @@ import { getCachedUser } from "@/lib/auth-client"
 import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
 import type { UserDTO, UserRole } from "@/lib/types"
-import { Loader2, Shield, ShieldCheck, ShieldX, Building2, Users } from "lucide-react"
+import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -115,10 +115,10 @@ export default function AdminPage() {
         actions={
           <>
             <Button variant="outline" size="sm" className="bg-card" onClick={() => setAreaManagerOpen(true)}>
-              <Building2 className="size-4" /> Áreas
+              <BuildingOffice2Icon className="size-4" /> Áreas
             </Button>
             <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={loadUsers}>
-              <Shield className="size-4" /> Recargar
+              <ShieldCheckIcon className="size-4" /> Recargar
             </Button>
           </>
         }
@@ -162,7 +162,7 @@ export default function AdminPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="px-5 py-10 text-center">
-                        <Loader2 className="size-5 animate-spin mx-auto" />
+                        <ArrowPathIcon className="size-5 animate-spin mx-auto" />
                       </td>
                     </tr>
                   ) : users.length === 0 ? (
@@ -192,11 +192,11 @@ export default function AdminPage() {
                           <td className="px-5 py-3">
                             {u.active !== false ? (
                               <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                                <ShieldCheck className="size-3.5" /> Activo
+                                <ShieldCheckIcon className="size-3.5" /> Activo
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs text-red-700">
-                                <ShieldX className="size-3.5" /> Inactivo
+                                <ShieldExclamationIcon className="size-3.5" /> Inactivo
                               </span>
                             )}
                           </td>
@@ -278,7 +278,7 @@ export default function AdminPage() {
                   onClick={handleRoleChange}
                   disabled={saving || !newRole}
                 >
-                  {saving ? <><Loader2 className="size-4 animate-spin" /> Guardando…</> : "Guardar"}
+                  {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Guardando…</> : "Guardar"}
                 </Button>
               </DialogFooter>
             </DialogContent>

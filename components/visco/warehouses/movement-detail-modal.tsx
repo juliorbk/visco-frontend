@@ -8,24 +8,24 @@ import {
 } from "@/components/ui/dialog"
 import type { InventoryMovementResponse } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRightLeft, Equal, Truck, Calendar, User, Package, ArrowDown, ArrowUp, FileText } from "lucide-react"
+import { ArrowsRightLeftIcon, EqualsIcon, TruckIcon, CalendarIcon, UserIcon, CubeIcon, ArrowDownIcon, ArrowUpIcon, DocumentTextIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 
-const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowRightLeft }> = {
+const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
   TRANSFER: {
     label: "Transferencia",
     color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 border-blue-200",
-    icon: ArrowRightLeft,
+    icon: ArrowsRightLeftIcon,
   },
   ADJUSTMENT: {
     label: "Ajuste",
     color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-200",
-    icon: Equal,
+    icon: EqualsIcon,
   },
   RECEIPT: {
     label: "Recepción",
     color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
-    icon: Truck,
+    icon: TruckIcon,
   },
 }
 
@@ -40,7 +40,7 @@ export function MovementDetailModal({
 }) {
   if (!movement) return null
 
-  const cfg = typeConfig[movement.type] ?? { label: movement.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowRightLeft }
+  const cfg = typeConfig[movement.type] ?? { label: movement.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowsRightLeftIcon }
   const Icon = cfg.icon
 
   return (
@@ -64,11 +64,11 @@ export function MovementDetailModal({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <DetailItem icon={Package} label="Producto" value={`${movement.productName} (${movement.productSku})`} />
-            <DetailItem icon={Calendar} label="Fecha" value={new Date(movement.createdAt).toLocaleString()} />
-            <DetailItem icon={User} label="Realizado por" value={movement.createdByName} />
+            <DetailItem icon={CubeIcon} label="Producto" value={`${movement.productName} (${movement.productSku})`} />
+            <DetailItem icon={CalendarIcon} label="Fecha" value={new Date(movement.createdAt).toLocaleString()} />
+            <DetailItem icon={UserIcon} label="Realizado por" value={movement.createdByName} />
             <DetailItem
-              icon={movement.type === "TRANSFER" ? ArrowDown : movement.type === "ADJUSTMENT" ? Equal : ArrowUp}
+              icon={movement.type === "TRANSFER" ? ArrowDownIcon : movement.type === "ADJUSTMENT" ? EqualsIcon : ArrowUpIcon}
               label={movement.type === "TRANSFER" ? "Cantidad" : movement.type === "ADJUSTMENT" ? "Nuevo stock" : "Cantidad recibida"}
               value={
                 movement.type === "TRANSFER"
@@ -79,24 +79,24 @@ export function MovementDetailModal({
               }
             />
             {movement.stockBefore != null && movement.type !== "ADJUSTMENT" && (
-              <DetailItem icon={ArrowUp} label="Stock antes" value={`${movement.stockBefore}`} />
+              <DetailItem icon={ArrowUpIcon} label="Stock antes" value={`${movement.stockBefore}`} />
             )}
             {movement.stockAfter != null && (
-              <DetailItem icon={ArrowUp} label="Stock después" value={`${movement.stockAfter}`} />
+              <DetailItem icon={ArrowUpIcon} label="Stock después" value={`${movement.stockAfter}`} />
             )}
           </div>
 
           <div className="space-y-2 pt-2 border-t">
             {movement.fromWarehouseName && (
               <div className="flex items-center gap-2 text-sm">
-                <ArrowDown className="size-4 text-red-500" />
+                <ArrowDownIcon className="size-4 text-red-500" />
                 <span className="text-muted-foreground">Origen:</span>
                 <span className="font-medium">{movement.fromWarehouseName}</span>
               </div>
             )}
             {movement.toWarehouseName && (
               <div className="flex items-center gap-2 text-sm">
-                <ArrowUp className="size-4 text-green-500" />
+                <ArrowUpIcon className="size-4 text-green-500" />
                 <span className="text-muted-foreground">Destino:</span>
                 <span className="font-medium">{movement.toWarehouseName}</span>
               </div>
@@ -105,7 +105,7 @@ export function MovementDetailModal({
 
           {movement.reason && (
             <div className="flex items-start gap-2 pt-2 border-t">
-              <FileText className="size-4 text-muted-foreground mt-0.5 shrink-0" />
+              <DocumentTextIcon className="size-4 text-muted-foreground mt-0.5 shrink-0" />
               <div>
                 <span className="text-xs text-muted-foreground">Motivo:</span>
                 <p className="text-sm italic text-muted-foreground mt-0.5">&ldquo;{movement.reason}&rdquo;</p>
@@ -123,7 +123,7 @@ function DetailItem({
   label,
   value,
 }: {
-  icon: typeof Package
+  icon: typeof CubeIcon
   label: string
   value: string
 }) {

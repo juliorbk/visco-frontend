@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Input } from "@/components/ui/input"
-import { Check, ChevronsUpDown, Loader2, Search } from "lucide-react"
+import { CheckIcon, ChevronUpDownIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { fetchLocationsByWarehouse } from "@/lib/services/warehouse"
 import type { LocationDTO } from "@/lib/types"
@@ -87,13 +87,13 @@ export function LocationPicker({ warehouseId, value, onChange, disabled }: Locat
             : warehouseId
               ? "Seleccionar ubicación..."
               : "Selecciona un almacén primero"}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0" align="start">
         <div className="p-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <MagnifyingGlassIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar ubicación..."
               value={search}
@@ -105,7 +105,7 @@ export function LocationPicker({ warehouseId, value, onChange, disabled }: Locat
         <div className="max-h-60 overflow-y-auto">
           {loading && locations.length === 0 ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <ArrowPathIcon className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : locations.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
@@ -125,7 +125,7 @@ export function LocationPicker({ warehouseId, value, onChange, disabled }: Locat
                     setOpen(false)
                   }}
                 >
-                  <Check
+                  <CheckIcon
                     className={cn(
                       "h-4 w-4 shrink-0",
                       value === loc.id ? "opacity-100" : "opacity-0"
@@ -141,7 +141,7 @@ export function LocationPicker({ warehouseId, value, onChange, disabled }: Locat
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin inline mr-1" />
+                    <ArrowPathIcon className="h-4 w-4 animate-spin inline mr-1" />
                   ) : null}
                   Cargar más...
                 </button>

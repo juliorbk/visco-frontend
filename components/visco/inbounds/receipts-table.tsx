@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import type { GoodReceiptResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -42,7 +42,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
       <div className="bg-white rounded-lg border border-[#f3f4f6] p-3 md:p-4 mb-4 space-y-3 md:space-y-4">
         <div className="flex flex-col md:flex-row gap-2 md:gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <input
               type="text"
               placeholder="Buscar por # recepción, orden..."
@@ -74,7 +74,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
             onClick={handleClearFilters}
             className="text-sm text-[#7b1a1a] hover:text-[#5c1212] font-medium flex items-center gap-1"
           >
-            <X className="w-4 h-4" />
+            <XMarkIcon className="w-4 h-4" />
             Limpiar filtros
           </button>
         )}
@@ -152,14 +152,14 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeftIcon className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRightIcon className="w-4 h-4" />
               </button>
             </div>
           </div>

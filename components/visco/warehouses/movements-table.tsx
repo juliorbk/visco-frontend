@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InventoryMovementResponse, MovementType, Page } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, ArrowRightLeft, Equal, Truck, ChevronLeft, ChevronRight, Download } from "lucide-react"
+import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, TruckIcon, ChevronLeftIcon, ChevronRightIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -17,21 +17,21 @@ import { MovementDetailModal } from "@/components/visco/warehouses/movement-deta
 import { exportMovements } from "@/lib/services/warehouse"
 import { toast } from "sonner"
 
-const typeConfig: Record<MovementType, { label: string; color: string; icon: typeof ArrowRightLeft }> = {
+const typeConfig: Record<MovementType, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
   TRANSFER: {
     label: "Transferencia",
     color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 border-blue-200",
-    icon: ArrowRightLeft,
+    icon: ArrowsRightLeftIcon,
   },
   ADJUSTMENT: {
     label: "Ajuste",
     color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-200",
-    icon: Equal,
+    icon: EqualsIcon,
   },
   RECEIPT: {
     label: "Recepción",
     color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
-    icon: Truck,
+    icon: TruckIcon,
   },
 }
 
@@ -74,7 +74,7 @@ export function MovementsTable({
   if (loading) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-        <Loader2 className="size-5 animate-spin" />
+        <ArrowPathIcon className="size-5 animate-spin" />
         Cargando movimientos…
       </div>
     )
@@ -114,14 +114,14 @@ export function MovementsTable({
           disabled={exporting || data.length === 0}
           className="ml-auto"
         >
-          {exporting ? <Loader2 className="size-4 mr-1 animate-spin" /> : <Download className="size-4 mr-1" />}
+          {exporting ? <ArrowPathIcon className="size-4 mr-1 animate-spin" /> : <ArrowDownTrayIcon className="size-4 mr-1" />}
           Exportar
         </Button>
       </div>
 
       <div className="rounded-xl border bg-card divide-y">
         {data.map((m) => {
-          const cfg = typeConfig[m.type] ?? { label: m.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowRightLeft }
+          const cfg = typeConfig[m.type] ?? { label: m.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowsRightLeftIcon }
           const Icon = cfg.icon
           return (
             <div
@@ -185,7 +185,7 @@ export function MovementsTable({
             disabled={page === 0 || loading}
             onClick={() => onPageChange(Math.max(0, page - 1))}
           >
-            <ChevronLeft className="size-4 mr-1" />
+            <ChevronLeftIcon className="size-4 mr-1" />
             Anterior
           </Button>
           <span className="text-sm text-muted-foreground">
@@ -198,7 +198,7 @@ export function MovementsTable({
             onClick={() => onPageChange(page + 1)}
           >
             Siguiente
-            <ChevronRight className="size-4 ml-1" />
+            <ChevronRightIcon className="size-4 ml-1" />
           </Button>
         </div>
       )}

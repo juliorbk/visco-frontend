@@ -6,7 +6,7 @@ import { RecentOrders } from "@/components/visco/dashboard/recent-orders"
 import { CriticalInventory } from "@/components/visco/dashboard/critical-inventory"
 import { OverstockInventory } from "@/components/visco/dashboard/overstock-inventory"
 import { Button } from "@/components/ui/button"
-import { Download, Calendar } from "lucide-react"
+import { ArrowDownTrayIcon, CalendarIcon } from "@heroicons/react/24/outline"
 
 export default function DashboardPage() {
   return (
@@ -17,10 +17,10 @@ export default function DashboardPage() {
         actions={
           <>
             <Button variant="outline" size="sm" className="bg-card max-sm:text-xs max-sm:px-2">
-              <Calendar className="size-3 md:size-4" /> Últimos 30 días
+              <CalendarIcon className="size-3 md:size-4" /> Últimos 30 días
             </Button>
             <Button variant="outline" size="sm" className="bg-card max-sm:text-xs max-sm:px-2">
-              <Download className="size-3 md:size-4" /> Exportar
+              <ArrowDownTrayIcon className="size-3 md:size-4" /> Exportar
             </Button>
           </>
         }

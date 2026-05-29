@@ -23,7 +23,7 @@ import {
 import { transferStock, adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { Loader2, ArrowRightLeft, Equal, AlertTriangle } from "lucide-react"
+import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -91,7 +91,7 @@ export function StockActionModal({
       if (product.totalStock - qty <= product.reorderPoint) {
         toast.warning(
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4" />
+            <ExclamationTriangleIcon className="size-4" />
             <span>Stock bajo después de la transferencia. Punto de reorden: {product.reorderPoint}</span>
           </div>,
           { duration: 6000 }
@@ -125,7 +125,7 @@ export function StockActionModal({
       if (ns <= product.reorderPoint) {
         toast.warning(
           <div className="flex items-center gap-2">
-            <AlertTriangle className="size-4" />
+            <ExclamationTriangleIcon className="size-4" />
             <span>Stock por debajo del punto de reorden ({product.reorderPoint})</span>
           </div>,
           { duration: 6000 }
@@ -159,7 +159,7 @@ export function StockActionModal({
             className={cn(mode === "transfer" ? "bg-[#7b1a1a] hover:bg-[#5c1212] text-white" : "")}
             onClick={() => setMode("transfer")}
           >
-            <ArrowRightLeft className="size-4 mr-1" /> Transferir
+            <ArrowsRightLeftIcon className="size-4 mr-1" /> Transferir
           </Button>
           <Button
             variant={mode === "adjust" ? "default" : "outline"}
@@ -167,7 +167,7 @@ export function StockActionModal({
             className={cn(mode === "adjust" ? "bg-[#7b1a1a] hover:bg-[#5c1212] text-white" : "")}
             onClick={() => setMode("adjust")}
           >
-            <Equal className="size-4 mr-1" /> Ajustar
+            <EqualsIcon className="size-4 mr-1" /> Ajustar
           </Button>
         </div>
 
@@ -206,7 +206,7 @@ export function StockActionModal({
             <DialogFooter>
               <Button variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
               <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={handleTransfer} disabled={saving}>
-                {saving ? <><Loader2 className="size-4 animate-spin" /> Transfiriendo…</> : "Transferir"}
+                {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Transfiriendo…</> : "Transferir"}
               </Button>
             </DialogFooter>
           </div>
@@ -238,7 +238,7 @@ export function StockActionModal({
             <DialogFooter>
               <Button variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
               <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={handleAdjust} disabled={saving}>
-                {saving ? <><Loader2 className="size-4 animate-spin" /> Ajustando…</> : "Ajustar"}
+                {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Ajustando…</> : "Ajustar"}
               </Button>
             </DialogFooter>
           </div>

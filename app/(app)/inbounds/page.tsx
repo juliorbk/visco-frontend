@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Download, Plus, Loader2, Warehouse } from "lucide-react"
+import { ArrowDownTrayIcon, PlusIcon, ArrowPathIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/visco/page-header"
 import { InboundsKPICards } from "@/components/visco/inbounds/kpi-cards"
@@ -67,13 +67,13 @@ export default function InboundsPage() {
         actions={
           <>
             <Button variant="outline" size="sm" className="bg-card" onClick={() => setWarehouseModalOpen(true)}>
-              <Warehouse className="size-4" /> Almacenes
+              <BuildingStorefrontIcon className="size-4" /> Almacenes
             </Button>
             <Button variant="outline" size="sm" className="bg-card">
-              <Download className="size-4" /> Exportar
+              <ArrowDownTrayIcon className="size-4" /> Exportar
             </Button>
             <Button size="sm" onClick={() => setIsModalOpen(true)}>
-              <Plus className="size-4" /> Nueva Recepción
+              <PlusIcon className="size-4" /> Nueva Recepción
             </Button>
           </>
         }
@@ -88,7 +88,7 @@ export default function InboundsPage() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <ArrowPathIcon className="size-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <>

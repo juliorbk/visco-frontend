@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Plus, Loader2 } from "lucide-react"
+import { PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/visco/page-header"
 import { DispatchesTable } from "@/components/visco/dispatches/dispatches-table"
@@ -48,14 +48,14 @@ export default function DispatchesPage() {
         subtitle="Registra y consulta las notas de despacho (salida de mercancía del almacén)."
         actions={
           <Button size="sm" onClick={() => setIsModalOpen(true)}>
-            <Plus className="size-4" /> Nuevo Despacho
+            <PlusIcon className="size-4" /> Nuevo Despacho
           </Button>
         }
       />
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <ArrowPathIcon className="size-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

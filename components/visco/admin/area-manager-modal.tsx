@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { fetchCostCenters } from "@/lib/services/requisitions"
 import type { CostCenter } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { ArrowPathIcon } from "@heroicons/react/24/outline"
 
 export function AreaManagerModal({
   open,
@@ -52,7 +52,7 @@ export function AreaManagerModal({
 
         <div className="space-y-1 max-h-72 overflow-y-auto">
           {loading ? (
-            <div className="py-8 text-center"><Loader2 className="size-5 animate-spin mx-auto" /></div>
+            <div className="py-8 text-center"><ArrowPathIcon className="size-5 animate-spin mx-auto" /></div>
           ) : costCenters.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Sin centros de costo registrados.</p>
           ) : (

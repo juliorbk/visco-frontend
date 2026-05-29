@@ -15,7 +15,7 @@ import {
   cancelOrder,
 } from "@/lib/services/procurement"
 import type { PurchaseOrderResponse, Page } from "@/lib/types"
-import { CheckCheck, FileClock, Plus, Loader2 } from "lucide-react"
+import { CheckBadgeIcon, DocumentTextIcon, PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -106,17 +106,17 @@ export default function ProcurementPage() {
         actions={
           <>
             <Button variant="outline" size="sm" className="bg-card">
-              <FileClock className="size-4" /> Ver pedidos recientes
+              <DocumentTextIcon className="size-4" /> Ver pedidos recientes
             </Button>
             <Button variant="outline" size="sm" className="bg-card">
-              <CheckCheck className="size-4" /> Aprobar pedidos
+              <CheckBadgeIcon className="size-4" /> Aprobar pedidos
             </Button>
             <Button
               size="sm"
               className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
               onClick={() => setCreateOpen(true)}
             >
-              <Plus className="size-4" /> Crear nuevo pedido
+              <PlusIcon className="size-4" /> Crear nuevo pedido
             </Button>
           </>
         }
@@ -152,7 +152,7 @@ export default function ProcurementPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={5} className="px-5 py-10 text-center">
-                        <Loader2 className="size-5 animate-spin mx-auto" />
+                        <ArrowPathIcon className="size-5 animate-spin mx-auto" />
                       </td>
                     </tr>
                   ) : (

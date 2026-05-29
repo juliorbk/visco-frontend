@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { SupplierDTO } from "@/lib/types"
-import { Loader2, Plus, X } from "lucide-react"
+import { ArrowPathIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline"
 
 const CURRENCIES = ["USD", "EUR", "VES", "COP", "BRL"]
 
@@ -180,7 +180,7 @@ export function SupplierModal({
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
               {saving ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Guardando…
+                  <ArrowPathIcon className="size-4 animate-spin" /> Guardando…
                 </>
               ) : editing ? (
                 "Guardar cambios"
@@ -235,7 +235,7 @@ function TagList({
           }}
         />
         <Button type="button" size="icon" variant="outline" onClick={add} disabled={disabled}>
-          <Plus className="size-4" />
+          <PlusIcon className="size-4" />
         </Button>
       </div>
       <div className="flex flex-wrap gap-1.5 mt-1">
@@ -252,7 +252,7 @@ function TagList({
               className="hover:text-red-600"
               disabled={disabled}
             >
-              <X className="size-3" />
+              <XMarkIcon className="size-3" />
             </button>
           </span>
         ))}

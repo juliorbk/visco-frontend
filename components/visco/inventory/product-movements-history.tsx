@@ -4,27 +4,12 @@ import { useEffect, useState } from "react"
 import type { InventoryMovementResponse, Page } from "@/lib/types"
 import { fetchMovements } from "@/lib/services/warehouse"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, ArrowRightLeft, Equal, Truck, ChevronLeft, ChevronRight, History } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { MovementDetailModal } from "@/components/visco/warehouses/movement-detail-modal"
+import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, TruckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon } from "@heroicons/react/24/outline"
 
-const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowRightLeft }> = {
-  TRANSFER: {
-    label: "Transferencia",
-    color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 border-blue-200",
-    icon: ArrowRightLeft,
-  },
-  ADJUSTMENT: {
-    label: "Ajuste",
-    color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-200",
-    icon: Equal,
-  },
-  RECEIPT: {
-    label: "Recepción",
-    color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
-    icon: Truck,
-  },
+const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
+  TRANSFER: { label: "Transferencia", color: "text-sky-700 bg-sky-50 border-sky-200", icon: ArrowsRightLeftIcon },
+  ADJUSTMENT: { label: "Ajuste", color: "text-amber-700 bg-amber-50 border-amber-200", icon: EqualsIcon },
+  RECEIPT: { label: "Recepción", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: TruckIcon },
 }
 
 const PAGE_SIZE = 10
@@ -55,7 +40,7 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
   if (loading) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
-        <Loader2 className="size-5 animate-spin" />
+        <ArrowPathIcon className="size-5 animate-spin" />
         Cargando historial…
       </div>
     )
@@ -72,13 +57,13 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
-        <History className="size-4 text-muted-foreground" />
+        <ClockIcon className="size-4 text-muted-foreground" />
         <span className="text-sm font-medium">Historial de movimientos</span>
       </div>
 
       <div className="rounded-xl border bg-card divide-y">
         {movements.map((m) => {
-          const cfg = typeConfig[m.type] ?? { label: m.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowRightLeft }
+          const cfg = typeConfig[m.type] ?? { label: m.type, color: "text-gray-600 bg-gray-100 border-gray-200", icon: ArrowsRightLeftIcon }
           const Icon = cfg.icon
           return (
             <div
@@ -150,7 +135,7 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
             disabled={page >= totalPages - 1 || loading}
             onClick={() => setPage((p) => p + 1)}
           >
-            Siguiente <ChevronRight className="size-4 ml-1" />
+            Siguiente <ChevronRightIcon className="size-4 ml-1" />
           </Button>
         </div>
       )}

@@ -23,7 +23,7 @@ import {
 import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
-import { Loader2, ArrowRightLeft } from "lucide-react"
+import { ArrowPathIcon, ArrowsRightLeftIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function TransferModal({
@@ -119,7 +119,7 @@ export function TransferModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {loadingData ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              <ArrowPathIcon className="size-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
             <>
@@ -182,7 +182,7 @@ export function TransferModal({
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving || loadingData}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Transfiriendo…</> : <><ArrowRightLeft className="size-4 mr-1" /> Transferir</>}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Transfiriendo…</> : <><ArrowsRightLeftIcon className="size-4 mr-1" /> Transferir</>}
             </Button>
           </DialogFooter>
         </form>

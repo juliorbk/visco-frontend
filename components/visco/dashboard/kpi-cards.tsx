@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Truck, Monitor, DollarSign, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { TruckIcon, ComputerDesktopIcon, CurrencyDollarIcon, CheckCircleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusIcon } from "@heroicons/react/24/outline"
 import { fetchKpis } from "@/lib/services/dashboard"
 import type { KpiStatsDTO } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -50,14 +50,14 @@ export function KpiCards() {
 
   const items = [
     {
-      icon: <Truck className="size-5" />,
+      icon: <TruckIcon className="size-5" />,
       label: "Pedidos totales",
       value: data.totalOrders?.toLocaleString() ?? "0",
       delta: 0,
       trend: "flat" as const,
     },
     {
-      icon: <Monitor className="size-5" />,
+      icon: <ComputerDesktopIcon className="size-5" />,
       label: "Inventario total",
       // Asumimos que el backend ahora enviará esta propiedad
       value: data.totalInventoryUnits?.toLocaleString() ?? "0", 
@@ -66,14 +66,14 @@ export function KpiCards() {
       trend: "flat" as const,
     },
     {
-      icon: <DollarSign className="size-5" />,
+      icon: <CurrencyDollarIcon className="size-5" />,
       label: "Gastos mensuales",
       value: `$${((data.monthlySpend ?? 0) / 1000).toFixed(1)}k`,
       delta: 0,
       trend: "flat" as const,
     },
     {
-      icon: <CheckCircle2 className="size-5" />,
+      icon: <CheckCircleIcon className="size-5" />,
       label: "Tasa de cumplimiento",
       value: `${(data.fulfillmentRate ?? 0).toFixed(1)}%`,
       delta: (data.fulfillmentRate ?? 0) - 90,
@@ -89,7 +89,7 @@ export function KpiCards() {
           className="rounded-xl border border-border bg-card p-5 flex flex-col gap-4 shadow-xs"
         >
           <div className="flex items-start justify-between">
-            <div className="size-9 grid place-items-center rounded-lg bg-[#fde8e8] text-[#7b1a1a]">
+            <div className="size-9 grid place-items-center rounded-lg bg-secondary text-secondary-foreground">
               {k.icon}
             </div>
             <DeltaPill delta={k.delta} trend={k.trend} />
@@ -114,7 +114,7 @@ export function KpiCards() {
 function DeltaPill({ delta, trend }: { delta: number; trend?: "up" | "down" | "flat" }) {
   const positive = delta > 0
   const negative = delta < 0
-  const Icon = trend === "down" ? TrendingDown : trend === "flat" ? Minus : TrendingUp
+  const Icon = trend === "down" ? ArrowTrendingDownIcon : trend === "flat" ? MinusIcon : ArrowTrendingUpIcon
   return (
     <span
       className={cn(

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from "@/lib/services/categories"
 import type { Category } from "@/lib/types"
-import { Loader2, Plus, Pencil, Trash2, FolderOpen, ChevronRight } from "lucide-react"
+import { ArrowPathIcon, PlusIcon, PencilIcon, TrashIcon, FolderOpenIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function CategoryManagerModal({
@@ -144,7 +144,7 @@ export function CategoryManagerModal({
               onClick={handleCreate}
               disabled={saving || !newName.trim()}
             >
-              <Plus className="size-4" />
+              <PlusIcon className="size-4" />
             </Button>
           </div>
           <Select
@@ -168,7 +168,7 @@ export function CategoryManagerModal({
         {/* Category tree */}
         <div className="space-y-1 max-h-72 overflow-y-auto">
           {loading ? (
-            <div className="py-8 text-center"><Loader2 className="size-5 animate-spin mx-auto" /></div>
+            <div className="py-8 text-center"><ArrowPathIcon className="size-5 animate-spin mx-auto" /></div>
           ) : categories.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Sin categorías aún.</p>
           ) : (
@@ -195,7 +195,7 @@ export function CategoryManagerModal({
                     ) : (
                       <>
                         <div className="flex items-center gap-2">
-                          <FolderOpen className="size-4 text-[#7b1a1a]" />
+                          <FolderOpenIcon className="size-4 text-[#7b1a1a]" />
                           <span className="text-sm font-semibold">{main.name}</span>
                           {subs.length > 0 && (
                             <span className="text-[10px] text-muted-foreground">({subs.length})</span>
@@ -206,13 +206,13 @@ export function CategoryManagerModal({
                             onClick={() => { setEditingId(main.id); setEditName(main.name); setEditParentId(null) }}
                             className="size-7 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
                           >
-                            <Pencil className="size-3.5" />
+                            <PencilIcon className="size-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(main.id, main.name)}
                             className="size-7 grid place-items-center rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50"
                           >
-                            <Trash2 className="size-3.5" />
+                            <TrashIcon className="size-3.5" />
                           </button>
                         </div>
                       </>
@@ -242,7 +242,7 @@ export function CategoryManagerModal({
                       ) : (
                         <>
                           <div className="flex items-center gap-2">
-                            <ChevronRight className="size-3 text-muted-foreground" />
+                            <ChevronRightIcon className="size-3 text-muted-foreground" />
                             <span className="text-sm">{sub.name}</span>
                           </div>
                           <div className="flex items-center gap-1">
@@ -250,13 +250,13 @@ export function CategoryManagerModal({
                               onClick={() => { setEditingId(sub.id); setEditName(sub.name); setEditParentId(sub.parentId) }}
                               className="size-7 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
                             >
-                              <Pencil className="size-3.5" />
+                              <PencilIcon className="size-3.5" />
                             </button>
                             <button
                               onClick={() => handleDelete(sub.id, sub.name)}
                               className="size-7 grid place-items-center rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50"
                             >
-                              <Trash2 className="size-3.5" />
+                              <TrashIcon className="size-3.5" />
                             </button>
                           </div>
                         </>

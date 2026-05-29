@@ -2,7 +2,7 @@
 
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
-import { FileDown } from "lucide-react"
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 import { generatePurchaseOrderPDF } from "@/lib/pdf/purchase-order-pdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
@@ -106,7 +106,7 @@ export function OrderDetail({
             downloadPDF(doc, `ORDEN_COMPRA_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
         >
-          <FileDown className="size-4 mr-2" />
+          <ArrowDownTrayIcon className="size-4 mr-2" />
           Exportar PDF
         </Button>
       </div>

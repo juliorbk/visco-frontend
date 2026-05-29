@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { fetchSupplierPerformance } from "@/lib/services/suppliers"
 import type { SupplierPerformanceMonthlyDTO } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { ArrowPathIcon } from "@heroicons/react/24/outline"
 
 export function SupplierPerformanceChart() {
   const [data, setData] = useState<SupplierPerformanceMonthlyDTO[]>([])
@@ -38,7 +38,7 @@ export function SupplierPerformanceChart() {
       <div className="h-[220px]">
         {loading ? (
           <div className="h-full grid place-items-center text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" />
+            <ArrowPathIcon className="size-5 animate-spin" />
           </div>
         ) : data.length === 0 ? (
           <div className="h-full grid place-items-center text-xs text-muted-foreground">

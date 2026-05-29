@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, ExternalLink, FileDown, X, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { DocumentDuplicateIcon, ArrowTopRightOnSquareIcon, ArrowDownTrayIcon, XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
 import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -50,7 +50,7 @@ export function ReceiptDetailPanel({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-[#111827]">Detalle de Recepción</h3>
         <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-          <X className="w-5 h-5 text-[#6b7280]" />
+          <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
         </button>
       </div>
 
@@ -64,7 +64,7 @@ export function ReceiptDetailPanel({
             className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors"
             title="Copiar número"
           >
-            <Copy className="w-4 h-4 text-[#6b7280]" />
+            <DocumentDuplicateIcon className="w-4 h-4 text-[#6b7280]" />
           </button>
         </div>
 
@@ -157,7 +157,7 @@ export function ReceiptDetailPanel({
       {summary && (
         <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
           <h4 className="font-semibold text-[#111827] mb-4 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            <ExclamationTriangleIcon className="w-4 h-4 text-orange-500" />
             Estado acumulado de la OC ({summary.totalReceipts} recepciones)
           </h4>
           <div className="overflow-x-auto">
@@ -181,11 +181,11 @@ export function ReceiptDetailPanel({
                     <td className="py-3 px-0 text-right">
                       {item.fullyReceived ? (
                         <span className="text-green-700 flex items-center justify-end gap-1">
-                          <CheckCircle2 className="w-4 h-4" /> Completo
+                          <CheckCircleIcon className="w-4 h-4" /> Completo
                         </span>
                       ) : (
                         <span className="text-orange-600 flex items-center justify-end gap-1">
-                          <AlertTriangle className="w-4 h-4" /> Pendiente
+                          <ExclamationTriangleIcon className="w-4 h-4" /> Pendiente
                         </span>
                       )}
                     </td>
@@ -212,7 +212,7 @@ export function ReceiptDetailPanel({
 
       <div className="space-y-3">
         <button className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2">
-          <ExternalLink className="w-4 h-4" />
+          <ArrowTopRightOnSquareIcon className="w-4 h-4" />
           Ver Orden de Compra
         </button>
         <button
@@ -222,7 +222,7 @@ export function ReceiptDetailPanel({
             downloadPDF(doc, `NOTA_ENTREGA_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
         >
-          <FileDown className="w-4 h-4" />
+          <ArrowDownTrayIcon className="w-4 h-4" />
           Exportar PDF
         </button>
       </div>

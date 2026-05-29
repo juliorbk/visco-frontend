@@ -1,4 +1,4 @@
-import { Check } from "lucide-react"
+import { CheckIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import type { PurchaseOrderStatus } from "@/lib/types"
 
@@ -37,7 +37,7 @@ export function ReceiptStepper({ status }: { status?: PurchaseOrderStatus | stri
                   )}
                   aria-current={isCurrent ? "step" : undefined}
                 >
-                  {isDone ? <Check className="size-4" /> : i + 1}
+                  {isDone ? <CheckIcon className="size-4" /> : i + 1}
                 </div>
                 <span
                   className={cn(

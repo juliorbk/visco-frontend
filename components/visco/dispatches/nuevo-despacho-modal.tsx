@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Search } from "lucide-react"
+import { XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { toast } from "sonner"
@@ -108,7 +108,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         <div className="flex items-center justify-between p-8 border-b border-[#f3f4f6]">
           <h2 className="text-2xl font-bold text-[#111827]">Registrar Despacho</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-            <X className="w-6 h-6 text-[#6b7280]" />
+            <XMarkIcon className="w-6 h-6 text-[#6b7280]" />
           </button>
         </div>
 
@@ -165,7 +165,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
 
               <div className="mb-6">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
                   <input
                     type="text"
                     placeholder="Buscar producto..."

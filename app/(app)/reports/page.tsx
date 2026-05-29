@@ -17,18 +17,7 @@ import {
   YAxis,
 } from "recharts"
 
-import {
-  Calendar,
-  ChevronRight,
-  DollarSign,
-  FileSpreadsheet,
-  FileText,
-  Package,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Sparkles,
-} from "lucide-react"
+import { CalendarIcon, ChevronRightIcon, DocumentTextIcon, CubeIcon, UsersIcon, CurrencyDollarIcon, ArrowDownTrayIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, SparklesIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 
 const REPORTS = [
@@ -36,19 +25,19 @@ const REPORTS = [
     id: "expenses",
     title: "Expenses",
     subtitle: "Análisis de costos por categoría",
-    icon: DollarSign,
+    icon: CurrencyDollarIcon,
   },
   {
     id: "inventory",
     title: "Inventory",
     subtitle: "Niveles de stock y rotación",
-    icon: Package,
+    icon: CubeIcon,
   },
   {
     id: "performance",
     title: "Performance",
     subtitle: "KPIs de proveedores y SLAs",
-    icon: Users,
+    icon: UsersIcon,
   },
 ]
 
@@ -64,10 +53,10 @@ export default function ReportsPage() {
         actions={
           <>
             <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-              <FileText className="size-4" /> Export PDF
+              <DocumentTextIcon className="size-4" /> Export PDF
             </Button>
             <Button size="sm" variant="outline" className="bg-card">
-              <FileSpreadsheet className="size-4" /> Export Excel
+              <ArrowDownTrayIcon className="size-4" /> Export Excel
             </Button>
           </>
         }
@@ -114,7 +103,7 @@ export default function ReportsPage() {
                   className="border-[#7b1a1a]/50 text-[#7b1a1a]"
                 />
                 <span className="text-sm">Custom Range</span>
-                <Calendar className="size-3.5 ml-auto text-muted-foreground" />
+                <CalendarIcon className="size-3.5 ml-auto text-muted-foreground" />
               </Label>
             </RadioGroup>
           </section>
@@ -155,7 +144,7 @@ export default function ReportsPage() {
                           {r.subtitle}
                         </div>
                       </div>
-                      <ChevronRight className="size-4 opacity-60 shrink-0" />
+                      <ChevronRightIcon className="size-4 opacity-60 shrink-0" />
                     </button>
                   </li>
                 )
@@ -165,7 +154,7 @@ export default function ReportsPage() {
 
           <section className="rounded-xl bg-[#1f2937] text-white p-5 shadow-xs">
             <div className="flex items-center gap-2 text-white/80 text-xs">
-              <Sparkles className="size-4" />
+              <SparklesIcon className="size-4" />
               <span className="uppercase tracking-wider">Custom Report</span>
             </div>
             <h3 className="font-serif text-lg font-semibold mt-2">
@@ -335,7 +324,7 @@ function MetricCard({
   caption: string
 }) {
   const dark = variant === "dark"
-  const Icon = trend === "up" ? TrendingUp : TrendingDown
+  const Icon = trend === "up" ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
   return (
     <div
       className={cn(

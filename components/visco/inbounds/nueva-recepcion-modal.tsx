@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { X, Plus, ChevronRight } from "lucide-react"
+import { XMarkIcon, PlusIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
 import { LocationPicker } from "@/components/visco/warehouses/location-picker"
@@ -128,7 +128,7 @@ export function NuevaRecepcionModal({
         <div className="flex items-center justify-between p-8 border-b border-[#f3f4f6]">
           <h2 className="text-2xl font-bold text-[#111827]">Registrar Recepción de Mercancía</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-            <X className="w-6 h-6 text-[#6b7280]" />
+            <XMarkIcon className="w-6 h-6 text-[#6b7280]" />
           </button>
         </div>
 
@@ -346,7 +346,7 @@ export function NuevaRecepcionModal({
                   disabled={step === 1 && !selectedPO}
                   className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
-                  Continuar <ChevronRight className="w-4 h-4" />
+                  Continuar <ChevronRightIcon className="w-4 h-4" />
                 </button>
               ) : (
                 <button

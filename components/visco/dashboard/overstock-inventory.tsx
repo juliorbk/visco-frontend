@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { PackageOpen } from "lucide-react"
+import { ArchiveBoxIcon } from "@heroicons/react/24/outline"
 import { fetchOverstockInventory } from "@/lib/services/dashboard"
 import type { CriticalInventoryItemDTO } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -21,7 +21,7 @@ export function OverstockInventory() {
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs h-full">
       <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-        <PackageOpen className="size-4 text-rose-500" />
+        <ArchiveBoxIcon className="size-4 text-rose-500" />
         <h3 className="font-serif text-lg font-semibold">Stock Excedido</h3>
       </div>
       {loading ? (
@@ -48,7 +48,7 @@ export function OverstockInventory() {
               className="flex items-center gap-3 rounded-lg p-3 ring-1 ring-inset bg-rose-50 ring-rose-200"
             >
               <div className="size-9 rounded-md grid place-items-center shrink-0 bg-rose-100 text-rose-700">
-                <PackageOpen className="size-4" />
+                <ArchiveBoxIcon className="size-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">{it.productName}</div>

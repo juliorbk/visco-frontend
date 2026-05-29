@@ -11,18 +11,18 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { TagIcon } from "@heroicons/react/24/outline"
 import {
-  Download,
-  Filter,
-  Plus,
-  Search,
-  Loader2,
-  Tags,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUpDown,
-  Package,
-} from "lucide-react"
+  ArrowDownTrayIcon,
+  FunnelIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowsUpDownIcon,
+  CubeIcon,
+} from "@heroicons/react/24/outline"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, Category } from "@/lib/types"
@@ -175,7 +175,7 @@ export default function InventoryPage() {
                     category !== "all" && "border-primary text-primary"
                   )}
                 >
-                  <Filter className="size-4 mr-2" />
+                  <FunnelIcon className="size-4 mr-2" />
                   {category === "all" ? "Filters" : "Category Active"}
                 </Button>
               </DropdownMenuTrigger>
@@ -225,7 +225,7 @@ export default function InventoryPage() {
                 stockSort !== "none" && "border-primary text-primary"
               )}
             >
-              <ArrowUpDown className="size-4 mr-2" />
+              <ArrowsUpDownIcon className="size-4 mr-2" />
               Sort by Stock{" "}
               {stockSort === "desc"
                 ? "(Desc)"
@@ -246,12 +246,12 @@ export default function InventoryPage() {
                 hasStockOnly && "border-primary text-primary"
               )}
             >
-              <Package className="size-4 mr-2" />
+              <CubeIcon className="size-4 mr-2" />
               {hasStockOnly ? "Con stock" : "Solo stock"}
             </Button>
 
             <Button variant="outline" size="sm" className="bg-card">
-              <Download className="size-4 mr-2" /> Export
+              <ArrowDownTrayIcon className="size-4 mr-2" /> Export
             </Button>
             <Button
               variant="outline"
@@ -259,7 +259,7 @@ export default function InventoryPage() {
               className="bg-card"
               onClick={() => setCategoryManagerOpen(true)}
             >
-              <Tags className="size-4 mr-2" /> Categories
+              <TagIcon className="size-4 mr-2" /> Categories
             </Button>
             <Button
               size="sm"
@@ -269,7 +269,7 @@ export default function InventoryPage() {
                 setAddOpen(true)
               }}
             >
-              <Plus className="size-4 mr-2" /> Add Item
+              <PlusIcon className="size-4 mr-2" /> Add Item
             </Button>
           </>
         }
@@ -277,7 +277,7 @@ export default function InventoryPage() {
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nombre o SKU…"
             className="pl-9 bg-card"
@@ -307,7 +307,7 @@ export default function InventoryPage() {
                     colSpan={6}
                     className="px-5 py-10 text-center text-sm text-muted-foreground"
                   >
-                    <Loader2 className="size-6 animate-spin mx-auto" />
+                    <ArrowPathIcon className="size-6 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : products.length === 0 ? (
@@ -368,7 +368,7 @@ export default function InventoryPage() {
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               className="text-muted-foreground"
             >
-              <ChevronLeft className="size-4 mr-1" /> Anterior
+              <ChevronLeftIcon className="size-4 mr-1" /> Anterior
             </Button>
 
             <span className="text-sm font-medium text-muted-foreground">
@@ -382,7 +382,7 @@ export default function InventoryPage() {
               onClick={() => setPage((p) => p + 1)}
               className="text-muted-foreground"
             >
-              Siguiente <ChevronRight className="size-4 ml-1" />
+              Siguiente <ChevronRightIcon className="size-4 ml-1" />
             </Button>
           </div>
         )}

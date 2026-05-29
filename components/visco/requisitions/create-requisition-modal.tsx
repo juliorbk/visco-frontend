@@ -24,7 +24,7 @@ import { createRequisition, fetchCostCenters } from "@/lib/services/requisitions
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { CostCenter, ProductDTO } from "@/lib/types"
-import { Check, Loader2, Plus, Search, Trash2, X } from "lucide-react"
+import { CheckIcon, ArrowPathIcon, PlusIcon, MagnifyingGlassIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -208,7 +208,7 @@ export function CreateRequisitionModal({
                     i > step && "bg-card text-muted-foreground ring-border",
                   )}
                 >
-                  {i < step ? <Check className="size-3.5" /> : i + 1}
+                  {i < step ? <CheckIcon className="size-3.5" /> : i + 1}
                 </div>
                 <span
                   className={cn(
@@ -272,7 +272,7 @@ export function CreateRequisitionModal({
               <div className="relative" ref={finderRef}>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       className="pl-9"
                       placeholder="Escribe nombre, SKU o código…"
@@ -293,7 +293,7 @@ export function CreateRequisitionModal({
                           setFinderQuery("")
                         }}
                       >
-                        <X className="size-4" />
+                        <XMarkIcon className="size-4" />
                       </button>
                     )}
                   </div>
@@ -316,13 +316,13 @@ export function CreateRequisitionModal({
                     className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white shrink-0"
                     onClick={addLine}
                   >
-                    <Plus className="size-4" />
+                    <PlusIcon className="size-4" />
                   </Button>
                 </div>
 
                 {finderOpen && loadingProducts && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
-                    <Loader2 className="size-4 animate-spin mx-auto" />
+                    <ArrowPathIcon className="size-4 animate-spin mx-auto" />
                   </div>
                 )}
                 {finderOpen && !loadingProducts && products.length > 0 && (
@@ -378,7 +378,7 @@ export function CreateRequisitionModal({
                         className="text-muted-foreground hover:text-red-600 shrink-0"
                         aria-label="Eliminar línea"
                       >
-                        <Trash2 className="size-4" />
+                        <TrashIcon className="size-4" />
                       </button>
                     </li>
                   ))}
@@ -422,7 +422,7 @@ export function CreateRequisitionModal({
             </Button>
           ) : (
             <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Requisición"}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Creando…</> : "Crear Requisición"}
             </Button>
           )}
         </DialogFooter>

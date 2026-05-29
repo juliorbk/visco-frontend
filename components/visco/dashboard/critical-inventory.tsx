@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertTriangle, ShoppingCart } from "lucide-react"
+import { ExclamationTriangleIcon, ShoppingCartIcon } from "@heroicons/react/24/outline"
 import { fetchCriticalInventory } from "@/lib/services/dashboard"
 import type { CriticalInventoryItemDTO } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -21,7 +21,7 @@ export function CriticalInventory() {
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs h-full">
       <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-        <AlertTriangle className="size-4 text-amber-500" />
+        <ExclamationTriangleIcon className="size-4 text-amber-500" />
         <h3 className="font-serif text-lg font-semibold">Inventario Crítico</h3>
       </div>
       {loading ? (
@@ -59,7 +59,7 @@ export function CriticalInventory() {
                   it.severity === "CRITICAL" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700",
                 )}
               >
-                <AlertTriangle className="size-4" />
+                <ExclamationTriangleIcon className="size-4" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">{it.productName}</div>
@@ -72,7 +72,7 @@ export function CriticalInventory() {
                 aria-label={`Reordenar ${it.productName}`}
                 className="size-8 grid place-items-center rounded-md bg-white ring-1 ring-border text-[#7b1a1a] hover:bg-[#fde8e8]"
               >
-                <ShoppingCart className="size-4" />
+                <ShoppingCartIcon className="size-4" />
               </button>
             </li>
           ))}

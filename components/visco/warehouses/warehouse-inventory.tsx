@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { fetchWarehouseProducts } from "@/lib/services/warehouse"
 import type { ProductOnStock } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
-import { Search, Loader2, ChevronLeft, ChevronRight, Package } from "lucide-react"
+import { MagnifyingGlassIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon } from "@heroicons/react/24/outline"
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export function WarehouseInventoryTable({
     <div>
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             placeholder="Buscar producto por nombre o SKU…"
             className="pl-9 bg-card"
@@ -71,7 +71,7 @@ export function WarehouseInventoryTable({
         </div>
         {warehouseName && (
           <span className="text-sm text-muted-foreground hidden sm:inline">
-            <Package className="size-3.5 inline mr-1" />
+            <CubeIcon className="size-3.5 inline mr-1" />
             {warehouseName}
           </span>
         )}
@@ -95,7 +95,7 @@ export function WarehouseInventoryTable({
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                    <Loader2 className="size-6 animate-spin mx-auto" />
+                    <ArrowPathIcon className="size-6 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : products.length === 0 ? (
@@ -132,7 +132,7 @@ export function WarehouseInventoryTable({
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               className="text-muted-foreground"
             >
-              <ChevronLeft className="size-4 mr-1" /> Anterior
+              <ChevronLeftIcon className="size-4 mr-1" /> Anterior
             </Button>
 
             <span className="text-sm font-medium text-muted-foreground">
@@ -146,7 +146,7 @@ export function WarehouseInventoryTable({
               onClick={() => setPage((p) => p + 1)}
               className="text-muted-foreground"
             >
-              Siguiente <ChevronRight className="size-4 ml-1" />
+              Siguiente <ChevronRightIcon className="size-4 ml-1" />
             </Button>
           </div>
         )}

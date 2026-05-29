@@ -1,6 +1,6 @@
 "use client"
 
-import { Package, MapPin, User, FileText } from "lucide-react"
+import { CubeIcon, MapPinIcon, UserIcon, DocumentTextIcon } from "@heroicons/react/24/outline"
 import type { WarehouseDetailResponse } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -37,7 +37,7 @@ export function WarehouseDetail({
     <div className="rounded-xl border bg-card p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Package className="size-4 text-[#7b1a1a]" />
+          <CubeIcon className="size-4 text-[#7b1a1a]" />
           <h3 className="font-serif font-semibold text-lg">{warehouse.name}</h3>
         </div>
         <Badge variant="secondary" className="text-xs font-mono">
@@ -47,18 +47,18 @@ export function WarehouseDetail({
 
       <div className="space-y-2 text-sm">
         <div className="flex items-start gap-2 text-muted-foreground">
-          <MapPin className="size-3.5 mt-0.5 shrink-0" />
+          <MapPinIcon className="size-3.5 mt-0.5 shrink-0" />
           <span>{warehouse.physicalAddress || "Sin dirección"}</span>
         </div>
         {warehouse.responsibleUserName && (
           <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="size-3.5 shrink-0" />
+            <UserIcon className="size-3.5 shrink-0" />
             <span>{warehouse.responsibleUserName}</span>
           </div>
         )}
         {warehouse.description && (
           <div className="flex items-start gap-2 text-muted-foreground">
-            <FileText className="size-3.5 mt-0.5 shrink-0" />
+            <DocumentTextIcon className="size-3.5 mt-0.5 shrink-0" />
             <span>{warehouse.description}</span>
           </div>
         )}

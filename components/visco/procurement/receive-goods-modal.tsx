@@ -23,7 +23,7 @@ import {
 import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { LocationPicker } from "@/components/visco/warehouses/location-picker"
-import { Loader2 } from "lucide-react"
+import { ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function ReceiveGoodsModal({
@@ -208,7 +208,7 @@ export function ReceiveGoodsModal({
             Cancelar
           </Button>
           <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
-            {saving ? <><Loader2 className="size-4 animate-spin" /> Guardando…</> : "Confirmar Recepción"}
+            {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Guardando…</> : "Confirmar Recepción"}
           </Button>
         </DialogFooter>
       </DialogContent>

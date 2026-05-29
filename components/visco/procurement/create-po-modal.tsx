@@ -29,7 +29,7 @@ import { fetchProducts } from "@/lib/services/inventory"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplierFromPo } from "@/lib/permissions"
-import { Check, Loader2, Plus, Trash2, Search, X, Building2 } from "lucide-react"
+import { CheckIcon, ArrowPathIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon, XMarkIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
@@ -309,7 +309,7 @@ export function CreatePOModal({
                     i > step && "bg-card text-muted-foreground ring-border",
                   )}
                 >
-                  {i < step ? <Check className="size-3.5" /> : i + 1}
+                  {i < step ? <CheckIcon className="size-3.5" /> : i + 1}
                 </div>
                 <span
                   className={cn(
@@ -359,7 +359,7 @@ export function CreatePOModal({
                     onClick={() => setSupplierModalOpen(true)}
                     title="Crear nuevo proveedor"
                   >
-                    <Building2 className="size-4" />
+                    <BuildingOffice2Icon className="size-4" />
                   </Button>
                 )}
               </div>
@@ -454,7 +454,7 @@ export function CreatePOModal({
               <div className="relative" ref={finderRef}>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       className="pl-9"
                       placeholder="Escribe nombre, SKU o código…"
@@ -475,7 +475,7 @@ export function CreatePOModal({
                           setFinderQuery("")
                         }}
                       >
-                        <X className="size-4" />
+                        <XMarkIcon className="size-4" />
                       </button>
                     )}
                   </div>
@@ -500,7 +500,7 @@ export function CreatePOModal({
                     className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white shrink-0"
                     onClick={addLine}
                   >
-                    <Plus className="size-4" />
+                    <PlusIcon className="size-4" />
                   </Button>
                 </div>
 
@@ -613,7 +613,7 @@ export function CreatePOModal({
                         className="text-muted-foreground hover:text-red-600 shrink-0"
                         aria-label="Eliminar línea"
                       >
-                        <Trash2 className="size-4" />
+                        <TrashIcon className="size-4" />
                       </button>
                     </li>
                   ))}
@@ -670,7 +670,7 @@ export function CreatePOModal({
             </Button>
           ) : (
             <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={submit} disabled={saving}>
-              {saving ? <><Loader2 className="size-4 animate-spin" /> Creando…</> : "Crear Pedido"}
+              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Creando…</> : "Crear Pedido"}
             </Button>
           )}
         </DialogFooter>
