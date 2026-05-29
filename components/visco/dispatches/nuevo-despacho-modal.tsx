@@ -40,13 +40,15 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }, [isOpen])
 
   useEffect(() => {
-    if (selectedWarehouseId) {
-      setLoadingProducts(true)
-      fetchProductsOnStock(selectedWarehouseId)
-        .then((res) => setProducts(res.content ?? []))
-        .catch(() => {})
-        .finally(() => setLoadingProducts(false))
-    }
+    if (!selectedWarehouseId) return
+    let cancelled = false
+    setLoadingProducts(true)
+    setProducts([])
+    fetchProductsOnStock(selectedWarehouseId)
+      .then((res) => { if (!cancelled) setProducts(res.content ?? []) })
+      .catch((err) => { if (!cancelled) toast.error(err instanceof Error ? err.message : "Error al cargar productos") })
+      .finally(() => { if (!cancelled) setLoadingProducts(false) })
+    return () => { cancelled = true }
   }, [selectedWarehouseId])
 
   if (!isOpen) return null
