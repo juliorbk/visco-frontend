@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { LayoutDashboard, Package, ShoppingCart, Building2, BarChart3, Truck, FileText, Plus, X, Shield, Settings, Warehouse, LogOut } from "lucide-react"
+import { Squares2X2Icon as LayoutDashboard, CubeIcon as Package, ShoppingCartIcon, BuildingOffice2Icon, ChartBarIcon, TruckIcon, DocumentTextIcon, PlusIcon, XMarkIcon, ShieldCheckIcon, Cog6ToothIcon, BuildingStorefrontIcon, ArrowUpTrayIcon as LogOutIcon } from "@heroicons/react/24/outline"
 import { Logo } from "./logo"
 import { getCachedUser, fetchUser } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
@@ -12,13 +12,13 @@ import type { UserDTO } from "@/lib/types"
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/inventory", label: "Inventory", icon: Package },
-  { href: "/requisitions", label: "Requisitions", icon: FileText },
-  { href: "/procurement", label: "Procurement", icon: ShoppingCart },
-  { href: "/inbounds", label: "Inbounds", icon: Truck },
-  { href: "/suppliers", label: "Suppliers", icon: Building2 },
-  { href: "/dispatches", label: "Dispatches", icon: LogOut },
-  { href: "/warehouses", label: "Warehouses", icon: Warehouse },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/requisitions", label: "Requisitions", icon: DocumentTextIcon },
+  { href: "/procurement", label: "Procurement", icon: ShoppingCartIcon },
+  { href: "/inbounds", label: "Inbounds", icon: TruckIcon },
+  { href: "/suppliers", label: "Suppliers", icon: BuildingOffice2Icon },
+  { href: "/dispatches", label: "Dispatches", icon: LogOutIcon },
+  { href: "/warehouses", label: "Warehouses", icon: BuildingStorefrontIcon },
+  { href: "/reports", label: "Reports", icon: ChartBarIcon },
 ]
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -30,7 +30,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
   }, [])
 
   const NAV = user?.role === "ADMIN"
-    ? [...BASE_NAV, { href: "/admin", label: "Admin", icon: Shield }]
+    ? [...BASE_NAV,   { href: "/admin", label: "Admin", icon: ShieldCheckIcon }]
     : BASE_NAV
 
   return (
@@ -57,7 +57,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             className="md:hidden size-8 grid place-items-center rounded-md hover:bg-sidebar-accent text-sidebar-foreground/80"
             aria-label="Cerrar menú"
           >
-            <X className="size-5" />
+            <XMarkIcon className="size-5" />
           </button>
         </div>
 
@@ -91,7 +91,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             onClick={onClose}
             className="flex items-center justify-center gap-1.5 w-full rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-3 py-2.5 transition-colors"
           >
-            <Plus className="size-3.5" />
+            <PlusIcon className="size-3.5" />
             New Purchase Order
           </Link>
         </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bell, Settings, Info, Search, LogOut, User, Menu } from "lucide-react"
+import { BellIcon, Cog6ToothIcon, InformationCircleIcon, MagnifyingGlassIcon, ArrowRightStartOnRectangleIcon, UserIcon, Bars3Icon } from "@heroicons/react/24/outline"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -52,11 +52,11 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         className="md:hidden size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary shrink-0"
         aria-label="Abrir menú"
       >
-        <Menu className="size-5" />
+        <Bars3Icon className="size-5" />
       </button>
 
       <div className="relative flex-1 max-w-xl mx-auto">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           type="search"
           placeholder="Buscar pedidos, productos, proveedores…"
@@ -73,19 +73,19 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
           aria-label="Notificaciones"
         >
-          <Bell className="size-[18px]" />
+          <BellIcon className="size-[18px]" />
         </button>
         <button
           className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary max-md:hidden"
           aria-label="Configuración"
         >
-          <Settings className="size-[18px]" />
+          <Cog6ToothIcon className="size-[18px]" />
         </button>
         <button
           className="size-9 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary max-md:hidden"
           aria-label="Ayuda"
         >
-          <Info className="size-[18px]" />
+          <InformationCircleIcon className="size-[18px]" />
         </button>
 
         <DropdownMenu>
@@ -110,14 +110,14 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <User className="mr-2 size-4" /> Perfil
+               <UserIcon className="mr-2 size-4" /> Perfil
             </DropdownMenuItem>
             <DropdownMenuItem>
-              <Settings className="mr-2 size-4" /> Preferencias
+               <Cog6ToothIcon className="mr-2 size-4" /> Preferencias
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
-              <LogOut className="mr-2 size-4" /> Cerrar sesión
+               <ArrowRightStartOnRectangleIcon className="mr-2 size-4" /> Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
