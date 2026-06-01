@@ -455,6 +455,7 @@ export interface CreateRequisitionRequest {
 export interface DispatchItemRequest {
   productId: number
   quantity: number
+  outputPrice: number
 }
 
 export interface DispatchRequest {
