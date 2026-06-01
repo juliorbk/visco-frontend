@@ -1,18 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { XMarkIcon, ArrowPathIcon, ArrowsRightLeftIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -20,10 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
-import { ArrowPathIcon, ArrowsRightLeftIcon } from "@heroicons/react/24/outline"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export function TransferModal({
@@ -37,6 +43,7 @@ export function TransferModal({
 }) {
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [products, setProducts] = useState<ProductOnStock[]>([])
+  const [openProduct, setOpenProduct] = useState(false)
   const [productId, setProductId] = useState<number>(0)
   const [fromWarehouseId, setFromWarehouseId] = useState<number>(0)
   const [toWarehouseId, setToWarehouseId] = useState<number>(0)
@@ -45,6 +52,21 @@ export function TransferModal({
   const [reason, setReason] = useState("")
   const [saving, setSaving] = useState(false)
   const [loadingData, setLoadingData] = useState(false)
+
+  const selectedProduct = products.find((p) => p.id === productId)
+
+  const loadProducts = (warehouseId: number) => {
+    if (!warehouseId) return
+    fetchProductsOnStock(warehouseId)
+      .then((page) => {
+        const prods = page.content ?? []
+        setProducts(prods)
+        if (prods.length > 0 && !prods.find((p) => p.id === productId)) {
+          setProductId(prods[0].id)
+        }
+      })
+      .catch(() => toast.error("Error al cargar productos"))
+  }
 
   useEffect(() => {
     if (open) {
@@ -56,14 +78,9 @@ export function TransferModal({
           const toId = wh.length >= 2 ? wh[1].id : 0
           setFromWarehouseId(fromId)
           setToWarehouseId(toId)
-          if (fromId) return fetchProductsOnStock(fromId)
-          return { content: [] } as any
+          return fromId
         })
-        .then((page) => {
-          const prods = page.content ?? []
-          setProducts(prods)
-          if (prods.length > 0) setProductId(prods[0].id)
-        })
+        .then((fromId) => loadProducts(fromId))
         .catch(() => toast.error("Error al cargar datos"))
         .finally(() => setLoadingData(false))
     }
@@ -74,6 +91,7 @@ export function TransferModal({
     setQuantity("1")
     setUnitCost("")
     setReason("")
+    setProductId(0)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,41 +124,95 @@ export function TransferModal({
     }
   }
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) close(); else onOpenChange(true) }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="font-serif">Transferir Stock</DialogTitle>
-          <DialogDescription>
-            Transfiere existencias entre almacenes.
-          </DialogDescription>
-        </DialogHeader>
+  if (!open) return null
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {loadingData ? (
-            <div className="flex items-center justify-center py-8">
-              <ArrowPathIcon className="size-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <>
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6]">
+          <div>
+            <h2 className="text-xl font-bold text-[#111827]">Transferir Stock</h2>
+            <p className="text-sm text-[#6b7280] mt-0.5">Transfiere existencias entre almacenes.</p>
+          </div>
+          <button onClick={close} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
+            <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
+          </button>
+        </div>
+
+        {loadingData ? (
+          <div className="flex items-center justify-center py-12">
+            <ArrowPathIcon className="size-6 animate-spin text-[#6b7280]" />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="p-6 space-y-5">
               <div className="space-y-1.5">
                 <Label>Producto</Label>
-                <Select value={String(productId)} onValueChange={(v) => setProductId(Number(v))}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar producto" /></SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p.id} value={String(p.id)}>
-                        {p.name} ({p.sku})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openProduct} onOpenChange={setOpenProduct}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openProduct}
+                      className="w-full justify-between font-normal bg-background"
+                      disabled={saving}
+                    >
+                      {selectedProduct
+                        ? `${selectedProduct.name} (${selectedProduct.sku})`
+                        : "Buscar producto..."}
+                      <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar por nombre o SKU..." />
+                      <CommandList>
+                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
+                        <CommandGroup>
+                          {products.map((p) => (
+                            <CommandItem
+                              key={p.id}
+                              value={`${p.name} ${p.sku}`}
+                              onSelect={() => {
+                                setProductId(p.id === productId ? 0 : p.id)
+                                setOpenProduct(false)
+                              }}
+                            >
+                              <CheckIcon
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  productId === p.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{p.name}</span>
+                                <span className="text-xs text-[#6b7280]">SKU: {p.sku} &middot; Stock: {p.currentStock}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Origen</Label>
-                  <Select value={String(fromWarehouseId)} onValueChange={(v) => setFromWarehouseId(Number(v))}>
+                  <Select
+                    value={String(fromWarehouseId)}
+                    onValueChange={(v) => {
+                      const id = Number(v)
+                      setFromWarehouseId(id)
+                      loadProducts(id)
+                      if (id === toWarehouseId) {
+                        const other = warehouses.find((w) => w.id !== id)
+                        if (other) setToWarehouseId(other.id)
+                      }
+                    }}
+                    disabled={saving}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {warehouses.map((w) => (
@@ -151,7 +223,7 @@ export function TransferModal({
                 </div>
                 <div className="space-y-1.5">
                   <Label>Destino</Label>
-                  <Select value={String(toWarehouseId)} onValueChange={(v) => setToWarehouseId(Number(v))}>
+                  <Select value={String(toWarehouseId)} onValueChange={(v) => setToWarehouseId(Number(v))} disabled={saving}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {warehouses.map((w) => (
@@ -168,25 +240,40 @@ export function TransferModal({
               </div>
 
               <div className="space-y-1.5">
-                <Label>Costo unitario (opcional)</Label>
+                <Label>Costo unitario <span className="text-[#6b7280]">(opcional)</span></Label>
                 <Input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" disabled={saving} />
               </div>
 
               <div className="space-y-1.5">
-                <Label>Motivo (opcional)</Label>
+                <Label>Motivo <span className="text-[#6b7280]">(opcional)</span></Label>
                 <Textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Razón de la transferencia…" disabled={saving} />
               </div>
-            </>
-          )}
+            </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={close} disabled={saving}>Cancelar</Button>
-            <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving || loadingData}>
-              {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Transfiriendo…</> : <><ArrowsRightLeftIcon className="size-4 mr-1" /> Transferir</>}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#f3f4f6]">
+              <button
+                type="button"
+                onClick={close}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving || loadingData}
+                className="px-5 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                {saving ? (
+                  <><ArrowPathIcon className="size-4 animate-spin" /> Transfiriendo…</>
+                ) : (
+                  <><ArrowsRightLeftIcon className="size-4" /> Transferir</>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
   )
 }

@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { fetchWarehouseProducts } from "@/lib/services/warehouse"
-import type { ProductOnStock } from "@/lib/types"
+import { fetchProduct } from "@/lib/services/inventory"
+import type { ProductOnStock, ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
+import { ItemDetailPanel } from "@/components/visco/inventory/item-detail-panel"
 import { MagnifyingGlassIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon } from "@heroicons/react/24/outline"
+import { toast } from "sonner"
 
 const PAGE_SIZE = 20
 
@@ -24,6 +27,9 @@ export function WarehouseInventoryTable({
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
+
+  const [selectedProduct, setSelectedProduct] = useState<ProductDTO | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500)
@@ -49,6 +55,18 @@ export function WarehouseInventoryTable({
   }, [warehouseId, debouncedSearch, page])
 
   useEffect(() => { loadProducts() }, [loadProducts])
+
+  const handleRowClick = async (p: ProductOnStock) => {
+    setLoadingDetail(true)
+    try {
+      const detail = await fetchProduct(p.id)
+      setSelectedProduct(detail)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al cargar detalle del producto")
+    } finally {
+      setLoadingDetail(false)
+    }
+  }
 
   const computeStatus = (p: ProductOnStock) => {
     if (p.currentStock <= 0) return "Sin stock"
@@ -106,7 +124,11 @@ export function WarehouseInventoryTable({
                 </tr>
               ) : (
                 products.map((p) => (
-                  <tr key={p.id} className="border-t border-border hover:bg-[#fafafa] transition-colors">
+                  <tr
+                    key={p.id}
+                    onClick={() => handleRowClick(p)}
+                    className="border-t border-border hover:bg-[#fafafa] transition-colors cursor-pointer"
+                  >
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.internalCode}</td>
                     <td className="px-5 py-3 font-medium text-foreground">{p.name}</td>
                     <td className="px-5 py-3 text-muted-foreground">{p.categoryName ?? "-"}</td>
@@ -151,6 +173,21 @@ export function WarehouseInventoryTable({
           </div>
         )}
       </div>
+
+      {loadingDetail && (
+        <div className="fixed inset-0 bg-black/20 z-40 flex items-center justify-center">
+          <ArrowPathIcon className="size-8 animate-spin text-white" />
+        </div>
+      )}
+
+      <ItemDetailPanel
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onEdit={(p) => {
+          setSelectedProduct(null)
+          toast.info("Edita el producto desde la sección Inventario General")
+        }}
+      />
     </div>
   )
 }

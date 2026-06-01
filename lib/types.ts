@@ -534,6 +534,89 @@ export interface ItemSummary {
   fullyReceived: boolean
 }
 
+// ── Reports ──
+
+export type ReportType = "STOCK_INVENTORY" | "STOCK_MOVEMENTS" | "CRITICAL_ALERTS" | "WAREHOUSE_ANALYSIS"
+export type ReportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+export type ReportFormat = "PDF" | "EXCEL" | "JSON"
+export type ReportFrequency = "DAILY" | "WEEKLY" | "MONTHLY"
+
+export interface ReportDTO {
+  id: number
+  name: string
+  description?: string
+  type: ReportType
+  status: ReportStatus
+  format: ReportFormat
+  generatedAt?: string
+  startDate?: string
+  endDate?: string
+  recordCount?: number
+  fileSize?: number
+  filePath?: string
+  createdBy?: string
+  createdAt?: string
+}
+
+export interface CreateReportRequest {
+  name: string
+  type: ReportType
+  format: ReportFormat
+  startDate: string
+  endDate: string
+  categoryId?: number
+  warehouseId?: number
+  search?: string
+  additionalFilters?: Record<string, unknown>
+}
+
+export interface ScheduledReportDTO {
+  id: number
+  name: string
+  reportType: ReportType
+  frequency: ReportFrequency
+  recipientEmails?: string
+  filterConfig?: string
+  format: ReportFormat
+  scheduleTime?: string
+  scheduleDayOfWeek?: number
+  scheduleDay?: number
+  lastExecutedAt?: string
+  nextExecutionAt?: string
+  enabled: boolean
+  createdAt?: string
+}
+
+export interface CreateScheduledReportRequest {
+  name: string
+  reportType: ReportType
+  frequency: ReportFrequency
+  recipientEmails?: string
+  filterConfig?: string
+  format: ReportFormat
+  scheduleTime: string
+  scheduleDayOfWeek?: number
+  scheduleDay?: number
+}
+
+export interface UpdateScheduledReportRequest extends Partial<CreateScheduledReportRequest> {
+  enabled?: boolean
+}
+
+export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
+  STOCK_INVENTORY: "Stock",
+  STOCK_MOVEMENTS: "Movimientos",
+  CRITICAL_ALERTS: "Alertas",
+  WAREHOUSE_ANALYSIS: "Análisis x Almacén",
+}
+
+export const REPORT_STATUS_COLORS: Record<ReportStatus, string> = {
+  PENDING: "text-yellow-600 bg-yellow-50",
+  PROCESSING: "text-blue-600 bg-blue-50",
+  COMPLETED: "text-emerald-600 bg-emerald-50",
+  FAILED: "text-red-600 bg-red-50",
+}
+
 // ── Spring Page wrapper ──
 
 export interface Page<T> {

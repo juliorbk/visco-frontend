@@ -193,24 +193,22 @@ export default function InventoryPage() {
                   <DropdownMenuRadioItem value="all">
                     Todas las categorías
                   </DropdownMenuRadioItem>
-                  {mainCategories.map((main) => {
+                  {mainCategories.flatMap((main) => {
                     const subs = subCategoriesByParent.get(main.id) ?? []
-                    return (
-                      <div key={main.id}>
-                        <DropdownMenuRadioItem value={String(main.id)}>
-                          {main.name}
+                    return [
+                      <DropdownMenuRadioItem key={`main-${main.id}`} value={String(main.id)}>
+                        {main.name}
+                      </DropdownMenuRadioItem>,
+                      ...subs.map((sub) => (
+                        <DropdownMenuRadioItem
+                          key={`sub-${sub.id}`}
+                          value={String(sub.id)}
+                          className="pl-6 text-muted-foreground"
+                        >
+                          └ {sub.name}
                         </DropdownMenuRadioItem>
-                        {subs.map((sub) => (
-                          <DropdownMenuRadioItem
-                            key={sub.id}
-                            value={String(sub.id)}
-                            className="pl-6 text-muted-foreground"
-                          >
-                            └ {sub.name}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </div>
-                    )
+                      )),
+                    ]
                   })}
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>

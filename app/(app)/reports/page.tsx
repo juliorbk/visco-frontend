@@ -1,407 +1,778 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-
-import { CalendarIcon, ChevronRightIcon, DocumentTextIcon, CubeIcon, UsersIcon, CurrencyDollarIcon, ArrowDownTrayIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon, SparklesIcon } from "@heroicons/react/24/outline"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import {
+  DocumentTextIcon,
+  ArrowDownTrayIcon,
+  ClockIcon,
+  TrashIcon,
+  PlayIcon,
+  PlusIcon,
+  EllipsisVerticalIcon,
+  ArrowPathIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CalendarIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ChartBarIcon,
+} from "@heroicons/react/24/outline"
 
-const REPORTS = [
-  {
-    id: "expenses",
-    title: "Expenses",
-    subtitle: "Análisis de costos por categoría",
-    icon: CurrencyDollarIcon,
-  },
-  {
-    id: "inventory",
-    title: "Inventory",
-    subtitle: "Niveles de stock y rotación",
-    icon: CubeIcon,
-  },
-  {
-    id: "performance",
-    title: "Performance",
-    subtitle: "KPIs de proveedores y SLAs",
-    icon: UsersIcon,
-  },
-]
+import {
+  fetchReports,
+  generateReport,
+  deleteReport,
+  getReportDownloadUrl,
+  fetchScheduledReports,
+  createScheduledReport,
+  updateScheduledReport,
+  deleteScheduledReport,
+  executeScheduledReport,
+} from "@/lib/services/reports"
+import {
+  fetchWarehouses,
+} from "@/lib/services/warehouse"
+import { fetchCategories } from "@/lib/services/categories"
+import type {
+  ReportDTO,
+  ScheduledReportDTO,
+  ReportType,
+  ReportFormat,
+  ReportStatus,
+  ReportFrequency,
+  CreateReportRequest,
+  WarehouseResponse,
+  Category,
+} from "@/lib/types"
+import { REPORT_TYPE_LABELS, REPORT_STATUS_COLORS } from "@/lib/types"
 
 export default function ReportsPage() {
-  const [range, setRange] = useState("month")
-  const [activeReport, setActiveReport] = useState("expenses")
+  const [tab, setTab] = useState("generate")
+  const [loading, setLoading] = useState(false)
 
   return (
     <div>
       <PageHeader
         title="Reports & Analytics"
-        subtitle="Genera, descarga y comparte reportes ejecutivos en tiempo real."
-        actions={
-          <>
-            <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-              <DocumentTextIcon className="size-4" /> Export PDF
-            </Button>
-            <Button size="sm" variant="outline" className="bg-card">
-              <ArrowDownTrayIcon className="size-4" /> Export Excel
-            </Button>
-          </>
-        }
+        subtitle="Genera, descarga y programa reportes del sistema."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* LEFT COLUMN */}
-        <div className="lg:col-span-1 space-y-4">
-          <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-            <h3 className="font-serif text-base font-semibold mb-3">Time Range</h3>
-            <RadioGroup value={range} onValueChange={setRange} className="space-y-2">
-              {[
-                { v: "7d", l: "Last 7 Days" },
-                { v: "month", l: "This Month" },
-                { v: "quarter", l: "This Quarter" },
-                { v: "ytd", l: "Year to Date" },
-              ].map((opt) => (
-                <Label
-                  key={opt.v}
-                  htmlFor={`r-${opt.v}`}
-                  className={cn(
-                    "flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 transition-colors",
-                    range === opt.v && "bg-[#fde8e8]",
-                  )}
-                >
-                  <RadioGroupItem
-                    id={`r-${opt.v}`}
-                    value={opt.v}
-                    className="border-[#7b1a1a]/50 text-[#7b1a1a]"
-                  />
-                  <span className="text-sm">{opt.l}</span>
-                </Label>
-              ))}
-              <Label
-                htmlFor="r-custom"
-                className={cn(
-                  "flex items-center gap-2.5 cursor-pointer rounded-md px-2 py-1.5 transition-colors",
-                  range === "custom" && "bg-[#fde8e8]",
-                )}
-              >
-                <RadioGroupItem
-                  id="r-custom"
-                  value="custom"
-                  className="border-[#7b1a1a]/50 text-[#7b1a1a]"
-                />
-                <span className="text-sm">Custom Range</span>
-                <CalendarIcon className="size-3.5 ml-auto text-muted-foreground" />
-              </Label>
-            </RadioGroup>
-          </section>
+      <Tabs value={tab} onValueChange={setTab} className="mt-4">
+        <TabsList className="bg-card border border-border">
+          <TabsTrigger value="generate" className="gap-2">
+            <DocumentTextIcon className="size-4" /> Generar Reporte
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <ClockIcon className="size-4" /> Historial
+          </TabsTrigger>
+          <TabsTrigger value="scheduled" className="gap-2">
+            <CalendarIcon className="size-4" /> Programados
+          </TabsTrigger>
+        </TabsList>
 
-          <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-            <h3 className="font-serif text-base font-semibold mb-3">Report Library</h3>
-            <ul className="space-y-2">
-              {REPORTS.map((r) => {
-                const Icon = r.icon
-                const active = activeReport === r.id
-                return (
-                  <li key={r.id}>
-                    <button
-                      onClick={() => setActiveReport(r.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-                        active
-                          ? "bg-[#7b1a1a] text-white"
-                          : "hover:bg-secondary text-foreground",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "size-8 rounded-md grid place-items-center shrink-0",
-                          active ? "bg-white/15" : "bg-[#fde8e8] text-[#7b1a1a]",
-                        )}
-                      >
-                        <Icon className="size-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium">{r.title}</div>
-                        <div
-                          className={cn(
-                            "text-xs truncate",
-                            active ? "text-white/80" : "text-muted-foreground",
-                          )}
-                        >
-                          {r.subtitle}
-                        </div>
-                      </div>
-                      <ChevronRightIcon className="size-4 opacity-60 shrink-0" />
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
+        <TabsContent value="generate" className="mt-4">
+          <GenerateReportTab />
+        </TabsContent>
 
-          <section className="rounded-xl bg-[#1f2937] text-white p-5 shadow-xs">
-            <div className="flex items-center gap-2 text-white/80 text-xs">
-              <SparklesIcon className="size-4" />
-              <span className="uppercase tracking-wider">Custom Report</span>
-            </div>
-            <h3 className="font-serif text-lg font-semibold mt-2">
-              Construye tu propio reporte
-            </h3>
-            <p className="text-sm text-white/70 mt-1 mb-4">
-              Combina dimensiones, métricas y filtros con el builder visual.
-            </p>
-            <Button variant="outline" className="w-full bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white">
-              Launch Builder
-            </Button>
-          </section>
-        </div>
+        <TabsContent value="history" className="mt-4">
+          <ReportHistoryTab />
+        </TabsContent>
 
-        {/* RIGHT AREA */}
-        <div className="lg:col-span-2 space-y-4">
-          <TrendCard />
+        <TabsContent value="scheduled" className="mt-4">
+          <ScheduledReportsTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <CategoryCard />
-            <MetricCard
-              variant="dark"
-              label="Total Spend"
-              value="$2.4M"
-              delta="+12%"
-              trend="up"
-              caption="vs último mes"
-            />
-            <MetricCard
-              variant="light"
-              label="Invoices Proc."
-              value="842"
-              delta="-3%"
-              trend="down"
-              caption="vs último mes"
+// ─── Generate Report Tab ──────────────────────────────────────
+
+function GenerateReportTab() {
+  const [name, setName] = useState("")
+  const [type, setType] = useState<ReportType>("STOCK_INVENTORY")
+  const [format, setFormat] = useState<ReportFormat>("EXCEL")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [categoryId, setCategoryId] = useState("")
+  const [warehouseId, setWarehouseId] = useState("")
+  const [search, setSearch] = useState("")
+  const [generating, setGenerating] = useState(false)
+
+  const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+
+  useEffect(() => {
+    fetchWarehouses().then(setWarehouses).catch(() => {})
+    fetchCategories(0, 200).then((r) => setCategories(r.content ?? [])).catch(() => {})
+  }, [])
+
+  const handleGenerate = async () => {
+    if (!name.trim()) {
+      toast.error("El nombre del reporte es requerido")
+      return
+    }
+    if (!startDate || !endDate) {
+      toast.error("Las fechas de inicio y fin son requeridas")
+      return
+    }
+
+    setGenerating(true)
+    try {
+      const body: CreateReportRequest = {
+        name: name.trim(),
+        type,
+        format,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        search: search || undefined,
+        categoryId: categoryId ? Number(categoryId) : undefined,
+        warehouseId: warehouseId ? Number(warehouseId) : undefined,
+      }
+      const report = await generateReport(body)
+      toast.success(`Reporte "${report.name}" generado exitosamente`)
+      setName("")
+      setSearch("")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al generar reporte")
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <Card className="lg:col-span-2 p-6">
+        <h3 className="font-serif text-lg font-semibold mb-4">Configuración del Reporte</h3>
+        <div className="space-y-4">
+          <div>
+            <Label>Nombre del Reporte</Label>
+            <Input
+              placeholder="Ej: Reporte mensual de stock"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
-          <EfficiencyCard />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo de Reporte</Label>
+              <Select value={type} onValueChange={(v) => setType(v as ReportType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(REPORT_TYPE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Formato</Label>
+              <Select value={format} onValueChange={(v) => setFormat(v as ReportFormat)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PDF">PDF</SelectItem>
+                  <SelectItem value="EXCEL">Excel</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Fecha Inicio</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div>
+              <Label>Fecha Fin</Label>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Almacén (opcional)</Label>
+              <Select value={warehouseId} onValueChange={setWarehouseId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos</SelectItem>
+                  {warehouses.map((w) => (
+                    <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Categoría (opcional)</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <Label>Búsqueda (opcional)</Label>
+            <Input
+              placeholder="Filtrar por nombre o SKU..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white w-full"
+          >
+            {generating ? (
+              <><ArrowPathIcon className="size-4 mr-2 animate-spin" /> Generando...</>
+            ) : (
+              <><DocumentTextIcon className="size-4 mr-2" /> Generar Reporte</>
+            )}
+          </Button>
         </div>
-      </div>
+      </Card>
+
+      <Card className="p-6 bg-[#1f2937] text-white">
+        <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
+          <ChartBarIcon className="size-4" />
+          <span className="uppercase tracking-wider">Tipos de Reporte</span>
+        </div>
+        <div className="space-y-3 text-sm text-white/80">
+          <div>
+            <strong className="text-white">Stock:</strong> Snapshot completo del inventario con niveles por producto y almacén.
+          </div>
+          <div>
+            <strong className="text-white">Movimientos:</strong> Historial de entradas, salidas y ajustes de stock.
+          </div>
+          <div>
+            <strong className="text-white">Alertas:</strong> Productos con stock crítico, bajo punto de reorden o en exceso.
+          </div>
+          <div>
+            <strong className="text-white">Análisis x Almacén:</strong> Capacidad, utilización y distribución por almacén.
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }
 
-function TrendCard() {
+// ─── Report History Tab ───────────────────────────────────────
+
+function ReportHistoryTab() {
+  const [reports, setReports] = useState<ReportDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
+  const [typeFilter, setTypeFilter] = useState("")
+  const [statusFilter, setStatusFilter] = useState("")
+  const [refreshing, setRefreshing] = useState(0)
+
+  const loadReports = useCallback(async () => {
+    try {
+      setLoading(true)
+      const res = await fetchReports(page, 20, typeFilter || undefined, statusFilter || undefined)
+      setReports(res.content ?? [])
+      setTotalPages(res.page.totalPages)
+      setTotalElements(res.page.totalElements)
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        toast.error("Error al cargar reportes")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [page, typeFilter, statusFilter, refreshing])
+
+  useEffect(() => {
+    loadReports()
+  }, [loadReports])
+
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteReport(id)
+      toast.success("Reporte eliminado")
+      setRefreshing((p) => p + 1)
+    } catch {
+      toast.error("Error al eliminar reporte")
+    }
+  }
+
+  const handleDownload = (id: number) => {
+    window.open(getReportDownloadUrl(id), "_blank")
+  }
+
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-serif text-lg font-semibold">Total Expenditures</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Trailing 30 days vs previous period
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-xs">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#7b1a1a]" /> Current
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2.5 rounded-full bg-[#f4c0c0]" /> Previous
-          </span>
-        </div>
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(0) }}>
+          <SelectTrigger className="w-44 bg-card">
+            <SelectValue placeholder="Todos los tipos" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos los tipos</SelectItem>
+            {Object.entries(REPORT_TYPE_LABELS).map(([k, v]) => (
+              <SelectItem key={k} value={k}>{v}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0) }}>
+          <SelectTrigger className="w-40 bg-card">
+            <SelectValue placeholder="Todos los estados" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos los estados</SelectItem>
+            <SelectItem value="COMPLETED">Completado</SelectItem>
+            <SelectItem value="PENDING">Pendiente</SelectItem>
+            <SelectItem value="PROCESSING">Procesando</SelectItem>
+            <SelectItem value="FAILED">Error</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline" size="sm" className="bg-card" onClick={() => setRefreshing((p) => p + 1)}>
+          <ArrowPathIcon className="size-4 mr-2" /> Actualizar
+        </Button>
       </div>
-      <div className="h-[260px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={reportTrendCurrent} margin={{ top: 5, right: 10, left: -16, bottom: 0 }}>
-            <defs>
-              <linearGradient id="cur" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#7b1a1a" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#7b1a1a" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="prev" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f4c0c0" stopOpacity={0.45} />
-                <stop offset="100%" stopColor="#f4c0c0" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-            <XAxis
-              dataKey="day"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-            />
-            <YAxis
-              tickFormatter={(v) => `$${v / 1000}k`}
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#6b7280" }}
-            />
-            <Tooltip
-              contentStyle={{
-                borderRadius: 8,
-                border: "1px solid #f3f4f6",
-                fontSize: 12,
-                padding: "8px 10px",
-              }}
-              formatter={(v: number) => [`$${v.toLocaleString()}`, undefined]}
-            />
-            <Area
-              type="monotone"
-              dataKey="previous"
-              stroke="#f4c0c0"
-              strokeWidth={2}
-              fill="url(#prev)"
-            />
-            <Area
-              type="monotone"
-              dataKey="current"
-              stroke="#7b1a1a"
-              strokeWidth={2.5}
-              fill="url(#cur)"
-            />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
+
+      <Card>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Formato</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Registros</TableHead>
+                <TableHead>Generado</TableHead>
+                <TableHead className="w-24">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <ArrowPathIcon className="size-6 animate-spin mx-auto" />
+                  </TableCell>
+                </TableRow>
+              ) : reports.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No hay reportes generados aún.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                reports.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell className="font-medium">{r.name}</TableCell>
+                    <TableCell>{REPORT_TYPE_LABELS[r.type]}</TableCell>
+                    <TableCell>{r.format}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn("font-normal", REPORT_STATUS_COLORS[r.status])}>
+                        {r.status === "COMPLETED" && <CheckCircleIcon className="size-3 mr-1" />}
+                        {r.status === "FAILED" && <XCircleIcon className="size-3 mr-1" />}
+                        {r.status === "PROCESSING" && <ArrowPathIcon className="size-3 mr-1 animate-spin" />}
+                        {r.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="tabular-nums">{r.recordCount ?? "-"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {r.generatedAt ? new Date(r.generatedAt).toLocaleDateString() : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <EllipsisVerticalIcon className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {r.status === "COMPLETED" && (
+                            <DropdownMenuItem onClick={() => handleDownload(r.id)}>
+                              <ArrowDownTrayIcon className="size-4 mr-2" /> Descargar
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(r.id)}
+                            className="text-red-600"
+                          >
+                            <TrashIcon className="size-4 mr-2" /> Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/30">
+            <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              <ChevronLeftIcon className="size-4 mr-1" /> Anterior
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Página {page + 1} de {totalPages} · {totalElements} reportes
+            </span>
+            <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
+              Siguiente <ChevronRightIcon className="size-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }
 
-function CategoryCard() {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-        Expenses by Category
-      </div>
-      <div className="mt-1 font-serif text-xl font-semibold">5 categorías</div>
-      <div className="h-[100px] mt-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={categoryExpenses} margin={{ top: 4, right: 0, left: -32, bottom: 0 }}>
-            <XAxis
-              dataKey="cat"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 10, fill: "#6b7280" }}
-            />
-            <YAxis hide />
-            <Tooltip
-              contentStyle={{
-                borderRadius: 6,
-                border: "1px solid #f3f4f6",
-                fontSize: 11,
-                padding: "4px 8px",
-              }}
-            />
-            <Bar dataKey="value" fill="#7b1a1a" radius={[3, 3, 0, 0]} maxBarSize={18} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  )
-}
+// ─── Scheduled Reports Tab ────────────────────────────────────
 
-function MetricCard({
-  variant,
-  label,
-  value,
-  delta,
-  trend,
-  caption,
-}: {
-  variant: "dark" | "light"
-  label: string
-  value: string
-  delta: string
-  trend: "up" | "down"
-  caption: string
-}) {
-  const dark = variant === "dark"
-  const Icon = trend === "up" ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
-  return (
-    <div
-      className={cn(
-        "rounded-xl border p-5 shadow-xs flex flex-col justify-between min-h-[140px]",
-        dark ? "bg-[#7b1a1a] text-white border-[#7b1a1a]" : "bg-card border-border",
-      )}
-    >
-      <div className={cn("text-xs uppercase tracking-wider font-medium", dark ? "text-white/70" : "text-muted-foreground")}>
-        {label}
-      </div>
-      <div>
-        <div className="font-serif text-3xl font-semibold mt-1">{value}</div>
-        <div
-          className={cn(
-            "mt-1 flex items-center gap-1 text-xs",
-            dark
-              ? "text-white/80"
-              : trend === "up"
-                ? "text-emerald-600"
-                : "text-red-600",
-          )}
-        >
-          <Icon className="size-3.5" />
-          <span className="font-medium">{delta}</span>
-          <span className={cn(dark ? "text-white/60" : "text-muted-foreground")}>{caption}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
+function ScheduledReportsTab() {
+  const [scheduled, setScheduled] = useState<ScheduledReportDTO[]>([])
+  const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [refreshing, setRefreshing] = useState(0)
 
-function EfficiencyCard() {
-  const score = 94
-  const circumference = 2 * Math.PI * 38
-  const offset = circumference - (score / 100) * circumference
+  // Form state
+  const [formName, setFormName] = useState("")
+  const [formType, setFormType] = useState<ReportType>("STOCK_INVENTORY")
+  const [formFreq, setFormFreq] = useState<ReportFrequency>("WEEKLY")
+  const [formFormat, setFormFormat] = useState<ReportFormat>("EXCEL")
+  const [formTime, setFormTime] = useState("08:00")
+  const [formDayOfWeek, setFormDayOfWeek] = useState("1")
+  const [formDayOfMonth, setFormDayOfMonth] = useState("1")
+  const [formEmails, setFormEmails] = useState("")
+  const [formSaving, setFormSaving] = useState(false)
+
+  const loadScheduled = useCallback(async () => {
+    try {
+      setLoading(true)
+      const data = await fetchScheduledReports()
+      setScheduled(data)
+    } catch {
+      toast.error("Error al cargar reportes programados")
+    } finally {
+      setLoading(false)
+    }
+  }, [refreshing])
+
+  useEffect(() => {
+    loadScheduled()
+  }, [loadScheduled])
+
+  const resetForm = () => {
+    setFormName("")
+    setFormType("STOCK_INVENTORY")
+    setFormFreq("WEEKLY")
+    setFormFormat("EXCEL")
+    setFormTime("08:00")
+    setFormDayOfWeek("1")
+    setFormDayOfMonth("1")
+    setFormEmails("")
+  }
+
+  const handleCreate = async () => {
+    if (!formName.trim()) {
+      toast.error("El nombre es requerido")
+      return
+    }
+
+    setFormSaving(true)
+    try {
+      await createScheduledReport({
+        name: formName.trim(),
+        reportType: formType,
+        frequency: formFreq,
+        format: formFormat,
+        scheduleTime: formTime + ":00",
+        scheduleDayOfWeek: formFreq === "WEEKLY" ? Number(formDayOfWeek) : undefined,
+        scheduleDay: formFreq === "MONTHLY" ? Number(formDayOfMonth) : undefined,
+        recipientEmails: formEmails || undefined,
+      })
+      toast.success("Reporte programado creado exitosamente")
+      setDialogOpen(false)
+      resetForm()
+      setRefreshing((p) => p + 1)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al crear")
+    } finally {
+      setFormSaving(false)
+    }
+  }
+
+  const handleToggle = async (sr: ScheduledReportDTO) => {
+    try {
+      await updateScheduledReport(sr.id, { enabled: !sr.enabled })
+      setRefreshing((p) => p + 1)
+    } catch {
+      toast.error("Error al actualizar")
+    }
+  }
+
+  const handleDeleteScheduled = async (id: number) => {
+    try {
+      await deleteScheduledReport(id)
+      toast.success("Reporte programado eliminado")
+      setRefreshing((p) => p + 1)
+    } catch {
+      toast.error("Error al eliminar")
+    }
+  }
+
+  const handleExecute = async (id: number) => {
+    try {
+      await executeScheduledReport(id)
+      toast.success("Reporte ejecutado, revisa el historial")
+      setRefreshing((p) => p + 1)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al ejecutar")
+    }
+  }
+
+  const freqLabel = (f: ReportFrequency) =>
+    f === "DAILY" ? "Diario" : f === "WEEKLY" ? "Semanal" : "Mensual"
+
+  const dayOfWeekLabel = (d: number) =>
+    ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][d] ?? ""
 
   return (
-    <div className="rounded-xl bg-[#1f2937] text-white p-5 md:p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-      <div>
-        <div className="text-xs uppercase tracking-wider text-white/70 font-medium">
-          Efficiency Score
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-card"
+            onClick={() => setRefreshing((p) => p + 1)}
+          >
+            <ArrowPathIcon className="size-4 mr-2" /> Actualizar
+          </Button>
         </div>
-        <div className="mt-2 font-serif text-5xl font-semibold leading-none">
-          {score}
-          <span className="text-2xl text-white/60 font-normal"> / 100</span>
-        </div>
-        <p className="mt-3 text-sm text-white/75 max-w-md text-pretty">
-          Tu organización está operando 12 puntos por encima del benchmark del sector. Mantén las
-          aprobaciones automatizadas para sostener este score.
-        </p>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
+              <PlusIcon className="size-4 mr-2" /> Nuevo Programado
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Crear Reporte Programado</DialogTitle>
+              <DialogDescription>
+                Configura un reporte para que se genere automáticamente.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>Nombre</Label>
+                <Input value={formName} onChange={(e) => setFormName(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tipo</Label>
+                  <Select value={formType} onValueChange={(v) => setFormType(v as ReportType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(REPORT_TYPE_LABELS).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Formato</Label>
+                  <Select value={formFormat} onValueChange={(v) => setFormFormat(v as ReportFormat)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PDF">PDF</SelectItem>
+                      <SelectItem value="EXCEL">Excel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Frecuencia</Label>
+                  <Select value={formFreq} onValueChange={(v) => setFormFreq(v as ReportFrequency)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DAILY">Diario</SelectItem>
+                      <SelectItem value="WEEKLY">Semanal</SelectItem>
+                      <SelectItem value="MONTHLY">Mensual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Hora</Label>
+                  <Input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} />
+                </div>
+              </div>
+              {formFreq === "WEEKLY" && (
+                <div>
+                  <Label>Día de la Semana</Label>
+                  <Select value={formDayOfWeek} onValueChange={setFormDayOfWeek}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Lunes</SelectItem>
+                      <SelectItem value="2">Martes</SelectItem>
+                      <SelectItem value="3">Miércoles</SelectItem>
+                      <SelectItem value="4">Jueves</SelectItem>
+                      <SelectItem value="5">Viernes</SelectItem>
+                      <SelectItem value="6">Sábado</SelectItem>
+                      <SelectItem value="7">Domingo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {formFreq === "MONTHLY" && (
+                <div>
+                  <Label>Día del Mes</Label>
+                  <Input type="number" min={1} max={31} value={formDayOfMonth}
+                    onChange={(e) => setFormDayOfMonth(e.target.value)} />
+                </div>
+              )}
+              <div>
+                <Label>Correos (separados por coma)</Label>
+                <Input
+                  value={formEmails}
+                  onChange={(e) => setFormEmails(e.target.value)}
+                  placeholder="admin@ejemplo.com, manager@ejemplo.com"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleCreate} disabled={formSaving}
+                className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
+                {formSaving ? "Guardando..." : "Crear Programado"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      <div className="relative size-20 md:size-24 shrink-0">
-        <svg viewBox="0 0 100 100" className="size-full -rotate-90">
-          <circle
-            cx="50"
-            cy="50"
-            r="38"
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth="8"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r="38"
-            fill="none"
-            stroke="#f4c0c0"
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-          />
-        </svg>
-        <div className="absolute inset-0 grid place-items-center font-serif text-lg font-semibold">
-          {score}%
+
+      <Card>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Frecuencia</TableHead>
+                <TableHead>Formato</TableHead>
+                <TableHead>Próxima Ejec.</TableHead>
+                <TableHead>Activo</TableHead>
+                <TableHead className="w-28">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <ArrowPathIcon className="size-6 animate-spin mx-auto" />
+                  </TableCell>
+                </TableRow>
+              ) : scheduled.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No hay reportes programados. Crea uno nuevo.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                scheduled.map((sr) => (
+                  <TableRow key={sr.id}>
+                    <TableCell className="font-medium">{sr.name}</TableCell>
+                    <TableCell>{REPORT_TYPE_LABELS[sr.reportType]}</TableCell>
+                    <TableCell>{freqLabel(sr.frequency)}</TableCell>
+                    <TableCell>{sr.format}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {sr.nextExecutionAt
+                        ? new Date(sr.nextExecutionAt).toLocaleString()
+                        : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={sr.enabled}
+                        onCheckedChange={() => handleToggle(sr)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => handleExecute(sr.id)}>
+                          <PlayIcon className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteScheduled(sr.id)}>
+                          <TrashIcon className="size-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
