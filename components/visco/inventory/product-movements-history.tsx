@@ -106,6 +106,12 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
                           {m.fromWarehouseName && ` en ${m.fromWarehouseName}`}
                         </>
                       )}
+                      {m.type === "DISPATCH" && (
+                        <>
+                          -{m.quantity} uds despachadas
+                          {m.toWarehouseName && ` a ${m.toWarehouseName}`}
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>

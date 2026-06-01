@@ -63,7 +63,7 @@ export function RegisterModal({
   const [generalManagements, setGeneralManagements] = useState<GeneralManagementDTO[]>([])
 
   useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current)
+    return () => clearTimeout(closeTimerRef.current ?? undefined)
   }, [])
 
   useEffect(() => {
@@ -111,7 +111,7 @@ export function RegisterModal({
 
   const close = () => {
     onOpenChange(false)
-    clearTimeout(closeTimerRef.current)
+    clearTimeout(closeTimerRef.current ?? undefined)
     closeTimerRef.current = setTimeout(reset, 200)
   }
 

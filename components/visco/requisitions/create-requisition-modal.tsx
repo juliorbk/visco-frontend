@@ -71,7 +71,7 @@ export function CreateRequisitionModal({
   const finderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current)
+    return () => clearTimeout(closeTimerRef.current ?? undefined)
   }, [])
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export function CreateRequisitionModal({
 
   const close = () => {
     onOpenChange(false)
-    clearTimeout(closeTimerRef.current)
+    clearTimeout(closeTimerRef.current ?? undefined)
     closeTimerRef.current = setTimeout(reset, 200)
   }
 

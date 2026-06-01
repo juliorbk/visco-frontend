@@ -84,7 +84,7 @@ export function CreatePOModal({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    return () => clearTimeout(closeTimerRef.current)
+    return () => clearTimeout(closeTimerRef.current ?? undefined)
   }, [])
 
   // Product finder state
@@ -170,7 +170,7 @@ export function CreatePOModal({
 
   const close = () => {
     onOpenChange(false)
-    clearTimeout(closeTimerRef.current)
+    clearTimeout(closeTimerRef.current ?? undefined)
     closeTimerRef.current = setTimeout(reset, 200)
   }
 

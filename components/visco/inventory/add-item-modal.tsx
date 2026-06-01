@@ -36,7 +36,7 @@ import {
 import { createProduct, updateProduct } from "@/lib/services/inventory"
 import { fetchSuppliers } from "@/lib/services/suppliers"
 import { fetchCategories } from "@/lib/services/categories"
-import type { ProductDTO, SupplierDTO, Category } from "@/lib/types"
+import type { ProductDTO, SupplierDTO, Category, Uom } from "@/lib/types"
 import { CheckIcon, ChevronUpDownIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -224,7 +224,7 @@ const submit = async (e: React.FormEvent) => {
 
           <div className="space-y-1.5">
             <Label>UOM</Label>
-            <Select value={form.uom} onValueChange={(v) => update("uom", v)} disabled={saving}>
+            <Select value={form.uom} onValueChange={(v) => update("uom", v as Uom)} disabled={saving}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
