@@ -4,12 +4,16 @@ import { useEffect, useState } from "react"
 import type { InventoryMovementResponse, Page } from "@/lib/types"
 import { fetchMovements } from "@/lib/services/warehouse"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, TruckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon } from "@heroicons/react/24/outline"
+import { MovementDetailModal } from "@/components/visco/warehouses/movement-detail-modal"
 
 const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
   TRANSFER: { label: "Transferencia", color: "text-sky-700 bg-sky-50 border-sky-200", icon: ArrowsRightLeftIcon },
   ADJUSTMENT: { label: "Ajuste", color: "text-amber-700 bg-amber-50 border-amber-200", icon: EqualsIcon },
   RECEIPT: { label: "Recepción", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: TruckIcon },
+  DISPATCH: { label: "Despacho", color: "text-purple-700 bg-purple-50 border-purple-200", icon: ArrowsRightLeftIcon },
 }
 
 const PAGE_SIZE = 10
@@ -124,7 +128,7 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
             disabled={page === 0 || loading}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
           >
-            <ChevronLeft className="size-4 mr-1" /> Anterior
+            <ChevronLeftIcon className="size-4 mr-1" /> Anterior
           </Button>
           <span className="text-xs text-muted-foreground">
             Página {page + 1} de {totalPages}

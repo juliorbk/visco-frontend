@@ -1,7 +1,5 @@
 import type { UserDTO } from "./types"
 
-export type { UserDTO as UserInfo }
-
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 let cachedUser: UserDTO | null | undefined = undefined
@@ -22,7 +20,7 @@ export async function fetchUser(): Promise<UserDTO | null> {
   }
 }
 
-export function getCachedUser(): UserInfo | null | undefined {
+export function getCachedUser(): UserDTO | null | undefined {
   return cachedUser
 }
 

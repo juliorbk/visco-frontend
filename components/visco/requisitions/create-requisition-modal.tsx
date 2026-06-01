@@ -62,7 +62,7 @@ export function CreateRequisitionModal({
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [finderOpen, setFinderOpen] = useState(false)
   const [finderQuery, setFinderQuery] = useState("")

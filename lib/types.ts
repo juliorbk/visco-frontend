@@ -51,6 +51,7 @@ export interface UserDTO {
   name: string
   email: string
   role: UserRole
+  active: boolean
   costCenterId: number | null
   costCenterName: string | null
 }
@@ -250,11 +251,11 @@ export interface WarehouseResponse {
   id: number
   name: string
   sapCenterCode: string
-  description:string
-  physicalAddress:string
+  description: string
+  physicalAddress: string
   active: boolean
-  responsibleUserId: string
-  responsibleUserName: string
+  responsibleUserId: string | null
+  responsibleUserName: string | null
 }
 
 export interface CreateWarehouseRequest {
@@ -508,10 +509,6 @@ export interface InventoryMovementResponse {
 }
 
 export interface WarehouseDetailResponse extends WarehouseResponse {
-  physicalAddress: string
-  description: string
-  responsibleUserId: string | null
-  responsibleUserName: string | null
   totalProducts: number
   totalStock: number
 }

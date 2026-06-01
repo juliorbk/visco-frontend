@@ -33,7 +33,7 @@ export function CreateWarehouseModal({
   const [sapCenterCode, setSapCenterCode] = useState("")
   const [saving, setSaving] = useState(false)
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current)

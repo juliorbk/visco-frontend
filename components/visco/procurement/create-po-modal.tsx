@@ -81,7 +81,7 @@ export function CreatePOModal({
   const canCreateSupplier = canCreateSupplierFromPo(user)
   const [selectedRequisitionId, setSelectedRequisitionId] = useState<number | null>(null)
 
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current)
@@ -112,13 +112,17 @@ export function CreatePOModal({
         setSelectedRequisitionId(prefillFromRequisition.id)
         setDescription(prefillFromRequisition.description)
         setLines(
-          prefillFromRequisition.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            unitPrice: 0,
-            sku: item.productSku,
-          })),
+          prefillFromRequisition.items.map((item) => {
+            const id = nextLineId++
+            return {
+              id,
+              productId: item.productId,
+              productName: item.productName,
+              quantity: item.quantity,
+              unitPrice: 0,
+              sku: item.productSku,
+            }
+          }),
         )
       }
     }
@@ -178,13 +182,17 @@ export function CreatePOModal({
       if (req) {
         setDescription(req.description)
         setLines(
-          req.items.map((item) => ({
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            unitPrice: 0,
-            sku: item.productSku,
-          })),
+          req.items.map((item) => {
+            const id = nextLineId++
+            return {
+              id,
+              productId: item.productId,
+              productName: item.productName,
+              quantity: item.quantity,
+              unitPrice: 0,
+              sku: item.productSku,
+            }
+          }),
         )
       }
     }
@@ -681,6 +689,7 @@ export function CreatePOModal({
         onOpenChange={(o) => {
           setSupplierModalOpen(o)
         }}
+        editing={null}
         onSave={handleCreateSupplier}
         saving={creatingSupplier}
       />

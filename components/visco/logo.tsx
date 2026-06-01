@@ -33,7 +33,7 @@ export function Logo({ className, showSubtitle = true, size = "md" }: LogoProps)
             size === "sm" ? "text-[9px]" : "text-[10px]"
           )}
         >
-          Enterprise Tier
+          NEXUS WMS
         </span>
       )}
     </div>

@@ -33,6 +33,11 @@ const typeConfig: Record<MovementType, { label: string; color: string; icon: typ
     color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
     icon: TruckIcon,
   },
+  DISPATCH: {
+    label: "Despacho",
+    color: "text-purple-600 bg-purple-100 dark:bg-purple-900/30 border-purple-200",
+    icon: ArrowsRightLeftIcon,
+  },
 }
 
 export function MovementsTable({
@@ -100,6 +105,7 @@ export function MovementsTable({
             <SelectItem value="TRANSFER">Transferencias</SelectItem>
             <SelectItem value="ADJUSTMENT">Ajustes</SelectItem>
             <SelectItem value="RECEIPT">Recepciones</SelectItem>
+            <SelectItem value="DISPATCH">Despachos</SelectItem>
           </SelectContent>
         </Select>
         {warehouseName && (

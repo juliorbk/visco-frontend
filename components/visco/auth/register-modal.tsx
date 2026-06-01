@@ -56,7 +56,7 @@ export function RegisterModal({
   const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
   const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
   const [showPwd, setShowPwd] = useState(false)
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [saving, setSaving] = useState(false)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [managements, setManagements] = useState<ManagementDTO[]>([])

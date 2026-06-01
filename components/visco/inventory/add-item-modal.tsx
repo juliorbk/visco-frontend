@@ -59,7 +59,7 @@ const empty: FormState = {
   sapCode: "",
   description: "",
   // Casteamos el valor inicial
-  uom: "UNIDAD" as ProductDTO["uom"], 
+  uom: "UN" as ProductDTO["uom"], 
   reorderPoint: "0",
   supplierId: null,
   categoryId: null,
