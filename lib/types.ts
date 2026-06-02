@@ -476,14 +476,15 @@ export interface DispatchItemResponse {
 export interface DispatchResponse {
   id: number
   dispatchNumber: string
-  warehouseId: number
   warehouseName: string
-  items: DispatchItemResponse[]
-  notes: string
-  createdByName: string
-  createdAt: string
-  employeeId: number
   employeeName: string
+  employeeDocument: string | null
+  costCenterCode: string | null
+  costCenterDescription: string | null
+  createdAt: string
+  createdByName: string
+  notes: string
+  items: DispatchItemResponse[]
 }
 
 // ── Inventory Movements ──
