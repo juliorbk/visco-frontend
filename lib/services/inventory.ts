@@ -3,7 +3,7 @@ import type { ProductDTO, Page } from "@/lib/types"
 
 export async function fetchProducts(
   page = 0,
-  size = 50,
+  size = 20,
   search?: string,
   category?: string,
   sortBy?: string,

@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createRequisition, fetchCostCenters } from "@/lib/services/requisitions"
+import { createRequisition } from "@/lib/services/requisitions"
+import { fetchAllCostCenters } from "@/lib/services/admin"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { CostCenter, ProductDTO } from "@/lib/types"
@@ -76,7 +77,7 @@ export function CreateRequisitionModal({
 
   useEffect(() => {
     if (open) {
-      fetchCostCenters().then(setCostCenters).catch(() => {})
+      fetchAllCostCenters(0, 200).then((res) => setCostCenters(res.content ?? [])).catch(() => {})
     }
   }, [open])
 
@@ -102,18 +103,24 @@ export function CreateRequisitionModal({
 
   useEffect(() => {
     if (!finderOpen) return
+    const controller = new AbortController()
     const fetchData = async () => {
       setLoadingProducts(true)
       try {
-        const res = await fetchProducts(0, 50, debouncedFinderQuery || undefined)
-        setProducts(res.content ?? [])
+        const res = await fetchProducts(0, 50, debouncedFinderQuery || undefined, undefined, undefined, undefined, undefined, controller.signal)
+        if (!controller.signal.aborted) {
+          setProducts(res.content ?? [])
+        }
       } catch {
         // ignore
       } finally {
-        setLoadingProducts(false)
+        if (!controller.signal.aborted) {
+          setLoadingProducts(false)
+        }
       }
     }
     fetchData()
+    return () => controller.abort()
   }, [debouncedFinderQuery, finderOpen])
 
   const reset = () => {

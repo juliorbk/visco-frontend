@@ -45,23 +45,31 @@ export default function RequisitionsPage() {
 
   const requisitions = pageData?.content ?? []
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true)
-      const res = await fetchRequisitions(page, 30, statusFilter !== "all" ? statusFilter : undefined)
-      setPageData(res)
-      setSelectedId((prev) =>
-        prev && res.content.find((r) => r.id === prev) ? prev : res.content[0]?.id ?? null,
-      )
+      const res = await fetchRequisitions(page, 30, statusFilter !== "all" ? statusFilter : undefined, signal)
+      if (!signal?.aborted) {
+        setPageData(res)
+        setSelectedId((prev) =>
+          prev && res.content.find((r) => r.id === prev) ? prev : res.content[0]?.id ?? null,
+        )
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar requisiciones")
+      if (!signal?.aborted) {
+        toast.error(err instanceof Error ? err.message : "Error al cargar requisiciones")
+      }
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }, [page, statusFilter])
 
   useEffect(() => {
-    load()
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
   }, [load])
 
   useEffect(() => {

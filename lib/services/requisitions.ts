@@ -3,12 +3,13 @@ import type { RequisitionResponse, CreateRequisitionRequest, Page, CostCenter } 
 
 export async function fetchRequisitions(
   page = 0,
-  size = 50,
-  status?: string
+  size = 20,
+  status?: string,
+  signal?: AbortSignal
 ): Promise<Page<RequisitionResponse>> {
   const params = new URLSearchParams({ page: String(page), size: String(size) })
   if (status) params.set("status", status)
-  return api.get<Page<RequisitionResponse>>(`/api/requisitions?${params}`)
+  return api.get<Page<RequisitionResponse>>(`/api/requisitions?${params}`, signal)
 }
 
 export async function fetchRequisition(id: number): Promise<RequisitionResponse> {

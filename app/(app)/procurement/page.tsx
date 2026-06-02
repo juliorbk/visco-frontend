@@ -10,6 +10,7 @@ import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { ReceiveGoodsModal } from "@/components/visco/procurement/receive-goods-modal"
 import {
   fetchOrders,
+  fetchOrder,
   submitForApproval,
   approveOrder,
   cancelOrder,
@@ -26,8 +27,14 @@ export default function ProcurementPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [receiveOpen, setReceiveOpen] = useState(false)
   const [page, setPage] = useState(0)
+  const [fullOrder, setFullOrder] = useState<PurchaseOrderResponse | null>(null)
 
   const orders = pageData?.content ?? []
+
+  useEffect(() => {
+    if (!selectedId) { setFullOrder(null); return }
+    fetchOrder(selectedId).then(setFullOrder).catch(() => setFullOrder(null))
+  }, [selectedId])
 
   const load = useCallback(async () => {
     try {
@@ -49,7 +56,7 @@ export default function ProcurementPage() {
     load()
   }, [load])
 
-  const selected = orders.find((o) => o.id === selectedId) ?? null
+  const selected = fullOrder ?? orders.find((o) => o.id === selectedId) ?? null
 
   // Patches local state for a single order without a full reload
   const patchOrder = (updated: PurchaseOrderResponse) => {
@@ -58,6 +65,7 @@ export default function ProcurementPage() {
         ? { ...prev, content: prev.content.map((x) => (x.id === updated.id ? updated : x)) }
         : prev
     )
+    if (updated.id === selectedId) setFullOrder(updated)
   }
 
   // PENDING → AWAITING_APPROVAL
