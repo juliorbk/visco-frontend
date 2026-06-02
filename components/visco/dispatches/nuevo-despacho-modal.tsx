@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { XMarkIcon, MagnifyingGlassIcon, PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
@@ -31,26 +31,22 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
 
-  const [finderOpen, setFinderOpen] = useState(false)
-  const [finderQuery, setFinderQuery] = useState("")
-  const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
-  const [finderResults, setFinderResults] = useState<ProductOnStock[]>([])
-  const [loadingFinder, setLoadingFinder] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<ProductOnStock | null>(null)
-  const [pickQty, setPickQty] = useState("1")
-  const [pickPrice, setPickPrice] = useState("")
-  const finderRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<ProductOnStock[]>([])
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [pendingQtys, setPendingQtys] = useState<Record<number, string>>({})
+  const [pendingPrices, setPendingPrices] = useState<Record<number, string>>({})
 
   const reset = () => {
     setStep(1)
     setSelectedWarehouseId(null)
     setLines([])
     setNotes("")
-    setFinderQuery("")
-    setFinderOpen(false)
-    setSelectedProduct(null)
-    setPickQty("1")
-    setPickPrice("")
+    setSearchQuery("")
+    setSearchResults([])
+    setPendingQtys({})
+    setPendingPrices({})
   }
 
   useEffect(() => {
@@ -61,39 +57,23 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }, [isOpen])
 
   useEffect(() => {
-    if (!finderOpen) setFinderQuery("")
-  }, [finderOpen])
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (finderRef.current && !finderRef.current.contains(e.target as Node)) {
-        setFinderOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handler)
-    return () => document.removeEventListener("mousedown", handler)
-  }, [])
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedFinderQuery(finderQuery), 300)
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300)
     return () => clearTimeout(timer)
-  }, [finderQuery])
+  }, [searchQuery])
 
   useEffect(() => {
-    if (!finderOpen || !selectedWarehouseId) return
-    const fetchData = async () => {
-      setLoadingFinder(true)
-      try {
-        const res = await fetchProductsOnStock(selectedWarehouseId, debouncedFinderQuery || undefined)
-        setFinderResults(res.content ?? [])
-      } catch {
-        // ignore
-      } finally {
-        setLoadingFinder(false)
-      }
+    if (!debouncedSearch || !selectedWarehouseId) {
+      setSearchResults([])
+      return
     }
-    fetchData()
-  }, [debouncedFinderQuery, finderOpen, selectedWarehouseId])
+    let cancelled = false
+    setLoadingSearch(true)
+    fetchProductsOnStock(selectedWarehouseId, debouncedSearch)
+      .then((res) => { if (!cancelled) setSearchResults(res.content ?? []) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingSearch(false) })
+    return () => { cancelled = true }
+  }, [debouncedSearch, selectedWarehouseId])
 
   if (!isOpen) return null
 
@@ -107,22 +87,18 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     else if (step === 3) setStep(2)
   }
 
-  const addLine = () => {
-    if (!selectedProduct) {
-      toast.error("Selecciona un producto")
-      return
-    }
-    const qty = Number(pickQty)
+  const addLine = (product: ProductOnStock) => {
+    const qty = Number(pendingQtys[product.id] ?? "1")
+    const price = Number(pendingPrices[product.id])
     if (qty <= 0) {
       toast.error("Cantidad debe ser mayor a cero")
       return
     }
-    const price = Number(pickPrice)
-    if (price <= 0) {
-      toast.error("Ingresa un precio de salida válido")
+    if (!price || price <= 0) {
+      toast.error(`Ingresa un precio de salida para ${product.name}`)
       return
     }
-    if (lines.some((l) => l.productId === selectedProduct.id)) {
+    if (lines.some((l) => l.productId === product.id)) {
       toast.error("Este producto ya está en la lista")
       return
     }
@@ -130,17 +106,15 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
       ...prev,
       {
         id: nextLineId++,
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        sku: selectedProduct.sku,
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
         quantity: qty,
         outputPrice: price,
       },
     ])
-    setSelectedProduct(null)
-    setPickQty("1")
-    setPickPrice("")
-    setFinderQuery("")
+    setPendingQtys((prev) => { const n = { ...prev }; delete n[product.id]; return n })
+    setPendingPrices((prev) => { const n = { ...prev }; delete n[product.id]; return n })
   }
 
   const handleSubmit = async () => {
@@ -220,115 +194,82 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
           {step === 2 && selectedWarehouseId && (
             <div>
               <h3 className="text-lg font-semibold text-[#111827] mb-2">Agregar Productos</h3>
-              <p className="text-sm text-[#6b7280] mb-6">
-                Busca productos, ingresa cantidad y precio de salida
-              </p>
 
-              <div className="space-y-4">
-                <div className="relative" ref={finderRef}>
-                  <div className="flex gap-2 items-start">
-                    <div className="relative flex-1">
-                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-                      <input
-                        type="text"
-                        placeholder="Buscar producto por nombre o SKU..."
-                        className="w-full pl-10 pr-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
-                        value={selectedProduct ? `${selectedProduct.name} (${selectedProduct.sku})` : finderQuery}
-                        onChange={(e) => {
-                          setFinderQuery(e.target.value)
-                          setSelectedProduct(null)
-                          setFinderOpen(true)
-                        }}
-                        onFocus={() => setFinderOpen(true)}
-                      />
-                      {selectedProduct && (
-                        <button
-                          type="button"
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6b7280] hover:text-[#111827]"
-                          onClick={() => {
-                            setSelectedProduct(null)
-                            setFinderQuery("")
-                          }}
-                        >
-                          <XMarkIcon className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+              <div className="relative mb-4">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+                <input
+                  type="text"
+                  placeholder="Buscar producto por nombre o SKU..."
+                  className="w-full pl-10 pr-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-                  {finderOpen && loadingFinder && (
-                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#f3f4f6] bg-white shadow-lg p-3 text-sm text-[#6b7280] text-center">
-                      <ArrowPathIcon className="w-4 h-4 animate-spin mx-auto" />
-                    </div>
-                  )}
-                  {finderOpen && !loadingFinder && finderResults.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#f3f4f6] bg-white shadow-lg max-h-48 overflow-y-auto">
-                      {finderResults.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          className="w-full text-left px-4 py-3 text-sm hover:bg-[#f5f5f7] transition-colors border-b last:border-b-0 border-[#f3f4f6]"
-                          onClick={() => {
-                            setSelectedProduct(p)
-                            setFinderQuery("")
-                            setFinderOpen(false)
-                          }}
-                        >
-                          <div className="font-medium text-[#111827]">{p.name}</div>
+              {loadingSearch && (
+                <div className="flex items-center justify-center py-4 text-sm text-[#6b7280]">
+                  <ArrowPathIcon className="w-4 h-4 animate-spin mr-2" />
+                  Buscando productos...
+                </div>
+              )}
+
+              {!loadingSearch && searchQuery && searchResults.length === 0 && (
+                <div className="py-4 text-sm text-[#6b7280] text-center">No se encontraron productos</div>
+              )}
+
+              {!loadingSearch && searchResults.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {searchResults.map((p) => {
+                    const qty = pendingQtys[p.id] ?? "1"
+                    const price = pendingPrices[p.id] ?? ""
+                    return (
+                      <div
+                        key={p.id}
+                        className="flex items-end gap-2 p-3 border border-[#f3f4f6] rounded-lg"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-[#111827] text-sm truncate">{p.name}</div>
                           <div className="text-xs text-[#6b7280]">
                             SKU: {p.sku} · Stock: {p.currentStock} {p.uom}
                           </div>
+                        </div>
+                        <div className="w-24 shrink-0">
+                          <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">Cant</label>
+                          <input
+                            type="number"
+                            value={qty}
+                            onChange={(e) => setPendingQtys((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                            className="w-full px-2 py-1.5 border border-[#f3f4f6] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                            min="1"
+                            max={p.currentStock}
+                          />
+                        </div>
+                        <div className="w-28 shrink-0">
+                          <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">PU ($)</label>
+                          <input
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPendingPrices((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                            className="w-full px-2 py-1.5 border border-[#f3f4f6] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => addLine(p)}
+                          className="shrink-0 px-3 py-1.5 bg-[#7b1a1a] text-white rounded-lg text-sm font-medium hover:bg-[#5c1212] transition-colors"
+                        >
+                          <PlusIcon className="w-4 h-4" />
                         </button>
-                      ))}
-                    </div>
-                  )}
-                  {finderOpen && !loadingFinder && finderQuery && finderResults.length === 0 && (
-                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#f3f4f6] bg-white shadow-lg p-3 text-sm text-[#6b7280] text-center">
-                      No se encontraron productos
-                    </div>
-                  )}
+                      </div>
+                    )
+                  })}
                 </div>
+              )}
 
-                {selectedProduct && (
-                  <div className="flex gap-3 items-end">
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-[#111827] mb-1">Cantidad</label>
-                      <input
-                        type="number"
-                        value={pickQty}
-                        onChange={(e) => setPickQty(e.target.value)}
-                        className="w-full px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
-                        min="1"
-                        max={selectedProduct.currentStock}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-medium text-[#111827] mb-1">
-                        Precio de salida
-                      </label>
-                      <input
-                        type="number"
-                        value={pickPrice}
-                        onChange={(e) => setPickPrice(e.target.value)}
-                        className="w-full px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addLine}
-                      className="px-4 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] transition-colors flex items-center gap-1.5 shrink-0"
-                    >
-                      <PlusIcon className="w-4 h-4" />
-                      Agregar
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 border border-[#f3f4f6] rounded-lg">
+              <div className="border border-[#f3f4f6] rounded-lg">
                 {lines.length === 0 ? (
                   <div className="p-6 text-center text-sm text-[#6b7280]">
                     Sin productos agregados aún.
@@ -344,7 +285,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-[#111827] truncate">{l.productName}</div>
                             <div className="text-xs text-[#6b7280]">
-                              {l.sku} · Cant: {l.quantity} · Precio: ${l.outputPrice.toFixed(2)}
+                              {l.sku} · Cant: {l.quantity} · PU: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
                             </div>
                           </div>
                           <button
@@ -394,7 +335,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <div className="space-y-1 mt-1">
                     {lines.map((l) => (
                       <p key={l.id} className="text-sm text-[#111827]">
-                        {l.productName} · Cant: {l.quantity} · ${l.outputPrice.toFixed(2)}
+                        {l.productName} · Cant: {l.quantity} · PU: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
                       </p>
                     ))}
                   </div>
