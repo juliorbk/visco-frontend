@@ -183,7 +183,7 @@ export default function SuppliersPage() {
           )}
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 lg:self-start">
           <SupplierDetail
             supplier={selected}
             onEdit={(s) => {
