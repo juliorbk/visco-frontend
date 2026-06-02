@@ -471,6 +471,7 @@ export interface DispatchItemResponse {
   productName: string
   productSku: string
   quantity: number
+  exitUnitPrice: number | null
 }
 
 export interface DispatchResponse {

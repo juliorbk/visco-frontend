@@ -5,6 +5,7 @@ import {
   addLogoPlaceholder,
   addSeparator,
   formatDateLong,
+  formatCurrency,
 } from "./pdf-utils"
 
 function addTable(
@@ -155,26 +156,58 @@ export function generateDispatchNotePDF(dispatch: DispatchResponse): jsPDF {
 
   // ── Items Table ──
   const totalItems = dispatch.items.reduce((s, i) => s + i.quantity, 0)
+  const hasPrices = dispatch.items.some((i) => i.exitUnitPrice != null)
+  const grandTotal = hasPrices
+    ? dispatch.items.reduce((s, i) => s + (i.exitUnitPrice ?? 0) * i.quantity, 0)
+    : 0
 
-  const colWidths = [contentW - 18 - 22, 18, 22]
-  const head = ["PRODUCTO", "SKU", "CANTIDAD"]
-  const bodyRows = dispatch.items.map((item) => [
-    item.productName,
-    item.productSku,
-    String(item.quantity),
-  ])
+  const colWidths = hasPrices
+    ? [contentW - 18 - 22 - 22 - 24, 18, 22, 22, 24]
+    : [contentW - 18 - 22, 18, 22]
+  const head = hasPrices
+    ? ["PRODUCTO", "SKU", "CANTIDAD", "P/U", "TOTAL"]
+    : ["PRODUCTO", "SKU", "CANTIDAD"]
+  const bodyRows = dispatch.items.map((item) =>
+    hasPrices
+      ? [
+          item.productName,
+          item.productSku,
+          String(item.quantity),
+          item.exitUnitPrice != null ? formatCurrency(item.exitUnitPrice) : "—",
+          item.exitUnitPrice != null ? formatCurrency(item.quantity * item.exitUnitPrice) : "—",
+        ]
+      : [item.productName, item.productSku, String(item.quantity)],
+  )
 
   y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
   y += 6
 
   // ── Total items summary ──
   doc.setFontSize(8)
-  doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.text)
   const sumX = pageW - margin - 70
-  doc.text("Total ítems:", sumX, y)
-  doc.text(`${totalItems} uds.`, sumX + 68, y, { align: "right" })
-  y += 12
+
+  if (hasPrices) {
+    doc.setFont("helvetica", "normal")
+    doc.text("Total ítems:", sumX, y)
+    doc.text(`${totalItems} uds.`, sumX + 68, y, { align: "right" })
+    y += 5
+    doc.setDrawColor(...COLORS.primary)
+    doc.setLineWidth(0.6)
+    doc.line(sumX, y, sumX + 70, y)
+    y += 5
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(10)
+    doc.setTextColor(...COLORS.primary)
+    doc.text("TOTAL", sumX, y)
+    doc.text(formatCurrency(grandTotal), sumX + 68, y, { align: "right" })
+    y += 12
+  } else {
+    doc.setFont("helvetica", "bold")
+    doc.text("Total ítems:", sumX, y)
+    doc.text(`${totalItems} uds.`, sumX + 68, y, { align: "right" })
+    y += 12
+  }
 
   // ── Notes ──
   if (dispatch.notes) {
