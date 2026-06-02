@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { SupplierPerformanceChart } from "@/components/visco/suppliers/performance-chart"
 import { SupplierCard } from "@/components/visco/suppliers/supplier-card"
 import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
@@ -11,7 +12,7 @@ import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } fr
 import type { SupplierDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplier } from "@/lib/permissions"
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 12
@@ -26,6 +27,12 @@ export default function SuppliersPage() {
   const [totalElements, setTotalElements] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
+  const [search, setSearch] = useState("")
+
+  const filtered = useMemo(
+    () => suppliers.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())),
+    [suppliers, search],
+  )
 
   const load = useCallback(async () => {
     try {
@@ -109,6 +116,18 @@ export default function SuppliersPage() {
         <SupplierPerformanceChart />
       </div>
 
+      <div className="mb-4">
+        <div className="relative max-w-xs">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nombre…"
+            className="pl-9 h-10"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -117,12 +136,12 @@ export default function SuppliersPage() {
                 <ArrowPathIcon className="size-5 animate-spin" />
                 Cargando proveedores…
               </div>
-            ) : suppliers.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-                No hay proveedores disponibles.
+                {search ? "No hay proveedores que coincidan con la búsqueda." : "No hay proveedores disponibles."}
               </div>
             ) : (
-              suppliers.map((s) => (
+              filtered.map((s) => (
                 <SupplierCard
                   key={s.id}
                   supplier={s}
