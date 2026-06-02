@@ -183,9 +183,9 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
           </button>
         </div>
 
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+        <div className="flex items-center justify-center px-6 pt-6 pb-4 shrink-0">
           {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center flex-1">
+            <div key={s} className="flex items-center">
               <div
                 className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm ${
                   s <= step ? "bg-[#7b1a1a] text-white" : "bg-[#f3f4f6] text-[#6b7280]"
@@ -194,7 +194,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 {s}
               </div>
               {s < 3 && (
-                <div className={`h-1 flex-1 mx-2 ${s < step ? "bg-[#7b1a1a]" : "bg-[#f3f4f6]"}`} />
+                <div className={`h-1 w-16 mx-2 ${s < step ? "bg-[#7b1a1a]" : "bg-[#f3f4f6]"}`} />
               )}
             </div>
           ))}
