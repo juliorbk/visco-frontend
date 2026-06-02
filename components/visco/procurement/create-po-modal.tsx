@@ -90,6 +90,8 @@ export function CreatePOModal({
   // Product finder state
   const [finderOpen, setFinderOpen] = useState(false)
   const [finderQuery, setFinderQuery] = useState("")
+  const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export function CreatePOModal({
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
       }).catch(() => {})
-      fetchProducts(0, 500).then((prodRes) => {
+      fetchProducts(0, 50, "", undefined, undefined, undefined, undefined).then((prodRes) => {
         setProducts(prodRes.content ?? [])
       }).catch(() => {})
       fetchWarehouses().then((wh) => {
@@ -132,6 +134,11 @@ export function CreatePOModal({
     if (!finderOpen) setFinderQuery("")
   }, [finderOpen])
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedFinderQuery(finderQuery), 300)
+    return () => clearTimeout(timer)
+  }, [finderQuery])
+
   // Close finder on outside click
   useEffect(() => {
     if (!finderOpen) return
@@ -144,16 +151,29 @@ export function CreatePOModal({
     return () => document.removeEventListener("mousedown", handler)
   }, [finderOpen])
 
-  const filteredProducts = useMemo(() => {
-    if (!finderQuery) return products
-    const q = finderQuery.toLowerCase()
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.internalCode.toLowerCase().includes(q),
-    )
-  }, [products, finderQuery])
+  useEffect(() => {
+    if (!finderOpen) return
+    const controller = new AbortController()
+    const fetchData = async () => {
+      setLoadingProducts(true)
+      try {
+        const res = await fetchProducts(0, 50, debouncedFinderQuery || undefined, undefined, undefined, undefined, undefined, controller.signal)
+        if (!controller.signal.aborted) {
+          setProducts(res.content ?? [])
+        }
+      } catch {
+        // ignore
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingProducts(false)
+        }
+      }
+    }
+    fetchData()
+    return () => controller.abort()
+  }, [debouncedFinderQuery, finderOpen])
+
+  const filteredProducts = useMemo(() => products, [products])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
 
@@ -513,7 +533,13 @@ export function CreatePOModal({
                 </div>
 
                 {/* Finder dropdown */}
-                {finderOpen && filteredProducts.length > 0 && (
+                {finderOpen && loadingProducts && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
+                    <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                    Buscando…
+                  </div>
+                )}
+                {finderOpen && !loadingProducts && filteredProducts.length > 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
                     {filteredProducts.map((p) => (
                       <button
@@ -534,7 +560,7 @@ export function CreatePOModal({
                     ))}
                   </div>
                 )}
-                {finderOpen && finderQuery && filteredProducts.length === 0 && (
+                {finderOpen && !loadingProducts && finderQuery && filteredProducts.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No se encontraron productos
                   </div>
