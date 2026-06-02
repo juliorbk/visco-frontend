@@ -9,12 +9,14 @@ export async function fetchSupplier(id: number): Promise<SupplierDTO> {
   return api.get<SupplierDTO>(`/api/suppliers/${id}`)
 }
 
-export async function createSupplier(data: Partial<SupplierDTO>): Promise<SupplierDTO> {
-  return api.post<SupplierDTO>("/api/suppliers", data)
+export async function createSupplier(body: Partial<SupplierDTO>): Promise<SupplierDTO> {
+  const { contactEmail, ...rest } = body
+  return api.post<SupplierDTO>("/api/suppliers", { ...rest, email: contactEmail })
 }
 
-export async function updateSupplier(id: number, data: Partial<SupplierDTO>): Promise<SupplierDTO> {
-  return api.put<SupplierDTO>(`/api/suppliers/${id}`, data)
+export async function updateSupplier(id: number, body: Partial<SupplierDTO>): Promise<SupplierDTO> {
+  const { contactEmail, ...rest } = body
+  return api.put<SupplierDTO>(`/api/suppliers/${id}`, { ...rest, email: contactEmail })
 }
 
 export async function deactivateSupplier(id: number): Promise<void> {
