@@ -83,7 +83,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }
 
   const handleBack = () => {
-    if (step === 2) { setStep(1) }
+    if (step === 2) setStep(1)
     else if (step === 3) setStep(2)
   }
 
@@ -143,35 +143,35 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-8 border-b border-[#f3f4f6]">
-          <h2 className="text-2xl font-bold text-[#111827]">Registrar Despacho</h2>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]">
+        <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6] shrink-0">
+          <h2 className="text-xl font-bold text-[#111827]">Registrar Despacho</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-            <XMarkIcon className="w-6 h-6 text-[#6b7280]" />
+            <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
           </button>
         </div>
 
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
-            {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center flex-1">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
-                    s <= step ? "bg-[#7b1a1a] text-white" : "bg-[#f3f4f6] text-[#6b7280]"
-                  }`}
-                >
-                  {s}
-                </div>
-                {s < 3 && (
-                  <div className={`h-1 flex-1 mx-2 ${s < step ? "bg-[#7b1a1a]" : "bg-[#f3f4f6]"}`} />
-                )}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+          {[1, 2, 3].map((s) => (
+            <div key={s} className="flex items-center flex-1">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm ${
+                  s <= step ? "bg-[#7b1a1a] text-white" : "bg-[#f3f4f6] text-[#6b7280]"
+                }`}
+              >
+                {s}
               </div>
-            ))}
-          </div>
+              {s < 3 && (
+                <div className={`h-1 flex-1 mx-2 ${s < step ? "bg-[#7b1a1a]" : "bg-[#f3f4f6]"}`} />
+              )}
+            </div>
+          ))}
+        </div>
 
+        <div className="px-6 overflow-y-auto flex-1">
           {step === 1 && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#111827] mb-4">Seleccionar Almacén</h3>
+            <div className="pb-6">
+              <h3 className="text-base font-semibold text-[#111827] mb-4">Seleccionar Almacén</h3>
               <div className="space-y-3">
                 {warehouses.map((w) => (
                   <button
@@ -192,15 +192,15 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
           )}
 
           {step === 2 && selectedWarehouseId && (
-            <div>
-              <h3 className="text-lg font-semibold text-[#111827] mb-2">Agregar Productos</h3>
+            <div className="pb-6 space-y-4">
+              <h3 className="text-base font-semibold text-[#111827]">Agregar Productos</h3>
 
-              <div className="relative mb-4">
+              <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
                 <input
                   type="text"
                   placeholder="Buscar producto por nombre o SKU..."
-                  className="w-full pl-10 pr-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                  className="w-full pl-10 pr-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -213,12 +213,12 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 </div>
               )}
 
-              {!loadingSearch && searchQuery && searchResults.length === 0 && (
+              {!loadingSearch && debouncedSearch && searchResults.length === 0 && (
                 <div className="py-4 text-sm text-[#6b7280] text-center">No se encontraron productos</div>
               )}
 
               {!loadingSearch && searchResults.length > 0 && (
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2">
                   {searchResults.map((p) => {
                     const qty = pendingQtys[p.id] ?? "1"
                     const price = pendingPrices[p.id] ?? ""
@@ -233,7 +233,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                             SKU: {p.sku} · Stock: {p.currentStock} {p.uom}
                           </div>
                         </div>
-                        <div className="w-24 shrink-0">
+                        <div className="w-20 shrink-0">
                           <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">Cant</label>
                           <input
                             type="number"
@@ -245,7 +245,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                           />
                         </div>
                         <div className="w-28 shrink-0">
-                          <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">PU ($)</label>
+                          <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">Precio Salida ($)</label>
                           <input
                             type="number"
                             value={price}
@@ -285,7 +285,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-[#111827] truncate">{l.productName}</div>
                             <div className="text-xs text-[#6b7280]">
-                              {l.sku} · Cant: {l.quantity} · PU: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
+                              {l.sku} · Cant: {l.quantity} · Precio Salida: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
                             </div>
                           </div>
                           <button
@@ -305,13 +305,13 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 )}
               </div>
 
-              <div className="mt-6">
+              <div>
                 <label className="block text-sm font-medium text-[#111827] mb-2">Notas</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Observaciones sobre el despacho..."
-                  className="w-full px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                  className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                   rows={3}
                   disabled={saving}
                 />
@@ -320,7 +320,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
           )}
 
           {step === 3 && (
-            <div className="text-center">
+            <div className="pb-6 text-center">
               <h3 className="text-2xl font-bold text-[#111827] mb-2">Confirmar Despacho</h3>
               <p className="text-[#6b7280] mb-6">¿Estás seguro de registrar este despacho?</p>
               <div className="bg-[#f5f5f7] rounded-lg p-6 mb-6 space-y-3 text-left">
@@ -335,7 +335,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <div className="space-y-1 mt-1">
                     {lines.map((l) => (
                       <p key={l.id} className="text-sm text-[#111827]">
-                        {l.productName} · Cant: {l.quantity} · PU: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
+                        {l.productName} · Cant: {l.quantity} · Precio Salida: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
                       </p>
                     ))}
                   </div>
@@ -343,37 +343,37 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
               </div>
             </div>
           )}
+        </div>
 
-          <div className="flex gap-3 justify-between mt-8">
-            <div>
-              {step > 1 && (
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors"
-                >
-                  ← Volver
-                </button>
-              )}
-            </div>
-            <div className="flex gap-3">
-              {step < 3 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={step === 1 && !selectedWarehouseId}
-                  className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Continuar
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={saving}
-                  className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] transition-colors disabled:opacity-50"
-                >
-                  {saving ? "Registrando..." : "Confirmar Despacho"}
-                </button>
-              )}
-            </div>
+        <div className="flex items-center justify-between gap-3 p-6 border-t border-[#f3f4f6] shrink-0 bg-white rounded-b-2xl">
+          <div>
+            {step > 1 && (
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors"
+              >
+                ← Volver
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            {step < 3 ? (
+              <button
+                onClick={handleNext}
+                disabled={step === 1 && !selectedWarehouseId}
+                className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Continuar
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={saving}
+                className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] transition-colors disabled:opacity-50"
+              >
+                {saving ? "Registrando..." : "Confirmar Despacho"}
+              </button>
+            )}
           </div>
         </div>
       </div>
