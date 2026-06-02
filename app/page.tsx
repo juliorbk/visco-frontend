@@ -65,11 +65,11 @@ export default function LoginPage() {
 
         <div className="my-auto max-w-md">
           <h2 className="font-serif italic text-4xl lg:text-5xl leading-tight text-balance">
-            Visco Orinoco Nexus - Gestión de compras inteligente y eficiente.
+            OriFlow | Visco Orinoco - Smart & Efficent Warehouse Management System
           </h2>
           <p className="mt-6 text-white/80 leading-relaxed text-pretty">
-            Centraliza inventario, procurement y proveedores en una sola plataforma.
-            Diseñada para equipos enterprise que necesitan visibilidad, control y velocidad.
+            Centralize purchasing, tracking, and inventory management for your warehouse.
+            Designed for enterprise teams that need visibility, control, and speed.
           </p>
         </div>
 

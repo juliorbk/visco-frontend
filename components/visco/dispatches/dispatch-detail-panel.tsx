@@ -1,8 +1,11 @@
 "use client"
 
 import { DocumentDuplicateIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { useEffect, useState } from "react"
 import type { DispatchResponse } from "@/lib/types"
+import { generateDispatchNotePDF } from "@/lib/pdf/dispatch-note-pdf"
+import { downloadPDF } from "@/lib/pdf/download-pdf"
 
 export function DispatchDetailPanel({
   dispatch,
@@ -30,9 +33,21 @@ export function DispatchDetailPanel({
     <div className="w-full bg-white rounded-lg border border-[#f3f4f6] p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-[#111827]">Detalle de Despacho</h3>
-        <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors">
-          <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const doc = generateDispatchNotePDF(dispatch)
+              downloadPDF(doc, `despacho-${dispatch.dispatchNumber}.pdf`)
+            }}
+            className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors"
+            title="Descargar PDF"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4 text-[#6b7280]" />
+          </button>
+          <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors">
+            <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
+          </button>
+        </div>
       </div>
 
       <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
