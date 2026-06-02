@@ -463,6 +463,7 @@ export interface DispatchRequest {
   items: DispatchItemRequest[]
   notes: string
   warehouseId: number
+  employeeId: number
 }
 
 export interface DispatchItemResponse {
@@ -481,6 +482,8 @@ export interface DispatchResponse {
   notes: string
   createdByName: string
   createdAt: string
+  employeeId: number
+  employeeName: string
 }
 
 // ── Inventory Movements ──

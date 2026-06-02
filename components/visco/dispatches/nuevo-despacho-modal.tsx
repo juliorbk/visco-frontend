@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { XMarkIcon, MagnifyingGlassIcon, PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
-import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
+import type { EmployeeDTO, ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
+import { fetchEmployee } from "@/lib/services/employees"
 import { toast } from "sonner"
 
 interface LineItem {
@@ -28,6 +29,9 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
+  const [employeeFicha, setEmployeeFicha] = useState("")
+  const [employeeData, setEmployeeData] = useState<EmployeeDTO | null>(null)
+  const [loadingEmployee, setLoadingEmployee] = useState(false)
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -42,6 +46,8 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setStep(1)
     setSelectedWarehouseId(null)
     setLines([])
+    setEmployeeFicha("")
+    setEmployeeData(null)
     setNotes("")
     setSearchQuery("")
     setSearchResults([])
@@ -77,9 +83,34 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
 
   if (!isOpen) return null
 
+  const lookupEmployee = async () => {
+    const id = Number(employeeFicha)
+    if (!id) {
+      toast.error("Ingresa un número de ficha válido")
+      return
+    }
+    setLoadingEmployee(true)
+    setEmployeeData(null)
+    try {
+      const emp = await fetchEmployee(id)
+      setEmployeeData(emp)
+      toast.success(`Empleado encontrado: ${emp.fullName}`)
+    } catch {
+      toast.error("Empleado no encontrado")
+    } finally {
+      setLoadingEmployee(false)
+    }
+  }
+
   const handleNext = () => {
     if (step === 1 && selectedWarehouseId) setStep(2)
-    else if (step === 2) setStep(3)
+    else if (step === 2) {
+      if (!employeeData) {
+        toast.error("Busca y confirma el empleado que retira")
+        return
+      }
+      setStep(3)
+    }
   }
 
   const handleBack = () => {
@@ -130,6 +161,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         warehouseId: selectedWarehouseId,
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, outputPrice: l.outputPrice })),
         notes,
+        employeeId: employeeData!.id,
       })
       toast.success("Despacho registrado correctamente")
       await onSubmit?.()
@@ -269,6 +301,34 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 </div>
               )}
 
+              <div>
+                <label className="block text-sm font-medium text-[#111827] mb-2">Empleado que retira</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={employeeFicha}
+                    onChange={(e) => { setEmployeeFicha(e.target.value); setEmployeeData(null) }}
+                    placeholder="Número de ficha..."
+                    className="flex-1 px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                    onKeyDown={(e) => { if (e.key === "Enter") lookupEmployee() }}
+                  />
+                  <button
+                    type="button"
+                    onClick={lookupEmployee}
+                    disabled={loadingEmployee || !employeeFicha}
+                    className="px-4 py-2.5 bg-[#7b1a1a] text-white rounded-lg text-sm font-medium hover:bg-[#5c1212] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {loadingEmployee ? "Buscando..." : "Buscar"}
+                  </button>
+                </div>
+                {employeeData && (
+                  <div className="mt-2 p-3 bg-[#f0fdf4] border border-[#86efac] rounded-lg">
+                    <p className="text-sm font-medium text-[#166534]">{employeeData.fullName}</p>
+                    <p className="text-xs text-[#166534]">Doc: {employeeData.documentNumber}</p>
+                  </div>
+                )}
+              </div>
+
               <div className="border border-[#f3f4f6] rounded-lg">
                 {lines.length === 0 ? (
                   <div className="p-6 text-center text-sm text-[#6b7280]">
@@ -328,6 +388,12 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <p className="text-xs text-[#6b7280]">Almacén</p>
                   <p className="text-sm font-semibold text-[#111827]">
                     {warehouses.find((w) => w.id === selectedWarehouseId)?.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Empleado que retira</p>
+                  <p className="text-sm font-semibold text-[#111827]">
+                    {employeeData?.fullName} - Ficha: {employeeFicha}
                   </p>
                 </div>
                 <div>

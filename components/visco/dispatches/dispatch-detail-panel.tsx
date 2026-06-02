@@ -60,6 +60,10 @@ export function DispatchDetailPanel({
             <p className="text-[#6b7280] font-medium">Creado por</p>
             <p className="text-[#111827] font-semibold mt-1">{dispatch.createdByName}</p>
           </div>
+          <div>
+            <p className="text-[#6b7280] font-medium">Empleado que retira</p>
+            <p className="text-[#111827] font-semibold mt-1">{dispatch.employeeName ?? "—"}</p>
+          </div>
           <div className="col-span-2">
             <p className="text-[#6b7280] font-medium">Fecha de creación</p>
             <p className="text-[#111827] mt-1">
