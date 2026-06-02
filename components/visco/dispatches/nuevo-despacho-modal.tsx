@@ -13,7 +13,7 @@ interface LineItem {
   productName: string
   sku: string
   quantity: number
-  outputPrice: number
+  exitUnitPrice: number
 }
 
 interface NuevoDespachoModalProps {
@@ -141,7 +141,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         productName: product.name,
         sku: product.sku,
         quantity: qty,
-        outputPrice: price,
+        exitUnitPrice: price,
       },
     ])
     setPendingQtys((prev) => { const n = { ...prev }; delete n[product.id]; return n })
@@ -159,7 +159,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     try {
       await createDispatch({
         warehouseId: selectedWarehouseId,
-        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, outputPrice: l.outputPrice })),
+        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, exitUnitPrice: l.exitUnitPrice })),
         notes,
         employeeId: employeeData!.id,
       })
@@ -345,7 +345,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-[#111827] truncate">{l.productName}</div>
                             <div className="text-xs text-[#6b7280]">
-                              {l.sku} · Cant: {l.quantity} · Precio Salida: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
+                              {l.sku} · Cant: {l.quantity} · Precio Salida: ${l.exitUnitPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.exitUnitPrice).toFixed(2)}
                             </div>
                           </div>
                           <button
@@ -401,7 +401,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <div className="space-y-1 mt-1">
                     {lines.map((l) => (
                       <p key={l.id} className="text-sm text-[#111827]">
-                        {l.productName} · Cant: {l.quantity} · Precio Salida: ${l.outputPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.outputPrice).toFixed(2)}
+                        {l.productName} · Cant: {l.quantity} · Precio Salida: ${l.exitUnitPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.exitUnitPrice).toFixed(2)}
                       </p>
                     ))}
                   </div>
