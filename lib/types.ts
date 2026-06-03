@@ -490,7 +490,7 @@ export interface DispatchResponse {
 
 // ── Inventory Movements ──
 
-export type MovementType = "TRANSFER" | "ADJUSTMENT" | "RECEIPT" | "DISPATCH"
+export type MovementType = "TRANSFER" | "ADJUSTMENT" | "INPUT" | "DISPATCH" | "OUTPUT"
 
 export interface InventoryMovementResponse {
   id: number
