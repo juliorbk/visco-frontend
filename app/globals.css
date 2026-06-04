@@ -4,8 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Brand palette */
-  --brand-primary: #73152D;
+  /* Brand palette - Base (Light Mode) */
+  --brand-primary: #73152D; /* Main logo text, maroon elements */
   --brand-primary-hover: #561022;
   --brand-primary-light: #FBEBEF;
 
@@ -17,14 +17,14 @@
   --popover: #ffffff;
   --popover-foreground: #111827;
 
-  /* Primary mapped to brand */
+  /* Primary mapped to brand for light mode */
   --primary: #73152D;
   --primary-foreground: #ffffff;
 
   --secondary: #f3f4f6;
   --secondary-foreground: #111827;
   --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
+  --muted-foreground: #6b7280; /* Light Mode Muted: Gray geometric parts from logo.jpg */
   --accent: #FBEBEF;
   --accent-foreground: #73152D;
   --destructive: #b91c1c;
@@ -39,7 +39,7 @@
   --text-secondary: #6b7280;
   --text-muted: #9ca3af;
 
-  /* Chart palette tuned to brand */
+  /* Chart palette - Tuned to brand (Light Mode) */
   --chart-1: #73152D;
   --chart-2: #E6B4BE;
   --chart-3: #111827;
@@ -65,12 +65,15 @@
   --card-foreground: #f5f5f7;
   --popover: #1f2937;
   --popover-foreground: #f5f5f7;
-  --primary: #F2AFBD;
+
+  /* Primary mapped to adapted color for dark mode to make the logo visible */
+  --primary: #EDDFDF; /* High-contrast warm off-white, replaces deep maroon for dark mode */
   --primary-foreground: #111827;
+
   --secondary: #374151;
   --secondary-foreground: #f5f5f7;
   --muted: #374151;
-  --muted-foreground: #9ca3af;
+  --muted-foreground: #D1D5DB; /* ADAPTED LIGHT GRAY: Makes the geometric parts visible */
   --accent: #561022;
   --accent-foreground: #FBEBEF;
   --destructive: #ef4444;
@@ -78,6 +81,18 @@
   --border: #374151;
   --input: #374151;
   --ring: #F2AFBD;
+
+  /* Text helpers */
+  --text-primary: #f5f5f7;
+  --text-secondary: #D1D5DB;
+  --text-muted: #9ca3af;
+
+  /* ADAPTED Chart palette - Visible and on-brand for dark mode */
+  --chart-1: #EDDFDF; /* High-contrast main adapted brand tone */
+  --chart-2: #F2AFBD; /* Dusty Rose accent (good contrast) */
+  --chart-3: #D1D5DB; /* Light Gray for muted elements */
+  --chart-4: #D697A6; /* Deeper dusty rose, still high contrast */
+  --chart-5: #E0D5D6; /* Warm light accent tone */
 }
 
 @theme inline {
