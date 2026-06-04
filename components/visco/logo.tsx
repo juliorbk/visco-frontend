@@ -15,7 +15,7 @@ interface LogoProps {
 export function Logo({ className, showSubtitle = true, size = "md" }: LogoProps) {
   // Ajustamos el tamaño basándonos en el ancho (w) en lugar del tamaño de fuente
   const sizeClass =
-    size === "sm" ? "w-24" : size === "lg" ? "w-48" : "w-32"
+    size === "sm" ? "w-20" : size === "lg" ? "w-40" : "w-28"
 
   return (
     <div className={cn("flex flex-col items-start tracking-tight", className)}>

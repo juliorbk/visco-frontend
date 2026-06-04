@@ -60,7 +60,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left panel */}
-      <section className="relative bg-[#7b1a1a] text-white px-5 py-8 sm:px-8 sm:py-10 lg:px-14 lg:py-14 flex flex-col">
+      <section className="relative bg-primary text-white px-5 py-8 sm:px-8 sm:py-10 lg:px-14 lg:py-14 flex flex-col">
         <Logo size="md" />
 
         <div className="my-auto max-w-md">
@@ -81,7 +81,7 @@ export default function LoginPage() {
       </section>
 
       {/* Right panel */}
-      <section className="bg-[#f5f5f7] px-5 py-8 sm:px-6 sm:py-10 lg:px-14 lg:py-14 flex items-center">
+      <section className="bg-background px-5 py-8 sm:px-6 sm:py-10 lg:px-14 lg:py-14 flex items-center">
         <div className="w-full max-w-md mx-auto">
           <h1 className="font-serif text-3xl font-semibold text-foreground">Bienvenido de vuelta</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -100,17 +100,21 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9 bg-white h-11"
-                  placeholder="nombre@empresa.com"
-                  autoComplete="email"
+                  className="pl-9"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-medium text-foreground">
-                Contraseña
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                  Contraseña
+                </Label>
+                <button type="button" className="text-xs text-primary hover:underline font-medium">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
               <div className="relative">
                 <LockClosedIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
@@ -118,77 +122,51 @@ export default function LoginPage() {
                   type={showPwd ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-9 pr-10 bg-white h-11"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
+                  className="pl-9"
+                  required
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPwd((v) => !v)}
+                  onClick={() => setShowPwd(!showPwd)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
                   {showPwd ? <EyeSlashIcon className="size-4" /> : <EyeIcon className="size-4" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox
-                  checked={remember}
-                  onCheckedChange={(v) => setRemember(Boolean(v))}
-                  className="data-[state=checked]:bg-[#7b1a1a] data-[state=checked]:border-[#7b1a1a]"
-                />
-                <span className="text-foreground">Recordarme</span>
-              </label>
-              <a href="#" className="text-[#7b1a1a] hover:underline font-medium">
-                ¿Olvidaste tu contraseña?
-              </a>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="remember"
+                checked={remember}
+                onCheckedChange={(c) => setRemember(!!c)}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              />
+              <Label htmlFor="remember" className="text-sm text-foreground">
+                Recordar sesión
+              </Label>
             </div>
 
             <Button
               type="submit"
+              className="w-full h-11 bg-primary hover:bg-primary-hover text-white font-medium"
               disabled={loading}
-              className="w-full h-11 bg-[#7b1a1a] hover:bg-[#5c1212] text-white font-medium"
             >
-              {loading ? "Ingresando…" : "Iniciar sesión"}
+              {loading ? "Iniciando..." : "Iniciar sesión"}
             </Button>
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-[#f5f5f7] px-3 text-muted-foreground uppercase tracking-wider">
-                  o continúa con
-                </span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 bg-white font-medium"
-            >
-              <GoogleIcon className="size-4" />
-              Continuar con Google SSO
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground pt-2">
-              ¿No tienes cuenta?{" "}
-              <button
-                type="button"
-                onClick={() => setRegisterOpen(true)}
-                className="text-[#7b1a1a] hover:underline font-medium"
-              >
-                Solicitar acceso
-              </button>
-            </p>
           </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            ¿No tienes una cuenta?{" "}
+            <button
+              onClick={() => setRegisterOpen(true)}
+              className="text-primary hover:underline font-medium"
+            >
+              Regístrate aquí
+            </button>
+          </p>
         </div>
       </section>
-
       <RegisterModal open={registerOpen} onOpenChange={setRegisterOpen} />
     </div>
   )
