@@ -22,10 +22,15 @@ const typeConfig: Record<string, { label: string; color: string; icon: typeof Ar
     color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-200",
     icon: EqualsIcon,
   },
-  RECEIPT: {
-    label: "Recepción",
+  INPUT: {
+    label: "Entrada",
     color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
     icon: TruckIcon,
+  },
+  OUTPUT: {
+    label: "Salida",
+    color: "text-red-600 bg-red-100 dark:bg-red-900/30 border-red-200",
+    icon: ArrowsRightLeftIcon,
   },
 }
 

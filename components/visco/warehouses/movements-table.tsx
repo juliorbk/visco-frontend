@@ -28,10 +28,15 @@ const typeConfig: Record<MovementType, { label: string; color: string; icon: typ
     color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-200",
     icon: EqualsIcon,
   },
-  RECEIPT: {
-    label: "Recepción",
+  INPUT: {
+    label: "Entrada",
     color: "text-green-600 bg-green-100 dark:bg-green-900/30 border-green-200",
     icon: TruckIcon,
+  },
+  OUTPUT: {
+    label: "Salida",
+    color: "text-red-600 bg-red-100 dark:bg-red-900/30 border-red-200",
+    icon: ArrowsRightLeftIcon,
   },
   DISPATCH: {
     label: "Despacho",
@@ -87,7 +92,8 @@ export function MovementsTable({
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="TRANSFER">Transferencias</SelectItem>
             <SelectItem value="ADJUSTMENT">Ajustes</SelectItem>
-            <SelectItem value="RECEIPT">Recepciones</SelectItem>
+            <SelectItem value="INPUT">Entradas</SelectItem>
+            <SelectItem value="OUTPUT">Salidas</SelectItem>
             <SelectItem value="DISPATCH">Despachos</SelectItem>
           </SelectContent>
         </Select>

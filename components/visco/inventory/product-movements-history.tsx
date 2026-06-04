@@ -12,7 +12,8 @@ import { MovementDetailModal } from "@/components/visco/warehouses/movement-deta
 const typeConfig: Record<string, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
   TRANSFER: { label: "Transferencia", color: "text-sky-700 bg-sky-50 border-sky-200", icon: ArrowsRightLeftIcon },
   ADJUSTMENT: { label: "Ajuste", color: "text-amber-700 bg-amber-50 border-amber-200", icon: EqualsIcon },
-  RECEIPT: { label: "Recepción", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: TruckIcon },
+  INPUT: { label: "Entrada", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: TruckIcon },
+  OUTPUT: { label: "Salida", color: "text-red-700 bg-red-50 border-red-200", icon: ArrowsRightLeftIcon },
   DISPATCH: { label: "Despacho", color: "text-purple-700 bg-purple-50 border-purple-200", icon: ArrowsRightLeftIcon },
 }
 
@@ -100,10 +101,16 @@ export function ProductMovementsHistory({ productId }: { productId: number }) {
                           Stock: {m.stockBefore} → {m.stockAfter}
                         </>
                       )}
-                      {m.type === "RECEIPT" && (
+                      {m.type === "INPUT" && (
                         <>
                           +{m.quantity} uds recibidas
-                          {m.fromWarehouseName && ` en ${m.fromWarehouseName}`}
+                          {m.toWarehouseName && ` en ${m.toWarehouseName}`}
+                        </>
+                      )}
+                      {m.type === "OUTPUT" && (
+                        <>
+                          -{m.quantity} uds de salida
+                          {m.fromWarehouseName && ` desde ${m.fromWarehouseName}`}
                         </>
                       )}
                       {m.type === "DISPATCH" && (
