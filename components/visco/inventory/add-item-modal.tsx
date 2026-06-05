@@ -111,7 +111,7 @@ export function AddItemModal({
     } else {
       setForm(empty)
     }
-  }, [editing, open])
+  }, [editing?.id, open])
 
   const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }))
@@ -132,7 +132,7 @@ export function AddItemModal({
     return map
   }, [categories])
 
-const submit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     try {
@@ -143,8 +143,8 @@ const submit = async (e: React.FormEvent) => {
         description: form.description,
         uom: form.uom as ProductDTO["uom"], 
         reorderPoint: Number(form.reorderPoint) || 0,
-        supplierId: form.supplierId,
-        categoryId: form.categoryId,
+        supplierId: form.supplierId ?? undefined,
+        categoryId: form.categoryId ?? undefined,
       }
       
       // Faltaba esta parte: llamar a la API y notificar
@@ -179,7 +179,7 @@ const submit = async (e: React.FormEvent) => {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-1.5">
             <Label htmlFor="name">Nombre</Label>
             <Input
