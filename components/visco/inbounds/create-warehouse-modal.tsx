@@ -47,6 +47,7 @@ export function CreateWarehouseModal({
   }
 
   const close = () => {
+    onOpenChange(false)
     clearTimeout(closeTimerRef.current ?? undefined)
     closeTimerRef.current = setTimeout(reset, 200)
   }
