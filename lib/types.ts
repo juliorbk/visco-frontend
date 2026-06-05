@@ -39,6 +39,28 @@ export interface RegisterRequest {
   password: string
   role: UserRole
   costCenterId?: number | null
+  inviteToken: string
+}
+
+export interface InviteTokenDTO {
+  id: string
+  token: string
+  email: string
+  intendedRole: UserRole
+  costCenterId: number | null
+  createdById: string
+  createdAt: string
+  expiresAt: string
+  usedAt: string | null
+  usedByUserId: string | null
+  revoked: boolean
+}
+
+export interface CreateInviteRequest {
+  email: string
+  role: UserRole
+  costCenterId?: number | null
+  expiresAt?: string | null
 }
 
 export interface AuthResponse {

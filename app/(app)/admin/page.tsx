@@ -23,6 +23,7 @@ import { fetchUsers, updateUser, deactivateUser, activateUser } from "@/lib/serv
 import { getCachedUser } from "@/lib/auth-client"
 import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
+import { InviteManager } from "@/components/visco/admin/invite-manager"
 import type { UserDTO, UserRole } from "@/lib/types"
 import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
@@ -37,7 +38,7 @@ const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
   WAREHOUSEMAN: { label: "Almacén", className: "bg-green-100 text-green-800 ring-green-200" },
 }
 
-type Tab = "users" | "employees"
+type Tab = "users" | "invites" | "employees"
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("users")
@@ -104,6 +105,7 @@ export default function AdminPage() {
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "users", label: "Usuarios" },
+    { key: "invites", label: "Invitaciones" },
     { key: "employees", label: "Empleados" },
   ]
 
@@ -141,7 +143,9 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {tab === "employees" ? (
+      {tab === "invites" ? (
+        <InviteManager />
+      ) : tab === "employees" ? (
         <EmployeeManager />
       ) : (
         <>
