@@ -53,7 +53,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (user === undefined || user === null) {
       refresh()
     }
-  }, [user, refresh])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <UserContext.Provider value={{ user, refresh, setUser }}>
