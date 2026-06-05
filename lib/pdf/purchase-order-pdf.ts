@@ -5,6 +5,7 @@ import {
   addLogoPlaceholder,
   addSectionTitle,
   addSeparator,
+  addWrappedText,
   formatDateShort,
   formatCurrency,
   translatePaymentMethod,
@@ -161,7 +162,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 38
+  const boxH = 42
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -171,14 +172,17 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  let by = y + 14
-  doc.text(supplier?.name ?? order.supplierName, x0 + 4, by)
-  by += 5
-  doc.text(supplier?.address ?? "—", x0 + 4, by)
-  by += 5
-  if (supplier?.email) { doc.text(supplier.email, x0 + 4, by); by += 5 }
+  let by = y + 15
+  by += addWrappedText(doc, supplier?.name ?? order.supplierName, x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, supplier?.address ?? "—", x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  if (supplier?.email) {
+    by += addWrappedText(doc, supplier.email, x0 + 4, by, boxW - 8, 4.5, 1)
+    by += 1.5
+  }
   if (supplier?.phoneNumbers?.length) {
-    doc.text("Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by)
+    addWrappedText(doc, "Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by, boxW - 8, 4.5, 1)
   }
 
   // Ship To box
@@ -188,21 +192,25 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  by = y + 14
-  doc.text(warehouseName, x1 + 4, by)
-  by += 5
-  doc.text(warehouseAddress, x1 + 4, by)
-  by += 5
+  by = y + 15
+  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
   const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
   const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
   const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
-  if (extraInfo) doc.text(extraInfo, x1 + 4, by)
-  by += 5
+  if (extraInfo) {
+    by += addWrappedText(doc, extraInfo, x1 + 4, by, boxW - 8, 4, 1)
+    by += 1.5
+  }
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  if (warehouse?.description) { doc.text(warehouse.description, x1 + 4, by) }
+  if (warehouse?.description) {
+    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4.5, 2)
+  }
 
   y += boxH + 6
 
