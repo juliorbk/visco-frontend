@@ -61,9 +61,14 @@ export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x, y, w, h, 3, 3, "FD")
-  doc.setFontSize(10)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(14)
+  doc.setTextColor(...COLORS.primary)
+  doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-doc.addImage("visco-logo.png", "PNG", x + w / 4, y + h / 4, w / 2, h / 2);
+  doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
 }
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {
