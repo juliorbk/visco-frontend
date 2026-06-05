@@ -53,6 +53,7 @@ const ROLES: { value: UserRole; label: string }[] = [
 ]
 
 const ROLE_BADGE: Record<UserRole, string> = {
+  SUPERADMIN: "bg-purple-100 text-purple-800 ring-purple-200",
   ADMIN: "bg-red-100 text-red-800 ring-red-200",
   MANAGER: "bg-blue-100 text-blue-800 ring-blue-200",
   PROCUREMENT: "bg-amber-100 text-amber-800 ring-amber-200",

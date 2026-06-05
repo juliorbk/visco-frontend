@@ -29,13 +29,28 @@ import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2I
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
-const ROLES: UserRole[] = ["WAREHOUSEMAN", "MANAGER", "PROCUREMENT", "ADMIN"]
+const ROLES: UserRole[] = [
+  "WAREHOUSEMAN",
+  "MANAGER",
+  "PROCUREMENT",
+  "ADMIN",
+  "SUPERADMIN",
+]
 
 const ROLE_BADGE: Record<UserRole, { label: string; className: string }> = {
+  SUPERADMIN: {
+    label: "Super Admin",
+    className: "bg-purple-100 text-purple-800 ring-purple-200",
+  },
   ADMIN: { label: "Admin", className: "bg-red-100 text-red-800 ring-red-200" },
   MANAGER: { label: "Manager", className: "bg-blue-100 text-blue-800 ring-blue-200" },
   PROCUREMENT: { label: "Compras", className: "bg-amber-100 text-amber-800 ring-amber-200" },
   WAREHOUSEMAN: { label: "Almacén", className: "bg-green-100 text-green-800 ring-green-200" },
+}
+
+const DEFAULT_ROLE_BADGE = {
+  label: "Desconocido",
+  className: "bg-gray-100 text-gray-700 ring-gray-200",
 }
 
 type Tab = "users" | "invites" | "employees"
@@ -93,7 +108,7 @@ export default function AdminPage() {
     try {
       const updated = await updateUser(editingUser.id, { role: newRole })
       setUsers((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
-      toast.success(`Rol de ${updated.name} actualizado a ${ROLE_BADGE[newRole].label}`)
+      toast.success(`Rol de ${updated.name} actualizado a ${(ROLE_BADGE[newRole] ?? DEFAULT_ROLE_BADGE).label}`)
       setEditingUser(null)
       setNewRole(null)
     } catch (err) {
@@ -177,7 +192,7 @@ export default function AdminPage() {
                     </tr>
                   ) : (
                     users.map((u) => {
-                      const rb = ROLE_BADGE[u.role]
+                      const rb = ROLE_BADGE[u.role] ?? DEFAULT_ROLE_BADGE
                       return (
                         <tr
                           key={u.id}
@@ -269,7 +284,7 @@ export default function AdminPage() {
                   <SelectContent>
                     {ROLES.map((r) => (
                       <SelectItem key={r} value={r}>
-                        {ROLE_BADGE[r].label}
+                        {(ROLE_BADGE[r] ?? DEFAULT_ROLE_BADGE).label}
                       </SelectItem>
                     ))}
                   </SelectContent>

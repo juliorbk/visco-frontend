@@ -1,6 +1,11 @@
 // ── Enums ──
 
-export type UserRole = "WAREHOUSEMAN" | "MANAGER" | "PROCUREMENT" | "ADMIN"
+export type UserRole =
+  | "WAREHOUSEMAN"
+  | "MANAGER"
+  | "PROCUREMENT"
+  | "ADMIN"
+  | "SUPERADMIN"
 
 export type PurchaseOrderStatus =
   | "PENDING"

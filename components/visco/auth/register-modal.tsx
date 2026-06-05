@@ -58,9 +58,9 @@ export function RegisterModal({
 }) {
   const isInvite = Boolean(inviteToken)
   const [name, setName] = useState("")
-  const [email, setEmail] = useState(inviteEmail ?? "")
+  const [email, setEmail] = useState(() => inviteEmail ?? "")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState<UserRole>(inviteRole ?? "WAREHOUSEMAN")
+  const [role, setRole] = useState<UserRole>(() => inviteRole ?? "WAREHOUSEMAN")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
   const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
@@ -74,15 +74,6 @@ export function RegisterModal({
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current ?? undefined)
   }, [])
-
-  // When the invite payload changes (or modal opens), prefill and lock
-  // email / role / cost center fields.
-  useEffect(() => {
-    if (open) {
-      if (inviteEmail) setEmail(inviteEmail)
-      if (inviteRole) setRole(inviteRole)
-    }
-  }, [open, inviteEmail, inviteRole])
 
   useEffect(() => {
     if (!open) return
