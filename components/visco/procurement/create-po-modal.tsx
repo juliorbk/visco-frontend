@@ -94,20 +94,13 @@ export function CreatePOModal({
   const finderRef = useRef<HTMLDivElement>(null)
 
   const prefillIdRef = useRef<number | null>(null)
-  const lastOpenedRef = useRef(false)
 
+  // Carga los catálogos (suppliers, products, warehouses, requisitions)
+  // cada vez que el modal se abre desde cerrado. Solo depende de `open`
+  // para que el padre re-renderizando con un nuevo prefillFromRequisition
+  // no skipee el fetch.
   useEffect(() => {
-    if (!open) {
-      lastOpenedRef.current = false
-      prefillIdRef.current = null
-      return
-    }
-    // Skip the data-loading branch when the modal is just re-rendering
-    // with the same prefill. The parent re-creates the prefill object on
-    // every render, so depending on its identity would re-fetch 4 APIs
-    // and re-seed the lines on every parent update.
-    if (lastOpenedRef.current) return
-    lastOpenedRef.current = true
+    if (!open) return
 
     Promise.all([
       fetchSuppliers(0, 200).then((supRes) => {
@@ -126,26 +119,39 @@ export function CreatePOModal({
     ]).catch(() => {
       // Errors are non-fatal; individual fetches already swallow them.
     })
+  }, [open])
 
-    if (prefillFromRequisition) {
-      prefillIdRef.current = prefillFromRequisition.id
-      setSelectedRequisitionId(prefillFromRequisition.id)
-      setDescription(prefillFromRequisition.description)
-      setLines(
-        prefillFromRequisition.items.map((item) => {
-          const id = nextLineIdRef.current++
-          return {
-            id,
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            unitPrice: 0,
-            sku: item.productSku,
-          }
-        }),
-      )
+  // Aplica el prefill cuando llega una requisition específica.
+  // Usa prefillIdRef para evitar re-seed si el padre re-crea la referencia
+  // del objeto prefill con el mismo id.
+  useEffect(() => {
+    if (!open || !prefillFromRequisition) return
+    if (prefillIdRef.current === prefillFromRequisition.id) return
+    prefillIdRef.current = prefillFromRequisition.id
+    setSelectedRequisitionId(prefillFromRequisition.id)
+    setDescription(prefillFromRequisition.description)
+    setLines(
+      prefillFromRequisition.items.map((item) => {
+        const id = nextLineIdRef.current++
+        return {
+          id,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: 0,
+          sku: item.productSku,
+        }
+      }),
+    )
+  }, [open, prefillFromRequisition?.id])
+
+  // Reset del prefillId cuando el modal se cierra para que al reabrir
+  // con la misma requisition se vuelva a sembrar.
+  useEffect(() => {
+    if (!open) {
+      prefillIdRef.current = null
     }
-  }, [open, prefillFromRequisition])
+  }, [open])
 
   useEffect(() => {
     if (!finderOpen) setFinderQuery("")
