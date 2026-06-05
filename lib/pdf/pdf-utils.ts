@@ -57,6 +57,40 @@ export function translateOrderType(type: string): string {
   return map[type] ?? type
 }
 
+export function translateOrderStatus(status: string): string {
+  const map: Record<string, string> = {
+    PENDING: "Pendiente",
+    AWAITING_APPROVAL: "Por Aprobar",
+    APPROVED: "Aprobada",
+    REJECTED: "Rechazada",
+    IN_TRANSIT: "En Tránsito",
+    DELIVERED: "Entregada",
+    COMPLETED: "Completada",
+    PARTIALLY_DELIVERED: "Entrega Parcial",
+    CANCELLED: "Cancelada",
+    WAITING_PAYMENT: "Esperando Pago",
+    HELD_AT_CUSTOMS: "Retenida en Aduana",
+  }
+  return map[status] ?? status
+}
+
+export function statusColor(status: string): [number, number, number] {
+  const map: Record<string, [number, number, number]> = {
+    PENDING: [234, 179, 8],
+    AWAITING_APPROVAL: [234, 179, 8],
+    APPROVED: [22, 163, 74],
+    REJECTED: [220, 38, 38],
+    IN_TRANSIT: [37, 99, 235],
+    DELIVERED: [22, 163, 74],
+    COMPLETED: [22, 163, 74],
+    PARTIALLY_DELIVERED: [234, 88, 12],
+    CANCELLED: [107, 114, 128],
+    WAITING_PAYMENT: [202, 138, 4],
+    HELD_AT_CUSTOMS: [220, 38, 38],
+  }
+  return map[status] ?? COLORS.textLight
+}
+
 export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, h: number) {
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)

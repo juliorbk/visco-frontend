@@ -486,6 +486,13 @@ export interface DispatchResponse {
   createdByName: string
   notes: string
   items: DispatchItemResponse[]
+  warehouse?: {
+    name: string
+    physicalAddress: string
+    description?: string
+    sapCenterCode?: string
+    responsibleUserName?: string
+  } | null
 }
 
 // ── Inventory Movements ──

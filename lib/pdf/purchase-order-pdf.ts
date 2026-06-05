@@ -9,6 +9,8 @@ import {
   formatCurrency,
   translatePaymentMethod,
   translateOrderType,
+  translateOrderStatus,
+  statusColor,
 } from "./pdf-utils"
 
 function addTable(
@@ -76,7 +78,13 @@ function addTable(
 }
 
 export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
-  const doc = new jsPDF("p", "mm", "a4")
+  const doc = new jsPDF({
+    orientation: "p",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+    putOnlyUsedFonts: true,
+  })
   const pageW = 210
   const margin = 20
   const contentW = pageW - 2 * margin
@@ -85,6 +93,8 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
 
   const supplier = order.supplier
   const warehouse = order.destinationWarehouse
+  const warehouseName = warehouse?.name ?? order.destinationWarehouseName ?? "—"
+  const warehouseAddress = warehouse?.physicalAddress ?? "—"
 
   // ── Logo + Title + Info ──
   addLogoPlaceholder(doc, x0, y, 40, 20)
@@ -94,13 +104,29 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.setTextColor(...COLORS.primary)
   doc.text("PURCHASE ORDER", pageW / 2, y + 8, { align: "center" })
 
+  // Status badge under title
+  const statusLabel = translateOrderStatus(order.status).toUpperCase()
+  const statusRgb = statusColor(order.status)
+  doc.setFontSize(8)
+  doc.setFont("helvetica", "bold")
+  const statusW = doc.getTextWidth(statusLabel) + 6
+  const statusX = pageW / 2 - statusW / 2
+  const statusY = y + 12
+  doc.setFillColor(...statusRgb)
+  doc.roundedRect(statusX, statusY, statusW, 5.5, 1.5, 1.5, "F")
+  doc.setTextColor(...COLORS.white)
+  doc.text(statusLabel, pageW / 2, statusY + 3.8, { align: "center" })
+
   const infoX = 135
-  const infoLines = [
+  const infoLines: [string, string][] = [
     ["DATE:", formatDateShort(order.createdAt)],
     ["PO #:", order.orderNumber],
     ["TYPE:", translateOrderType(order.type)],
     ["PAYMENT:", translatePaymentMethod(order.paymentMethod)],
   ]
+  if (order.requisitionId != null) {
+    infoLines.push(["REQ. ID:", `#${order.requisitionId}`])
+  }
   doc.setFontSize(7)
   doc.setFont("helvetica", "bold")
   infoLines.forEach(([label, value], i) => {
@@ -112,7 +138,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
     doc.setFont("helvetica", "bold")
   })
 
-  y += 36
+  y += 36 + (infoLines.length > 4 ? 5 : 0)
   addSeparator(doc, x0, y, contentW)
   y += 8
 
@@ -146,9 +172,9 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
   by = y + 14
-  doc.text(warehouse?.name ?? order.destinationWarehouseName ?? "—", x1 + 4, by)
+  doc.text(warehouseName, x1 + 4, by)
   by += 5
-  doc.text(warehouse?.physicalAddress ?? "—", x1 + 4, by)
+  doc.text(warehouseAddress, x1 + 4, by)
   by += 5
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
@@ -232,6 +258,47 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.text(formatCurrency(total), totalX + totalW - 2, totalY + 6, { align: "right" })
 
   y = totalY + 14
+
+  // ── Approval / Rejection info ──
+  if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
+    const isRejected = !!order.rejectionReason
+    const sectionLabel = isRejected ? "Rejection Info" : "Approval Info"
+    addSectionTitle(doc, x0, y, contentW, sectionLabel)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(8)
+    doc.setTextColor(...COLORS.text)
+    let ay = y + 16
+    if (order.approvedBy) {
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(...COLORS.textMuted)
+      doc.text("Aprobado por:", x0 + 4, ay)
+      doc.setFont("helvetica", "normal")
+      doc.setTextColor(...COLORS.text)
+      doc.text(order.approvedBy, x0 + 35, ay)
+      ay += 5
+    }
+    if (order.approvedAt) {
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(...COLORS.textMuted)
+      doc.text("Fecha:", x0 + 4, ay)
+      doc.setFont("helvetica", "normal")
+      doc.setTextColor(...COLORS.text)
+      doc.text(formatDateShort(order.approvedAt), x0 + 35, ay)
+      ay += 5
+    }
+    const noteText = order.rejectionReason || order.approvalNotes
+    if (noteText) {
+      doc.setFont("helvetica", "bold")
+      doc.setTextColor(...COLORS.textMuted)
+      doc.text("Notas:", x0 + 4, ay)
+      doc.setFont("helvetica", "normal")
+      doc.setTextColor(...COLORS.text)
+      const wrapped = doc.splitTextToSize(noteText, contentW - 40)
+      doc.text(wrapped, x0 + 35, ay)
+      ay += 5 * wrapped.length
+    }
+    y = ay + 6
+  }
 
   // ── Comments ──
   const commentsText = order.specialConditions || order.description || "—"

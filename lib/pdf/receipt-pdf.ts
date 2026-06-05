@@ -73,7 +73,13 @@ function addTable(
 }
 
 export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): jsPDF {
-  const doc = new jsPDF("p", "mm", "a4")
+  const doc = new jsPDF({
+    orientation: "p",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+    putOnlyUsedFonts: true,
+  })
   const pageW = 210
   const margin = 20
   const contentW = pageW - 2 * margin
@@ -83,7 +89,9 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   const po = receipt.purchaseOrder
   const supplier = po?.supplier
   const warehouse = po?.destinationWarehouse
+  const warehouseName = warehouse?.name ?? "—"
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
+  const supplierName = supplier?.name ?? "—"
   const supplierAddress = supplier?.address ?? "—"
 
   // ── Header ──
@@ -92,7 +100,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.accent)
-  doc.text("RECEIPT NOTE", pageW - margin, y + 10, { align: "right" })
+  doc.text("NOTA DE RECEPCIÓN", pageW - margin, y + 10, { align: "right" })
 
   doc.setFontSize(11)
   doc.setFont("helvetica", "bold")
@@ -107,20 +115,20 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text("RECEIPT DATE", x0, y)
-  doc.text(`CITY`, x0 + 70, y)
-  doc.text("STATUS", x0 + 140, y)
+  doc.text("FECHA RECEPCIÓN", x0, y)
+  doc.text("ORDEN DE COMPRA", x0 + 70, y)
+  doc.text("ESTADO", x0 + 140, y)
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
   doc.text(formatDateLong(receipt.receivedAt), x0, y + 5)
-  doc.text(warehouseAddress, x0 + 70, y + 5)
+  doc.text(`#${receipt.orderNumber}`, x0 + 70, y + 5)
 
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
   doc.text(
-    receipt.updatedStatus === "DELIVERED" ? "COMPLETED" : "PARTIAL",
+    receipt.updatedStatus === "DELIVERED" ? "COMPLETADA" : "PARCIAL",
     x0 + 140,
     y + 5,
   )
@@ -138,13 +146,18 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
-  doc.text("SUPPLIER", x0 + 4, y + 5)
+  doc.text("PROVEEDOR", x0 + 4, y + 5)
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  doc.text(supplier?.name ?? receipt.orderNumber, x0 + 4, y + 12)
+  doc.text(supplierName, x0 + 4, y + 12)
   doc.text(supplierAddress, x0 + 4, y + 18)
   if (supplier?.email) doc.text(supplier.email, x0 + 4, y + 24)
+  if (supplier?.phoneNumbers?.length) {
+    doc.setFontSize(8)
+    doc.setTextColor(...COLORS.textLight)
+    doc.text("Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, y + 30)
+  }
 
   // Warehouse box
   const x1 = x0 + boxW + 8
@@ -152,11 +165,11 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
-  doc.text("DESTINATION WAREHOUSE", x1 + 4, y + 5)
+  doc.text("ALMACÉN DESTINO", x1 + 4, y + 5)
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  doc.text(warehouse?.name ?? "—", x1 + 4, y + 12)
+  doc.text(warehouseName, x1 + 4, y + 12)
   doc.text(warehouseAddress, x1 + 4, y + 18)
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
@@ -183,10 +196,10 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
     : null
 
   const columns = hasUnitPrices
-    ? ["QTY.", "PRODUCT", "REFERENCE", "U/P", "TOTAL"]
+    ? ["CANT.", "PRODUCTO", "SKU", "P/U", "TOTAL"]
     : summary
       ? ["RECIBIDO", "PRODUCTO", "SKU", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
-      : ["QTY.", "PRODUCT", "REFERENCE", "EXP. QTY", "DIF."]
+      : ["CANT.", "PRODUCTO", "SKU", "ESPERADO", "DIF."]
 
   const bodyRows = receipt.items.map((item) => {
     const sm = summaryMap?.get(item.productId)
@@ -241,10 +254,10 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...COLORS.text)
     const sumX = pageW - margin - 70
-    doc.text("Total Expected", sumX, y)
+    doc.text("Total esperado", sumX, y)
     doc.text(`${totalExpected} uds.`, sumX + 68, y, { align: "right" })
     y += 5
-    doc.text("Total Received", sumX, y)
+    doc.text("Total recibido", sumX, y)
     doc.text(`${totalReceived} uds.`, sumX + 68, y, { align: "right" })
     y += 3
     doc.setDrawColor(...COLORS.primary)
@@ -279,10 +292,10 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...COLORS.text)
     const sumX = pageW - margin - 70
-    doc.text("Total Expected", sumX, y)
+    doc.text("Total esperado", sumX, y)
     doc.text(`${totalExpected} uds.`, sumX + 68, y, { align: "right" })
     y += 5
-    doc.text("Total Received", sumX, y)
+    doc.text("Total recibido", sumX, y)
     doc.text(`${totalReceived} uds.`, sumX + 68, y, { align: "right" })
     y += 10
   }
@@ -297,13 +310,13 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
-  doc.text("RECEIVED BY", x0 + 4, y + 5)
+  doc.text("RECIBIDO POR", x0 + 4, y + 5)
   doc.setDrawColor(...COLORS.border)
   doc.line(x0 + 4, y + 28, x0 + footBoxW - 4, y + 28)
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text("Name & Signature", x0 + footBoxW / 2, y + 34, { align: "center" })
+  doc.text("Nombre y firma", x0 + footBoxW / 2, y + 34, { align: "center" })
 
   // Observations box
   const obsX = x0 + footBoxW + 8
@@ -311,11 +324,11 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
-  doc.text("OBSERVATIONS", obsX + 4, y + 5)
+  doc.text("OBSERVACIONES", obsX + 4, y + 5)
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
-  const obsText = receipt.notes || "Without observations."
+  const obsText = receipt.notes || "Sin observaciones."
   const obsLines = doc.splitTextToSize(obsText, footBoxW - 8)
   doc.text(obsLines, obsX + 4, y + 14)
 
