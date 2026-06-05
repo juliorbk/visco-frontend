@@ -30,7 +30,7 @@ export default function InboundsPage() {
         fetchReceipts(0, 50),
         fetchPOs(0, 200),
       ])
-      const sorted = (recRes.content ?? []).sort(
+      const sorted = [...(recRes.content ?? [])].sort(
         (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
       )
       setReceipts(sorted)
