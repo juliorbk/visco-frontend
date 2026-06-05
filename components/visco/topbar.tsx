@@ -2,7 +2,8 @@
 
 import { BellIcon, Cog6ToothIcon, InformationCircleIcon, MagnifyingGlassIcon, ArrowRightStartOnRectangleIcon, UserIcon, Bars3Icon } from "@heroicons/react/24/outline"
 import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar } from "@/components/ui/avatar"
+import { AvatarFallback } from "@/components/ui/avatar-fallback"
 import {
   DropdownMenu,
   DropdownMenuContent,
