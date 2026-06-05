@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import * as RechartsPrimitive from 'recharts'
+import dynamic from 'next/dynamic'
 
 import { cn } from '@/lib/utils'
 
@@ -22,9 +22,9 @@ type ChartContextProps = {
   config: ChartConfig
 }
 
-const ChartContext = React.createContext<ChartContextProps | null>(null)
+export const ChartContext = React.createContext<ChartContextProps | null>(null)
 
-function useChart() {
+export function useChart() {
   const context = React.useContext(ChartContext)
 
   if (!context) {
@@ -34,40 +34,57 @@ function useChart() {
   return context
 }
 
-function ChartContainer({
-  id,
-  className,
-  children,
-  config,
-  ...props
-}: React.ComponentProps<'div'> & {
-  config: ChartConfig
-  children: React.ComponentProps<
-    typeof RechartsPrimitive.ResponsiveContainer
-  >['children']
-}) {
-  const uniqueId = React.useId()
-  const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`
+// Recharts primitives live in chart-recharts.tsx so this file can be
+// loaded without dragging in the recharts bundle. next/dynamic +
+// { ssr: false } keeps the static-import check happy while preserving
+// the public API.
+const ChartContainerImpl = dynamic(
+  () => import('./chart-recharts').then((m) => m.ChartContainerRecharts),
+  { ssr: false },
+)
+const ChartTooltipImpl = dynamic(
+  () => import('./chart-recharts').then((m) => m.ChartTooltipRecharts),
+  { ssr: false },
+)
+const ChartLegendImpl = dynamic(
+  () => import('./chart-recharts').then((m) => m.ChartLegendRecharts),
+  { ssr: false },
+)
 
+type ChartContainerProps = React.ComponentProps<'div'> & {
+  config: ChartConfig
+  children: React.ComponentProps<typeof import('recharts').ResponsiveContainer>['children']
+}
+
+export function ChartContainer(props: ChartContainerProps) {
   return (
-    <ChartContext.Provider value={{ config }}>
-      <div
-        data-slot="chart"
-        data-chart={chartId}
-        className={cn(
-          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border flex aspect-video justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
-          className,
-        )}
-        {...props}
-      >
-        <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
-          {children}
-        </RechartsPrimitive.ResponsiveContainer>
-      </div>
-    </ChartContext.Provider>
+    <React.Suspense
+      fallback={
+        <div className="flex aspect-video items-center justify-center text-xs text-muted-foreground">
+          Cargando…
+        </div>
+      }
+    >
+      <ChartContainerImpl {...props} />
+    </React.Suspense>
   )
 }
+
+export const ChartTooltip = (
+  props: React.ComponentProps<typeof ChartTooltipImpl>,
+) => (
+  <React.Suspense fallback={null}>
+    <ChartTooltipImpl {...props} />
+  </React.Suspense>
+)
+
+export const ChartLegend = (
+  props: React.ComponentProps<typeof ChartLegendImpl>,
+) => (
+  <React.Suspense fallback={null}>
+    <ChartLegendImpl {...props} />
+  </React.Suspense>
+)
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
@@ -102,9 +119,7 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
-
-function ChartTooltipContent({
+export function ChartTooltipContent({
   active,
   payload,
   className,
@@ -118,7 +133,7 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+}: React.ComponentProps<typeof import('recharts').Tooltip> &
   React.ComponentProps<'div'> & {
     hideLabel?: boolean
     hideIndicator?: boolean
@@ -248,16 +263,14 @@ function ChartTooltipContent({
   )
 }
 
-const ChartLegend = RechartsPrimitive.Legend
-
-function ChartLegendContent({
+export function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
   verticalAlign = 'bottom',
   nameKey,
 }: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+  Pick<React.ComponentProps<typeof import('recharts').Legend>, 'payload' | 'verticalAlign'> & {
     hideIcon?: boolean
     nameKey?: string
   }) {
@@ -341,11 +354,7 @@ function getPayloadConfigFromPayload(
     : config[key as keyof typeof config]
 }
 
-export {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  ChartStyle,
-}
+// Re-export recharts primitives at the type level so consumers can build
+// their own charts using the same shadcn-style wrapper. Runtime values
+// are loaded lazily via chart-recharts.tsx.
+export type { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
