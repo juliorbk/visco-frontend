@@ -6,6 +6,7 @@ import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 import { generatePurchaseOrderPDF } from "@/lib/pdf/purchase-order-pdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 // PENDING      → can only be submitted for approval
 // AWAITING_APPROVAL → can be approved or rejected
@@ -42,7 +43,7 @@ export function OrderDetail({
   const isApprovable  = APPROVABLE.includes(order.status)
   const isCancellable = CANCELLABLE.includes(order.status)
   const isReceivable  = RECEIVABLE.includes(order.status)
-  const hasActions    = isSubmittable || isApprovable || isReceivable
+  const hasActions    = isSubmittable || isApprovable || isReceivable || isCancellable
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs h-full flex flex-col">
@@ -63,12 +64,12 @@ export function OrderDetail({
       </div>
 
       {/* ── Stats ── */}
-      <div className="px-5 py-4 grid grid-cols-3 gap-3 border-b border-border">
+      <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-border">
         <Stat label="Total"       value={`$${total.toLocaleString()}`} />
         <Stat label="Solicitante" value={order.createdBy} />
         <Stat label="Tipo"        value={order.type} />
         <Stat label="Artículos"   value={`${order.items.length}`} />
-        <Stat label="Almacén destino" value={order.destinationWarehouseName ?? "-"} />
+        <Stat label="Almacén destino" value={order.destinationWarehouseName ?? "-"} className="sm:col-span-2" />
       </div>
 
       {/* ── Items ── */}
@@ -164,6 +165,17 @@ export function OrderDetail({
           </Button>
         )}
 
+        {/* Standalone cancel: status is cancellable but no other action is available */}
+        {isCancellable && !isSubmittable && !isApprovable && !isReceivable && (
+          <Button
+            variant="outline"
+            className="flex-1 bg-card"
+            onClick={() => onCancel?.(order)}
+          >
+            Cancelar pedido
+          </Button>
+        )}
+
         {/* No actions available */}
         {!hasActions && (
           <Button variant="outline" className="flex-1 bg-card" disabled>
@@ -175,9 +187,9 @@ export function OrderDetail({
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className="rounded-md border border-border bg-[#fafafa] px-3 py-2.5">
+    <div className={cn("rounded-md border border-border bg-[#fafafa] px-3 py-2.5", className)}>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className="mt-0.5 text-sm font-medium text-foreground truncate">{value}</div>
     </div>
