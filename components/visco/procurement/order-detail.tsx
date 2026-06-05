@@ -4,7 +4,6 @@ import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
-import { generatePurchaseOrderPDF } from "@/lib/pdf/purchase-order-pdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -102,7 +101,8 @@ export function OrderDetail({
         <Button
           variant="outline"
           className="w-full bg-card text-xs"
-          onClick={() => {
+          onClick={async () => {
+            const { generatePurchaseOrderPDF } = await import("@/lib/pdf/purchase-order-pdf")
             const doc = generatePurchaseOrderPDF(order)
             downloadPDF(doc, `ORDEN_COMPRA_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}

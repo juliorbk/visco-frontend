@@ -4,7 +4,6 @@ import { DocumentDuplicateIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
 import { useEffect, useState } from "react"
 import type { DispatchResponse } from "@/lib/types"
-import { generateDispatchNotePDF } from "@/lib/pdf/dispatch-note-pdf"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 
 export function DispatchDetailPanel({
@@ -35,7 +34,8 @@ export function DispatchDetailPanel({
         <h3 className="text-lg font-semibold text-[#111827]">Detalle de Despacho</h3>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
+            onClick={async () => {
+              const { generateDispatchNotePDF } = await import("@/lib/pdf/dispatch-note-pdf")
               const doc = generateDispatchNotePDF(dispatch)
               downloadPDF(doc, `despacho-${dispatch.dispatchNumber}.pdf`)
             }}
