@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RegisterModal } from "@/components/visco/auth/register-modal"
 import { toast } from "sonner"
-import { fetchUser } from "@/lib/auth-client"
+import { fetchUser, persistUser } from "@/lib/auth-client"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -48,6 +48,7 @@ export default function LoginPage() {
         toast.error("La sesión no se pudo establecer. Verifica que el backend haya configurado las cookies correctamente.")
         return
       }
+      persistUser(user)
       toast.success("Sesión iniciada")
       router.push("/dashboard")
     } catch {

@@ -2,12 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
 import { Squares2X2Icon as LayoutDashboard, CubeIcon as Package, ShoppingCartIcon, BuildingOffice2Icon, ChartBarIcon, TruckIcon, DocumentTextIcon, PlusIcon, XMarkIcon, ShieldCheckIcon, Cog6ToothIcon, BuildingStorefrontIcon, ArrowUpTrayIcon as LogOutIcon } from "@heroicons/react/24/outline"
 import { Logo } from "./logo"
-import { getCachedUser, fetchUser } from "@/lib/auth-client"
+import { useCurrentUser } from "@/lib/user-context"
 import { cn } from "@/lib/utils"
-import type { UserDTO } from "@/lib/types"
 
 const BASE_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -23,11 +21,7 @@ const BASE_NAV = [
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
-  const [user, setUser] = useState<UserDTO | null | undefined>(getCachedUser())
-
-  useEffect(() => {
-    fetchUser().then(setUser)
-  }, [])
+  const { user } = useCurrentUser()
 
   const NAV = user?.role === "ADMIN"
     ? [...BASE_NAV,   { href: "/admin", label: "Admin", icon: ShieldCheckIcon }]

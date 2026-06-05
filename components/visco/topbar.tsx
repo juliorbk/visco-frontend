@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { BellIcon, Cog6ToothIcon, InformationCircleIcon, MagnifyingGlassIcon, ArrowRightStartOnRectangleIcon, UserIcon, Bars3Icon } from "@heroicons/react/24/outline"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -13,18 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
-import { getCachedUser, fetchUser, clearUserCache } from "@/lib/auth-client"
+import { useCurrentUser } from "@/lib/user-context"
+import { clearUserCache } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
-  const [user, setUser] = useState(() => getCachedUser())
-
-  useEffect(() => {
-    fetchUser().then(setUser)
-  }, [])
+  const { user, setUser } = useCurrentUser()
 
   const initials = user
     ? user.name
@@ -41,6 +37,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     } catch {
       // Proceed even if server call fails
     }
+    setUser(null)
     clearUserCache()
     router.push("/")
   }
