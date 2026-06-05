@@ -76,6 +76,7 @@ export function NuevaRecepcionModal({
       }
       setStep(2)
     } else if (step === 2) {
+      if (!selectedPO) return
       if (!destinationWarehouseId) {
         toast.error("Selecciona un almacén destino")
         return
@@ -84,7 +85,7 @@ export function NuevaRecepcionModal({
         toast.error("Selecciona una ubicación destino")
         return
       }
-      const hasAny = selectedPO.items.some((it) => (receivedQuantities[it.productId] ?? 0) > 0)
+      const hasAny = selectedPO!.items.some((it) => (receivedQuantities[it.productId] ?? 0) > 0)
       if (!hasAny) {
         toast.error("Ingresa al menos una cantidad recibida")
         return

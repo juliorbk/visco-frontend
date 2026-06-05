@@ -213,7 +213,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   y += 22
 
   // ── Items Table ──
-  const subtotal = order.items.reduce((s, i) => s + i.subtotal, 0)
+  const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
   const colWidths = [12, contentW - 12 - 18 - 28 - 28, 18, 28, 28]
