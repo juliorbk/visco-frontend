@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Squares2X2Icon as LayoutDashboard, CubeIcon as Package, ShoppingCartIcon, BuildingOffice2Icon, ChartBarIcon, TruckIcon, DocumentTextIcon, PlusIcon, XMarkIcon, ShieldCheckIcon, Cog6ToothIcon, BuildingStorefrontIcon, ArrowUpTrayIcon as LogOutIcon } from "@heroicons/react/24/outline"
+import { Squares2X2Icon as LayoutDashboard, CubeIcon as Package, ShoppingCartIcon, BuildingOffice2Icon, ChartBarIcon, TruckIcon, DocumentTextIcon, PlusIcon, XMarkIcon, ShieldCheckIcon, Cog6ToothIcon, BuildingStorefrontIcon, PaperAirplaneIcon as DispatchesIcon } from "@heroicons/react/24/outline"
 import { Logo } from "./logo"
 import { useCurrentUser } from "@/lib/user-context"
 import { cn } from "@/lib/utils"
@@ -14,7 +14,7 @@ const BASE_NAV = [
   { href: "/procurement", label: "Procurement", icon: ShoppingCartIcon },
   { href: "/inbounds", label: "Inbounds", icon: TruckIcon },
   { href: "/suppliers", label: "Suppliers", icon: BuildingOffice2Icon },
-  { href: "/dispatches", label: "Dispatches", icon: LogOutIcon },
+  { href: "/dispatches", label: "Dispatches", icon: DispatchesIcon },
   { href: "/warehouses", label: "Warehouses", icon: BuildingStorefrontIcon },
   { href: "/reports", label: "Reports", icon: ChartBarIcon },
 ]
