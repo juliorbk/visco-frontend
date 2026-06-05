@@ -50,7 +50,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Initial fetch only when we don't have a cached value
   useEffect(() => {
-    if (user === undefined) {
+    if (user === undefined || user === null) {
       refresh()
     }
   }, [user, refresh])

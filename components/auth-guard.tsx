@@ -9,25 +9,25 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, refresh } = useCurrentUser()
   const [checked, setChecked] = useState(false)
+  const [initialRefreshDone, setInitialRefreshDone] = useState(false)
 
   useEffect(() => {
-    console.log("[AuthGuard] running refresh, user currently:", user)
     let cancelled = false
     refresh()
-      .then((u) => {
-        console.log("[AuthGuard] refresh completed, user:", user)
+      .then(() => {
         if (cancelled) return
+        setInitialRefreshDone(true)
       })
       .catch(() => {
-        if (!cancelled) router.replace("/")
+        if (cancelled) return
+        setInitialRefreshDone(true)
       })
     return () => {
       cancelled = true
     }
-  }, [pathname, refresh, router])
+  }, [refresh])
 
   useEffect(() => {
-    console.log("[AuthGuard] user effect triggered, user:", user, "checked:", checked)
     if (user === undefined) return
     if (user === null) {
       router.replace("/")
@@ -36,9 +36,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, router])
 
-  console.log("[AuthGuard] rendering, checked:", checked, "user:", user)
-
-  if (!checked) return <div className="min-h-screen bg-background flex items-center justify-center"><p>Loading...</p></div>
+  if (!checked || !initialRefreshDone) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><p>Loading...</p></div>
+  }
 
   return <>{children}</>
 }
