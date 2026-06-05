@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +27,7 @@ import {
 import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplier, canManageSupplierCategories } from "@/lib/permissions"
+import { useDebounce } from "@/hooks/use-debounce"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -51,22 +52,18 @@ export default function SuppliersPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
   const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 300)
   const [categoryFilter, setCategoryFilter] = useState<string>(ALL_CATEGORIES)
   const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
   const [categoriesManagerOpen, setCategoriesManagerOpen] = useState(false)
-
-  const filtered = useMemo(
-    () => suppliers.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())),
-    [suppliers, search],
-  )
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       const res =
         categoryFilter === ALL_CATEGORIES
-          ? await fetchSuppliers(page, PAGE_SIZE)
-          : await fetchSuppliersByCategory(Number(categoryFilter), page, PAGE_SIZE)
+          ? await fetchSuppliers(page, PAGE_SIZE, debouncedSearch)
+          : await fetchSuppliersByCategory(Number(categoryFilter), page, PAGE_SIZE, debouncedSearch)
       const list = res.content ?? []
       setSuppliers(list)
       setTotalPages(res.page.totalPages)
@@ -81,7 +78,7 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, categoryFilter])
+  }, [page, categoryFilter, debouncedSearch])
 
   const loadCategories = useCallback(async () => {
     try {
@@ -105,6 +102,12 @@ export default function SuppliersPage() {
 
   const handleCategoryFilterChange = (v: string) => {
     setCategoryFilter(v)
+    setPage(0)
+    setSelectedId(null)
+  }
+
+  const handleSearchChange = (v: string) => {
+    setSearch(v)
     setPage(0)
     setSelectedId(null)
   }
@@ -191,7 +194,7 @@ export default function SuppliersPage() {
             placeholder="Search by name…"
             className="pl-9 h-10"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
         <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
@@ -217,16 +220,16 @@ export default function SuppliersPage() {
                 <ArrowPathIcon className="size-5 animate-spin" />
                 Loading suppliers…
               </div>
-            ) : filtered.length === 0 ? (
+            ) : suppliers.length === 0 ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-                {search
+                {debouncedSearch
                   ? "No suppliers match the search."
                   : categoryFilter !== ALL_CATEGORIES
                     ? "No suppliers in this category."
                     : "No suppliers available."}
               </div>
             ) : (
-              filtered.map((s) => (
+              suppliers.map((s) => (
                 <SupplierCard
                   key={s.id}
                   supplier={s}

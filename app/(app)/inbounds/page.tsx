@@ -13,38 +13,51 @@ import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehou
 import { fetchReceipts, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchOrders as fetchPOs } from "@/lib/services/procurement"
 import type { GoodReceiptResponse, PurchaseOrderResponse } from "@/lib/types"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+const PAGE_SIZE = 12
 
 export default function InboundsPage() {
   const [receipts, setReceipts] = useState<GoodReceiptResponse[]>([])
+  const [totalPages, setTotalPages] = useState(1)
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedReceipt, setSelectedReceipt] = useState<GoodReceiptResponse | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [warehouseModalOpen, setWarehouseModalOpen] = useState(false)
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 300)
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       const [recRes, poRes] = await Promise.all([
-        fetchReceipts(0, 50),
+        fetchReceipts(page, PAGE_SIZE, debouncedSearch),
         fetchPOs(0, 200),
       ])
       const sorted = [...(recRes.content ?? [])].sort(
         (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
       )
       setReceipts(sorted)
+      setTotalPages(recRes.page.totalPages)
       setPurchaseOrders(poRes.content ?? [])
+      if (page === 0) setSelectedReceipt(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar datos")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page, debouncedSearch])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    setPage(0)
+  }, [debouncedSearch])
 
   const todayCount = receipts.filter(
     (r) => new Date(r.receivedAt).toDateString() === new Date().toDateString()
@@ -101,6 +114,11 @@ export default function InboundsPage() {
               receipts={receipts}
               onSelectReceipt={setSelectedReceipt}
               selectedReceiptId={selectedReceipt?.id}
+              searchQuery={search}
+              onSearchChange={setSearch}
+              currentPage={page + 1}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p - 1)}
             />
           </div>
           <div className="lg:col-span-1">

@@ -1,8 +1,14 @@
 import { api } from "@/lib/api"
 import type { SupplierDTO, SupplierPerformanceMonthlyDTO, SupplierCategoryDTO, Page } from "@/lib/types"
 
-export async function fetchSuppliers(page = 0, size = 50): Promise<Page<SupplierDTO>> {
-  return api.get<Page<SupplierDTO>>(`/api/suppliers?page=${page}&size=${size}`)
+export async function fetchSuppliers(
+  page = 0,
+  size = 50,
+  search?: string,
+): Promise<Page<SupplierDTO>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (search && search.trim()) params.set("search", search.trim())
+  return api.get<Page<SupplierDTO>>(`/api/suppliers?${params.toString()}`)
 }
 
 export async function fetchSupplier(id: number): Promise<SupplierDTO> {
@@ -13,9 +19,12 @@ export async function fetchSuppliersByCategory(
   categoryId: number,
   page = 0,
   size = 50,
+  search?: string,
 ): Promise<Page<SupplierDTO>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (search && search.trim()) params.set("search", search.trim())
   return api.get<Page<SupplierDTO>>(
-    `/api/suppliers/category/${categoryId}?page=${page}&size=${size}`,
+    `/api/suppliers/category/${categoryId}?${params.toString()}`,
   )
 }
 

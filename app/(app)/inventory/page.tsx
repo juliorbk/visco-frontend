@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,12 +35,15 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function InventoryPage() {
+  const searchParams = useSearchParams()
+  const initialSearch = searchParams.get("search") ?? ""
+
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [loading, setLoading] = useState(true)
 
   // Búsqueda con debounce
-  const [search, setSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [search, setSearch] = useState(initialSearch)
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
 
   // Filtros y ordenamiento
   const [category, setCategory] = useState<string>("all")

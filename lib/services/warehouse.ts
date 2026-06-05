@@ -71,8 +71,10 @@ export async function fetchMovements(
   return api.get<Page<InventoryMovementResponse>>(url)
 }
 
-export async function fetchReceipts(page = 0, size = 20): Promise<Page<GoodReceiptResponse>> {
-  return api.get<Page<GoodReceiptResponse>>(`/api/warehouse/receipts?page=${page}&size=${size}`)
+export async function fetchReceipts(page = 0, size = 20, search?: string): Promise<Page<GoodReceiptResponse>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (search && search.trim()) params.set("search", search.trim())
+  return api.get<Page<GoodReceiptResponse>>(`/api/warehouse/receipts?${params.toString()}`)
 }
 
 export async function fetchReceiptsByOrder(orderId: number): Promise<GoodReceiptResponse[]> {
@@ -138,8 +140,10 @@ export async function createDispatch(data: DispatchRequest): Promise<DispatchRes
   return api.post<DispatchResponse>("/api/warehouse/dispatch", data)
 }
 
-export async function fetchDispatches(page = 0, size = 20): Promise<Page<DispatchResponse>> {
-  return api.get<Page<DispatchResponse>>(`/api/warehouse/dispatches?page=${page}&size=${size}`)
+export async function fetchDispatches(page = 0, size = 20, search?: string): Promise<Page<DispatchResponse>> {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (search && search.trim()) params.set("search", search.trim())
+  return api.get<Page<DispatchResponse>>(`/api/warehouse/dispatches?${params.toString()}`)
 }
 
 export async function fetchDispatchById(id: number): Promise<DispatchResponse> {

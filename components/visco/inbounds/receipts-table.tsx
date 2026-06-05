@@ -9,33 +9,29 @@ interface ReceiptsTableProps {
   receipts: GoodReceiptResponse[]
   onSelectReceipt: (receipt: GoodReceiptResponse) => void
   selectedReceiptId?: number
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
 }
 
-export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: ReceiptsTableProps) {
-  const [searchQuery, setSearchQuery] = useState("")
+export function ReceiptsTable({
+  receipts,
+  onSelectReceipt,
+  selectedReceiptId,
+  searchQuery,
+  onSearchChange,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: ReceiptsTableProps) {
   const [statusFilter, setStatusFilter] = useState("all")
-  const [currentPage, setCurrentPage] = useState(1)
 
-  const itemsPerPage = 6
-  const filteredReceipts = receipts.filter((receipt) => {
-    const matchesSearch =
-      receipt.receiptNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      receipt.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())
-
-    const matchesStatus = statusFilter === "all" || receipt.updatedStatus === statusFilter
-
-    return matchesSearch && matchesStatus
-  })
-
-  const totalPages = Math.ceil(filteredReceipts.length / itemsPerPage)
-  const startIdx = (currentPage - 1) * itemsPerPage
-  const displayedReceipts = filteredReceipts.slice(startIdx, startIdx + itemsPerPage)
-
-  const handleClearFilters = () => {
-    setSearchQuery("")
-    setStatusFilter("all")
-    setCurrentPage(1)
-  }
+  const filteredReceipts =
+    statusFilter === "all"
+      ? receipts
+      : receipts.filter((r) => r.updatedStatus === statusFilter)
 
   return (
     <div className="flex-1">
@@ -47,10 +43,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
               type="text"
               placeholder="Buscar por # recepción, orden..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
             />
           </div>
@@ -59,7 +52,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value)
-              setCurrentPage(1)
+              onPageChange(1)
             }}
             className="px-3 md:px-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 bg-white"
           >
@@ -71,7 +64,11 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
 
         {(searchQuery || statusFilter !== "all") && (
           <button
-            onClick={handleClearFilters}
+            onClick={() => {
+              onSearchChange("")
+              setStatusFilter("all")
+              onPageChange(1)
+            }}
             className="text-sm text-[#7b1a1a] hover:text-[#5c1212] font-medium flex items-center gap-1"
           >
             <XMarkIcon className="w-4 h-4" />
@@ -80,7 +77,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
         )}
       </div>
 
-      {displayedReceipts.length > 0 ? (
+      {filteredReceipts.length > 0 ? (
         <div className="bg-white rounded-lg border border-[#f3f4f6] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -94,7 +91,7 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
                 </tr>
               </thead>
               <tbody>
-                {displayedReceipts.map((receipt) => {
+                {filteredReceipts.map((receipt) => {
                   const isSelected = selectedReceiptId === receipt.id
                   return (
                     <tr
@@ -142,27 +139,29 @@ export function ReceiptsTable({ receipts, onSelectReceipt, selectedReceiptId }: 
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#f3f4f6] bg-[#f5f5f7]">
-            <span className="text-sm text-[#6b7280]">
-              Página {currentPage} de {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeftIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[#f3f4f6] bg-[#f5f5f7]">
+              <span className="text-sm text-[#6b7280]">
+                Página {currentPage} de {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-[#f3f4f6] p-12 text-center">
