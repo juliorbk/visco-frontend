@@ -89,7 +89,7 @@ function addTable(
   return cy
 }
 
-export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): jsPDF {
+export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -112,7 +112,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   const supplierAddress = supplier?.address ?? "—"
 
   // ── Header ──
-  addLogoPlaceholder(doc, x0, y, 40, 22)
+  await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")

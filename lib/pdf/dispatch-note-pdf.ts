@@ -89,7 +89,7 @@ function addTable(
   return cy
 }
 
-export function generateDispatchNotePDF(dispatch: DispatchResponse): jsPDF {
+export async function generateDispatchNotePDF(dispatch: DispatchResponse): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -104,7 +104,7 @@ export function generateDispatchNotePDF(dispatch: DispatchResponse): jsPDF {
   let y = margin
 
   // ── Header ──
-  addLogoPlaceholder(doc, x0, y, 40, 22)
+  await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")

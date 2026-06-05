@@ -216,7 +216,7 @@ export function ReceiptDetailPanel({
         <ExportPDFButton
           onExport={async () => {
             const { generateReceiptPDF } = await import("@/lib/pdf/receipt-pdf")
-            const doc = generateReceiptPDF(receipt, summary)
+            const doc = await generateReceiptPDF(receipt, summary)
             downloadPDF(doc, `DELIVERY_NOTE_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
         />

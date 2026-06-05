@@ -94,7 +94,7 @@ function addTable(
   return cy
 }
 
-export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
+export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -114,7 +114,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
 
   // ── Logo + Title + Info ──
-  addLogoPlaceholder(doc, x0, y, 40, 20)
+  await addLogoPlaceholder(doc, x0, y, 40, 20)
 
   doc.setFontSize(20)
   doc.setFont("helvetica", "bold")

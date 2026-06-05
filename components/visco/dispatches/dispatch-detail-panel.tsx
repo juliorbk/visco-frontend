@@ -37,7 +37,7 @@ export function DispatchDetailPanel({
             variant="icon"
             onExport={async () => {
               const { generateDispatchNotePDF } = await import("@/lib/pdf/dispatch-note-pdf")
-              const doc = generateDispatchNotePDF(dispatch)
+              const doc = await generateDispatchNotePDF(dispatch)
               downloadPDF(doc, `despacho-${dispatch.dispatchNumber}.pdf`)
             }}
           />

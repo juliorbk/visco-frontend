@@ -104,7 +104,7 @@ export function OrderDetail({
           label="Export PDF"
           onExport={async () => {
             const { generatePurchaseOrderPDF } = await import("@/lib/pdf/purchase-order-pdf")
-            const doc = generatePurchaseOrderPDF(order)
+            const doc = await generatePurchaseOrderPDF(order)
             downloadPDF(doc, `PURCHASE_ORDER_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
         />

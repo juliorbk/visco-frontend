@@ -91,22 +91,56 @@ export function statusColor(status: string): [number, number, number] {
   return map[status] ?? COLORS.textLight
 }
 
-export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, h: number) {
+let cachedLogoDataUrl: string | null = null
+
+async function loadLogoDataUrl(): Promise<string | null> {
+  if (cachedLogoDataUrl) return cachedLogoDataUrl
   try {
-    doc.addImage("/visco-logo.png", "PNG", x, y, w, h)
+    const res = await fetch("/visco-logo.png")
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        cachedLogoDataUrl = (reader.result as string) ?? null
+        resolve(cachedLogoDataUrl)
+      }
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
   } catch {
-    doc.setDrawColor(...COLORS.border)
-    doc.setFillColor(...COLORS.bgLight)
-    doc.roundedRect(x, y, w, h, 3, 3, "FD")
-    doc.setFont("helvetica", "bold")
-    doc.setFontSize(14)
-    doc.setTextColor(...COLORS.primary)
-    doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(7)
-    doc.setTextColor(...COLORS.textMuted)
-    doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
+    return null
   }
+}
+
+export async function addLogoPlaceholder(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const dataUrl = await loadLogoDataUrl()
+  if (dataUrl) {
+    try {
+      const format = dataUrl.includes("data:image/jpeg") ? "JPEG" : "PNG"
+      doc.addImage(dataUrl, format, x, y, w, h)
+      return
+    } catch {
+      // fall through to text placeholder
+    }
+  }
+  doc.setDrawColor(...COLORS.border)
+  doc.setFillColor(...COLORS.bgLight)
+  doc.roundedRect(x, y, w, h, 3, 3, "FD")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(14)
+  doc.setTextColor(...COLORS.primary)
+  doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7)
+  doc.setTextColor(...COLORS.textMuted)
+  doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
 }
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {
