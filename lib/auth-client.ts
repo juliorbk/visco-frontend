@@ -9,7 +9,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 export async function fetchUser(): Promise<UserDTO | null> {
   if (!BASE_URL) return null
   try {
-    const res = await fetch(`${BASE_URL}/api/auth/me`, { credentials: "include" })
+    const res = await fetch(`${BASE_URL}/api/auth/me`, {
+      credentials: "include",
+    })
+    if (res.status === 401 || res.status === 403) return null
     if (!res.ok) return null
     return (await res.json()) as UserDTO
   } catch {

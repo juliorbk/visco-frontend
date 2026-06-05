@@ -4,30 +4,36 @@ if (!BASE_URL) {
   console.error("[API] NEXT_PUBLIC_API_URL no está definida. Las llamadas fallarán.")
 }
 
+export interface RequestOptions extends RequestInit {
+  /** When true, do not perform the implicit logout/redirect on 401/403.
+   *  Useful for probes like /api/auth/me that expect to return null. */
+  skipAuthRedirect?: boolean
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<T> {
+  const { skipAuthRedirect, ...init } = options
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   }
-  if (options.headers) {
-    Object.assign(headers, options.headers)
+  if (init.headers) {
+    Object.assign(headers, init.headers)
   }
 
   const url = `${BASE_URL}${endpoint}`
   if (process.env.NODE_ENV === "development")
-    console.log(`[API] ${options.method || "GET"} ${url}`)
+    console.log(`[API] ${init.method || "GET"} ${url}`)
 
   const res = await fetch(url, {
-    ...options,
+    ...init,
     headers,
     credentials: "include",
-    // signal ya viene dentro de options si se pasó
   })
 
   if (res.status === 401 || res.status === 403) {
-    if (typeof window !== "undefined") {
+    if (!skipAuthRedirect && typeof window !== "undefined") {
       window.location.href = "/"
     }
     throw new Error("Sesión expirada")
@@ -40,13 +46,15 @@ async function request<T>(
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: `Error ${res.status}` }))
     const messages: string[] = []
-    if (err.errors?.length) {
+    if (Array.isArray(err.errors) && err.errors.length) {
       for (const e of err.errors) {
-        messages.push(e.defaultMessage ?? e.message ?? e.field)
+        if (!e) continue
+        const m = e.defaultMessage ?? e.message ?? e.field
+        if (m) messages.push(String(m))
       }
     }
-    if (err.detail) messages.push(err.detail)
-    if (err.error) messages.push(err.error)
+    if (err.detail) messages.push(String(err.detail))
+    if (err.error) messages.push(String(err.error))
     throw new Error(messages.join("; ") || `Error ${res.status}`)
   }
 
@@ -54,26 +62,29 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(endpoint: string, signal?: AbortSignal) =>
-    request<T>(endpoint, { signal }),
-  post: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+  get: <T>(endpoint: string, signal?: AbortSignal, skipAuthRedirect?: boolean) =>
+    request<T>(endpoint, { signal, skipAuthRedirect }),
+  post: <T>(endpoint: string, body?: unknown, signal?: AbortSignal, skipAuthRedirect?: boolean) =>
     request<T>(endpoint, {
       method: "POST",
       body: body ? JSON.stringify(body) : undefined,
       signal,
+      skipAuthRedirect,
     }),
-  put: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+  put: <T>(endpoint: string, body?: unknown, signal?: AbortSignal, skipAuthRedirect?: boolean) =>
     request<T>(endpoint, {
       method: "PUT",
       body: body ? JSON.stringify(body) : undefined,
       signal,
+      skipAuthRedirect,
     }),
-  patch: <T>(endpoint: string, body?: unknown, signal?: AbortSignal) =>
+  patch: <T>(endpoint: string, body?: unknown, signal?: AbortSignal, skipAuthRedirect?: boolean) =>
     request<T>(endpoint, {
       method: "PATCH",
       body: body ? JSON.stringify(body) : undefined,
       signal,
+      skipAuthRedirect,
     }),
-  delete: <T>(endpoint: string, signal?: AbortSignal) =>
-    request<T>(endpoint, { method: "DELETE", signal }),
+  delete: <T>(endpoint: string, signal?: AbortSignal, skipAuthRedirect?: boolean) =>
+    request<T>(endpoint, { method: "DELETE", signal, skipAuthRedirect }),
 }
