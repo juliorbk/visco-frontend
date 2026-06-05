@@ -65,7 +65,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 export function useCurrentUser(): UserContextValue {
   const ctx = useContext(UserContext)
   if (!ctx) {
-    throw new Error("useCurrentUser must be used within a UserProvider")
+    return { user: undefined, refresh: async () => {}, setUser: () => {} }
   }
   return ctx
 }

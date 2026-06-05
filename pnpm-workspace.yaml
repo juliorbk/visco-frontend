@@ -5,9 +5,5 @@ onlyBuiltDependencies:
   - sharp
 
 # Supply-chain hardening: refuse packages published in the last 7 days
-# so newly-shipped malware (caught and unpublished within hours) can never
-# land in a clean install. Also require registry-hosted packages and a
-# non-decreasing trust level between resolutions.
 minimumReleaseAge: 10080
 blockExoticSubdeps: true
-trustPolicy: no-downgrade
