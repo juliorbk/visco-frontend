@@ -93,39 +93,57 @@ export function CreatePOModal({
   const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
+  const prefillIdRef = useRef<number | null>(null)
+  const lastOpenedRef = useRef(false)
+
   useEffect(() => {
-    if (open) {
+    if (!open) {
+      lastOpenedRef.current = false
+      prefillIdRef.current = null
+      return
+    }
+    // Skip the data-loading branch when the modal is just re-rendering
+    // with the same prefill. The parent re-creates the prefill object on
+    // every render, so depending on its identity would re-fetch 4 APIs
+    // and re-seed the lines on every parent update.
+    if (lastOpenedRef.current) return
+    lastOpenedRef.current = true
+
+    Promise.all([
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
-      }).catch(() => {})
+      }),
       fetchProducts(0, 50, "", undefined, undefined, undefined, undefined).then((prodRes) => {
         setProducts(prodRes.content ?? [])
-      }).catch(() => {})
+      }),
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
-        if (wh.length > 0 && !destinationWarehouseId) setDestinationWarehouseId(wh[0].id)
-      }).catch(() => {})
+        setDestinationWarehouseId((prev) => prev ?? wh[0]?.id ?? null)
+      }),
       fetchRequisitions(0, 200, "APPROVED").then((reqRes) => {
         setRequisitions(reqRes.content ?? [])
-      }).catch(() => {})
+      }),
+    ]).catch(() => {
+      // Errors are non-fatal; individual fetches already swallow them.
+    })
 
-      if (prefillFromRequisition) {
-        setSelectedRequisitionId(prefillFromRequisition.id)
-        setDescription(prefillFromRequisition.description)
-        setLines(
-          prefillFromRequisition.items.map((item) => {
-            const id = nextLineIdRef.current++
-            return {
-              id,
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: 0,
-              sku: item.productSku,
-            }
-          }),
-        )
-      }
+    if (prefillFromRequisition) {
+      prefillIdRef.current = prefillFromRequisition.id
+      setSelectedRequisitionId(prefillFromRequisition.id)
+      setDescription(prefillFromRequisition.description)
+      setLines(
+        prefillFromRequisition.items.map((item) => {
+          const id = nextLineIdRef.current++
+          return {
+            id,
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: 0,
+            sku: item.productSku,
+          }
+        }),
+      )
     }
   }, [open, prefillFromRequisition])
 
