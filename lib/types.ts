@@ -58,6 +58,15 @@ export interface UserDTO {
 
 // ── Supplier ──
 
+export interface SupplierCategoryDTO {
+  id: number
+  name: string
+  description: string
+  active: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface SupplierDTO {
   id: number
   name: string
@@ -70,6 +79,8 @@ export interface SupplierDTO {
   representatives: RepresentativeInfo[]
   rating?: number
   totalOrders?: number
+  categoryId?: number | null
+  categoryName?: string | null
 }
 
 export interface RepresentativeInfo {

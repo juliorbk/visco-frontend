@@ -20,10 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { SupplierDTO } from "@/lib/types"
+import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
+import { fetchActiveSupplierCategories } from "@/lib/services/suppliers"
 import { ArrowPathIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline"
 
 const CURRENCIES = ["USD", "EUR", "VES", "COP", "BRL"]
+
+const NO_CATEGORY = "__none__"
 
 export function SupplierModal({
   open,
@@ -47,8 +50,11 @@ export function SupplierModal({
   const [phoneInput, setPhoneInput] = useState("")
   const [reps, setReps] = useState<string[]>([])
   const [repInput, setRepInput] = useState("")
+  const [categoryId, setCategoryId] = useState<string>(NO_CATEGORY)
+  const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
 
   useEffect(() => {
+    if (!open) return
     if (editing) {
       setName(editing.name)
       setContactEmail(editing.contactEmail)
@@ -57,6 +63,9 @@ export function SupplierModal({
       setCurrency(editing.currency)
       setPhones(editing.phoneNumbers)
       setReps(editing.representatives.map((r) => r.fullName))
+      setCategoryId(
+        editing.categoryId != null ? String(editing.categoryId) : NO_CATEGORY,
+      )
     } else {
       setName("")
       setContactEmail("")
@@ -65,10 +74,18 @@ export function SupplierModal({
       setCurrency("USD")
       setPhones([])
       setReps([])
+      setCategoryId(NO_CATEGORY)
     }
     setPhoneInput("")
     setRepInput("")
   }, [editing, open])
+
+  useEffect(() => {
+    if (!open) return
+    fetchActiveSupplierCategories(0, 200)
+      .then((res) => setCategories(res.content ?? []))
+      .catch(() => setCategories([]))
+  }, [open])
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,6 +100,7 @@ export function SupplierModal({
         phoneNumbers: phones,
         representatives: reps.map((fullName) => ({ id: 0, fullName })),
         active: true,
+        categoryId: categoryId === NO_CATEGORY ? null : Number(categoryId),
       },
       editing?.id,
     )
@@ -93,18 +111,18 @@ export function SupplierModal({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {editing ? "Editar Proveedor" : "Nuevo Proveedor"}
+            {editing ? "Edit supplier" : "New supplier"}
           </DialogTitle>
           <DialogDescription>
             {editing
-              ? "Actualiza la información comercial y legal del proveedor."
-              : "Registra un nuevo proveedor en tu catálogo."}
+              ? "Update the supplier's commercial and legal information."
+              : "Register a new supplier in your catalog."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="sname">Nombre comercial</Label>
+            <Label htmlFor="sname">Business name</Label>
             <Input id="sname" required value={name} onChange={(e) => setName(e.target.value)} disabled={saving} />
           </div>
 
@@ -122,12 +140,12 @@ export function SupplierModal({
 
 
           <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="saddr">Dirección</Label>
+            <Label htmlFor="saddr">Address</Label>
             <Input id="saddr" value={address} onChange={(e) => setAddress(e.target.value)} disabled={saving} />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Moneda</Label>
+            <Label>Currency</Label>
             <Select value={currency} onValueChange={setCurrency} disabled={saving}>
               <SelectTrigger>
                 <SelectValue />
@@ -142,8 +160,29 @@ export function SupplierModal({
             </Select>
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Category</Label>
+            <Select
+              value={categoryId}
+              onValueChange={setCategoryId}
+              disabled={saving}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Uncategorized" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_CATEGORY}>Uncategorized</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="sdesc">Descripción</Label>
+            <Label htmlFor="sdesc">Description</Label>
             <Textarea
               id="sdesc"
               rows={2}
@@ -154,7 +193,7 @@ export function SupplierModal({
           </div>
 
           <TagList
-            label="Teléfonos"
+            label="Phone numbers"
             value={phones}
             setValue={setPhones}
             input={phoneInput}
@@ -164,28 +203,28 @@ export function SupplierModal({
           />
 
           <TagList
-            label="Representantes legales"
+            label="Legal representatives"
             value={reps}
             setValue={setReps}
             input={repInput}
             setInput={setRepInput}
-            placeholder="Nombre completo"
+            placeholder="Full name"
             disabled={saving}
           />
 
           <DialogFooter className="sm:col-span-2 mt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancelar
+              Cancel
             </Button>
             <Button type="submit" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" disabled={saving}>
               {saving ? (
                 <>
-                  <ArrowPathIcon className="size-4 animate-spin" /> Guardando…
+                  <ArrowPathIcon className="size-4 animate-spin" /> Saving…
                 </>
               ) : editing ? (
-                "Guardar cambios"
+                "Save changes"
               ) : (
-                "Crear proveedor"
+                "Create supplier"
               )}
             </Button>
           </DialogFooter>
