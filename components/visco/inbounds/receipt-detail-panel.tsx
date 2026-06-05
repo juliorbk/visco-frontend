@@ -1,6 +1,7 @@
 "use client"
 
-import { DocumentDuplicateIcon, ArrowTopRightOnSquareIcon, ArrowDownTrayIcon, XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
+import { DocumentDuplicateIcon, ArrowTopRightOnSquareIcon, XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
+import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -212,17 +213,13 @@ export function ReceiptDetailPanel({
           <ArrowTopRightOnSquareIcon className="w-4 h-4" />
           View Purchase Order
         </button>
-        <button
-          className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2"
-          onClick={async () => {
+        <ExportPDFButton
+          onExport={async () => {
             const { generateReceiptPDF } = await import("@/lib/pdf/receipt-pdf")
             const doc = generateReceiptPDF(receipt, summary)
             downloadPDF(doc, `DELIVERY_NOTE_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
-        >
-          <ArrowDownTrayIcon className="w-4 h-4" />
-          Export PDF
-        </button>
+        />
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { DocumentDuplicateIcon, XMarkIcon } from "@heroicons/react/24/outline"
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
+import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { useEffect, useState } from "react"
 import type { DispatchResponse } from "@/lib/types"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
@@ -33,17 +33,14 @@ export function DispatchDetailPanel({
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-[#111827]">Detalle de Despacho</h3>
         <div className="flex items-center gap-2">
-          <button
-            onClick={async () => {
+          <ExportPDFButton
+            variant="icon"
+            onExport={async () => {
               const { generateDispatchNotePDF } = await import("@/lib/pdf/dispatch-note-pdf")
               const doc = generateDispatchNotePDF(dispatch)
               downloadPDF(doc, `despacho-${dispatch.dispatchNumber}.pdf`)
             }}
-            className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors"
-            title="Descargar PDF"
-          >
-            <ArrowDownTrayIcon className="w-4 h-4 text-[#6b7280]" />
-          </button>
+          />
           <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors">
             <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
           </button>

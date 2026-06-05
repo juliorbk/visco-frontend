@@ -2,7 +2,7 @@
 
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline"
+import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -100,18 +100,14 @@ export function OrderDetail({
 
       {/* ── Export PDF ── */}
       <div className="px-5 py-3 border-t border-border">
-        <Button
-          variant="outline"
-          className="w-full bg-card text-xs"
-          onClick={async () => {
+        <ExportPDFButton
+          label="Export PDF"
+          onExport={async () => {
             const { generatePurchaseOrderPDF } = await import("@/lib/pdf/purchase-order-pdf")
             const doc = generatePurchaseOrderPDF(order)
             downloadPDF(doc, `PURCHASE_ORDER_${order.orderNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}
-        >
-          <ArrowDownTrayIcon className="size-4 mr-2" />
-          Export PDF
-        </Button>
+        />
       </div>
 
       {/* ── Actions ── */}
