@@ -8,10 +8,8 @@ interface LogoProps {
   // o pasar un prop de imagen diferente (ej. srcWhite / srcBrand).
 }
 
-/**
- * "VISCO ORINOCO" logo.
- * Utiliza el archivo visco-logo.png en lugar de texto.
- */
+
+
 export function Logo({ className, showSubtitle = true, size = "md" }: LogoProps) {
   // Ajustamos el tamaño basándonos en el ancho (w) en lugar del tamaño de fuente
   const sizeClass =
