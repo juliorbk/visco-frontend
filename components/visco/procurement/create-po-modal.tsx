@@ -43,8 +43,6 @@ interface LineItem {
   sku: string
 }
 
-let nextLineId = 1
-
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
 export function CreatePOModal({
@@ -59,6 +57,7 @@ export function CreatePOModal({
   prefillFromRequisition?: RequisitionResponse | null
 }) {
   const [step, setStep] = useState(0)
+  const nextLineIdRef = useRef(1)
   const [orderNumber, setOrderNumber] = useState(`PO-${Date.now().toString().slice(-4)}`)
   const [description, setDescription] = useState("")
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
@@ -115,7 +114,7 @@ export function CreatePOModal({
         setDescription(prefillFromRequisition.description)
         setLines(
           prefillFromRequisition.items.map((item) => {
-            const id = nextLineId++
+            const id = nextLineIdRef.current++
             return {
               id,
               productId: item.productId,
@@ -186,6 +185,7 @@ export function CreatePOModal({
     setFinderQuery("")
     setFinderOpen(false)
     setSelectedRequisitionId(null)
+    nextLineIdRef.current = 1
   }
 
   const close = () => {
@@ -203,7 +203,7 @@ export function CreatePOModal({
         setDescription(req.description)
         setLines(
           req.items.map((item) => {
-            const id = nextLineId++
+            const id = nextLineIdRef.current++
             return {
               id,
               productId: item.productId,
@@ -250,7 +250,7 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { id: nextLineId++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
+      { id: nextLineIdRef.current++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
     ])
     setPickProduct(null)
     setPickQty("1")
