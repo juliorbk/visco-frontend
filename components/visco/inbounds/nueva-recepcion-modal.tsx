@@ -69,8 +69,28 @@ export function NuevaRecepcionModal({
   }
 
   const handleNext = () => {
-    if (step === 1 && selectedPO) setStep(2)
-    else if (step === 2) setStep(3)
+    if (step === 1) {
+      if (!selectedPO) {
+        toast.error("Selecciona una orden de compra")
+        return
+      }
+      setStep(2)
+    } else if (step === 2) {
+      if (!destinationWarehouseId) {
+        toast.error("Selecciona un almacén destino")
+        return
+      }
+      if (!locationId) {
+        toast.error("Selecciona una ubicación destino")
+        return
+      }
+      const hasAny = selectedPO.items.some((it) => (receivedQuantities[it.productId] ?? 0) > 0)
+      if (!hasAny) {
+        toast.error("Ingresa al menos una cantidad recibida")
+        return
+      }
+      setStep(3)
+    }
   }
 
   const handleBack = () => {
