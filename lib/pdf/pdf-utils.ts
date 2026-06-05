@@ -92,17 +92,21 @@ export function statusColor(status: string): [number, number, number] {
 }
 
 export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, h: number) {
-  doc.setDrawColor(...COLORS.border)
-  doc.setFillColor(...COLORS.bgLight)
-  doc.roundedRect(x, y, w, h, 3, 3, "FD")
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(14)
-  doc.setTextColor(...COLORS.primary)
-  doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(7)
-  doc.setTextColor(...COLORS.textMuted)
-  doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
+  try {
+    doc.addImage("/visco-logo.png", "PNG", x, y, w, h)
+  } catch {
+    doc.setDrawColor(...COLORS.border)
+    doc.setFillColor(...COLORS.bgLight)
+    doc.roundedRect(x, y, w, h, 3, 3, "FD")
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(14)
+    doc.setTextColor(...COLORS.primary)
+    doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(7)
+    doc.setTextColor(...COLORS.textMuted)
+    doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
+  }
 }
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {
@@ -118,4 +122,21 @@ export function addSeparator(doc: jsPDF, x: number, y: number, w: number, color?
   doc.setDrawColor(...(color ?? COLORS.primary))
   doc.setLineWidth(0.8)
   doc.line(x, y, x + w, y)
+}
+
+export function addWrappedText(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number = 5,
+  maxLines?: number,
+): number {
+  const lines = doc.splitTextToSize(text, maxWidth)
+  const finalLines = maxLines ? lines.slice(0, maxLines) : lines
+  finalLines.forEach((line: string, i: number) => {
+    doc.text(line, x, y + i * lineHeight)
+  })
+  return finalLines.length * lineHeight
 }
