@@ -33,7 +33,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, router])
 
-  if (!checked) return null
+  if (!checked) return <div className="min-h-screen bg-background" />
 
   return <>{children}</>
 }
