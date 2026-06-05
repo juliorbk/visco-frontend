@@ -5,7 +5,6 @@ import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/typ
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
-import { generateReceiptPDF } from "@/lib/pdf/receipt-pdf"
 import { fetchReceiptSummary } from "@/lib/services/warehouse"
 
 export function ReceiptDetailPanel({
@@ -217,7 +216,8 @@ export function ReceiptDetailPanel({
         </button>
         <button
           className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2"
-          onClick={() => {
+          onClick={async () => {
+            const { generateReceiptPDF } = await import("@/lib/pdf/receipt-pdf")
             const doc = generateReceiptPDF(receipt, summary)
             downloadPDF(doc, `NOTA_ENTREGA_${receipt.receiptNumber}_${new Date().toISOString().split("T")[0]}.pdf`)
           }}

@@ -43,8 +43,6 @@ interface LineItem {
   sku: string
 }
 
-let nextLineId = 1
-
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
 export function CreatePOModal({
@@ -59,6 +57,7 @@ export function CreatePOModal({
   prefillFromRequisition?: RequisitionResponse | null
 }) {
   const [step, setStep] = useState(0)
+  const nextLineIdRef = useRef(1)
   const [orderNumber, setOrderNumber] = useState(`PO-${Date.now().toString().slice(-4)}`)
   const [description, setDescription] = useState("")
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
@@ -94,39 +93,57 @@ export function CreatePOModal({
   const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
+  const prefillIdRef = useRef<number | null>(null)
+  const lastOpenedRef = useRef(false)
+
   useEffect(() => {
-    if (open) {
+    if (!open) {
+      lastOpenedRef.current = false
+      prefillIdRef.current = null
+      return
+    }
+    // Skip the data-loading branch when the modal is just re-rendering
+    // with the same prefill. The parent re-creates the prefill object on
+    // every render, so depending on its identity would re-fetch 4 APIs
+    // and re-seed the lines on every parent update.
+    if (lastOpenedRef.current) return
+    lastOpenedRef.current = true
+
+    Promise.all([
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
-      }).catch(() => {})
+      }),
       fetchProducts(0, 50, "", undefined, undefined, undefined, undefined).then((prodRes) => {
         setProducts(prodRes.content ?? [])
-      }).catch(() => {})
+      }),
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
-        if (wh.length > 0 && !destinationWarehouseId) setDestinationWarehouseId(wh[0].id)
-      }).catch(() => {})
+        setDestinationWarehouseId((prev) => prev ?? wh[0]?.id ?? null)
+      }),
       fetchRequisitions(0, 200, "APPROVED").then((reqRes) => {
         setRequisitions(reqRes.content ?? [])
-      }).catch(() => {})
+      }),
+    ]).catch(() => {
+      // Errors are non-fatal; individual fetches already swallow them.
+    })
 
-      if (prefillFromRequisition) {
-        setSelectedRequisitionId(prefillFromRequisition.id)
-        setDescription(prefillFromRequisition.description)
-        setLines(
-          prefillFromRequisition.items.map((item) => {
-            const id = nextLineId++
-            return {
-              id,
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: 0,
-              sku: item.productSku,
-            }
-          }),
-        )
-      }
+    if (prefillFromRequisition) {
+      prefillIdRef.current = prefillFromRequisition.id
+      setSelectedRequisitionId(prefillFromRequisition.id)
+      setDescription(prefillFromRequisition.description)
+      setLines(
+        prefillFromRequisition.items.map((item) => {
+          const id = nextLineIdRef.current++
+          return {
+            id,
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: 0,
+            sku: item.productSku,
+          }
+        }),
+      )
     }
   }, [open, prefillFromRequisition])
 
@@ -186,6 +203,7 @@ export function CreatePOModal({
     setFinderQuery("")
     setFinderOpen(false)
     setSelectedRequisitionId(null)
+    nextLineIdRef.current = 1
   }
 
   const close = () => {
@@ -203,7 +221,7 @@ export function CreatePOModal({
         setDescription(req.description)
         setLines(
           req.items.map((item) => {
-            const id = nextLineId++
+            const id = nextLineIdRef.current++
             return {
               id,
               productId: item.productId,
@@ -250,7 +268,7 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { id: nextLineId++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
+      { id: nextLineIdRef.current++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
     ])
     setPickProduct(null)
     setPickQty("1")

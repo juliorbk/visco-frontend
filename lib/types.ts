@@ -153,11 +153,12 @@ export interface PurchaseOrderResponse {
   destinationWarehouseId: number | null
   destinationWarehouseName: string | null
   leadTime: number | null
-  paymentTerms: string | null
-  specialConditions: string | null
-  taxAmount: number | null
-  shippingCost: number | null
-  otherCost: number | null
+  subtotal?: number | null
+  paymentTerms?: string | null
+  specialConditions?: string | null
+  taxAmount?: number | null
+  shippingCost?: number | null
+  otherCost?: number | null
   supplier?: {
     name: string
     address: string
@@ -203,9 +204,11 @@ export interface GoodReceiptResponse {
   receiptNumber: string
   purchaseOrderId: number
   orderNumber: string
+  warehousePhysicalAddress: string | null
   updatedStatus: PurchaseOrderStatus
   receivedAt: string
   notes: string
+  receivedBy: string | null
   items: GoodReceiptItemResponse[]
   purchaseOrder?: {
     supplier: {
@@ -486,6 +489,13 @@ export interface DispatchResponse {
   createdByName: string
   notes: string
   items: DispatchItemResponse[]
+  warehouse?: {
+    name: string
+    physicalAddress: string
+    description?: string
+    sapCenterCode?: string
+    responsibleUserName?: string
+  } | null
 }
 
 // ── Inventory Movements ──

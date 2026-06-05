@@ -40,7 +40,10 @@ export default function ProcurementPage() {
     try {
       setLoading(true)
       const res = await fetchOrders(page, 50)
-      res.content.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      // Don't mutate res.content in place; copy and sort the copy.
+      res.content = [...res.content].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
       setPageData(res)
       setSelectedId((prev) =>
         prev && res.content.find((o) => o.id === prev) ? prev : res.content[0]?.id ?? null

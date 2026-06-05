@@ -1,10 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import dynamic from "next/dynamic"
 import { fetchSupplierPerformance } from "@/lib/services/suppliers"
 import type { SupplierPerformanceMonthlyDTO } from "@/lib/types"
 import { ArrowPathIcon } from "@heroicons/react/24/outline"
+
+const Chart = dynamic(
+  () => import("./performance-chart-inner").then((m) => m.PerformanceChartInner),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+)
 
 export function SupplierPerformanceChart() {
   const [data, setData] = useState<SupplierPerformanceMonthlyDTO[]>([])
@@ -37,44 +42,23 @@ export function SupplierPerformanceChart() {
       </div>
       <div className="h-[220px]">
         {loading ? (
-          <div className="h-full grid place-items-center text-muted-foreground">
-            <ArrowPathIcon className="size-5 animate-spin" />
-          </div>
+          <ChartSkeleton />
         ) : data.length === 0 ? (
           <div className="h-full grid place-items-center text-xs text-muted-foreground">
             No hay datos de desempeño disponibles
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 12, fill: "#6b7280" }}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tick={{ fontSize: 12, fill: "#6b7280" }}
-                domain={[0, 100]}
-              />
-              <Tooltip
-                cursor={{ fill: "rgba(123,26,26,0.05)" }}
-                contentStyle={{
-                  borderRadius: 8,
-                  border: "1px solid #f3f4f6",
-                  fontSize: 12,
-                  padding: "8px 10px",
-                }}
-              />
-              <Bar dataKey="a" name="Tier 1" fill="#7b1a1a" radius={[4, 4, 0, 0]} maxBarSize={24} />
-              <Bar dataKey="b" name="Tier 2-3" fill="#f4c0c0" radius={[4, 4, 0, 0]} maxBarSize={24} />
-            </BarChart>
-          </ResponsiveContainer>
+          <Chart data={data} />
         )}
       </div>
+    </div>
+  )
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="h-full grid place-items-center text-muted-foreground">
+      <ArrowPathIcon className="size-5 animate-spin" />
     </div>
   )
 }

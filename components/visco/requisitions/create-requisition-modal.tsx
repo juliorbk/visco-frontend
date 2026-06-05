@@ -38,8 +38,6 @@ interface LineItem {
   notes: string
 }
 
-let nextLineId = 1
-
 const STEPS = ["Información", "Productos", "Revisión"] as const
 
 export function CreateRequisitionModal({
@@ -52,6 +50,7 @@ export function CreateRequisitionModal({
   onCreated: () => void
 }) {
   const [step, setStep] = useState(0)
+  const nextLineIdRef = useRef(1)
   const [reqNumber, setReqNumber] = useState(`REQ-${Date.now().toString().slice(-4)}`)
   const [description, setDescription] = useState("")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
@@ -132,6 +131,7 @@ export function CreateRequisitionModal({
     setFinderQuery("")
     setFinderOpen(false)
     setPickNotes("")
+    nextLineIdRef.current = 1
   }
 
   const close = () => {
@@ -156,7 +156,7 @@ export function CreateRequisitionModal({
     }
     setLines((prev) => [
       ...prev,
-      { id: nextLineId++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, sku: pickProduct.sku, notes: pickNotes },
+      { id: nextLineIdRef.current++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, sku: pickProduct.sku, notes: pickNotes },
     ])
     setPickProduct(null)
     setPickQty("1")

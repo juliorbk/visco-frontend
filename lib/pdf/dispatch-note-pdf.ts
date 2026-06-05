@@ -73,7 +73,13 @@ function addTable(
 }
 
 export function generateDispatchNotePDF(dispatch: DispatchResponse): jsPDF {
-  const doc = new jsPDF("p", "mm", "a4")
+  const doc = new jsPDF({
+    orientation: "p",
+    unit: "mm",
+    format: "a4",
+    compress: true,
+    putOnlyUsedFonts: true,
+  })
   const pageW = 210
   const margin = 20
   const contentW = pageW - 2 * margin
@@ -113,6 +119,31 @@ export function generateDispatchNotePDF(dispatch: DispatchResponse): jsPDF {
   doc.text(dispatch.employeeName || "—", x0 + 120, y + 5)
 
   y += 14
+
+  // Warehouse extra info (address / SAP / responsible) when backend provides it
+  const wh = dispatch.warehouse
+  if (wh && (wh.physicalAddress || wh.sapCenterCode || wh.responsibleUserName)) {
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(7)
+    doc.setTextColor(...COLORS.textMuted)
+    doc.text("DIRECCIÓN ALMACÉN", x0, y)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.setTextColor(...COLORS.text)
+    doc.text(wh.physicalAddress || "—", x0, y + 5)
+    const extras = [
+      wh.sapCenterCode ? `SAP: ${wh.sapCenterCode}` : "",
+      wh.responsibleUserName ? `Resp: ${wh.responsibleUserName}` : "",
+    ].filter(Boolean).join("  |  ")
+    if (extras) {
+      doc.setFontSize(7.5)
+      doc.setTextColor(...COLORS.textMuted)
+      doc.text(extras, x0, y + 10)
+      y += 16
+    } else {
+      y += 12
+    }
+  }
 
   // Cost center
   doc.setFont("helvetica", "bold")

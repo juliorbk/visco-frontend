@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { XMarkIcon, MagnifyingGlassIcon, PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import type { EmployeeDTO, ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
@@ -22,10 +22,9 @@ interface NuevoDespachoModalProps {
   onSubmit?: () => void
 }
 
-let nextLineId = 1
-
 export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoModalProps) {
   const [step, setStep] = useState(1)
+  const nextLineIdRef = useRef(1)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
@@ -53,6 +52,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setSearchResults([])
     setPendingQtys({})
     setPendingPrices({})
+    nextLineIdRef.current = 1
   }
 
   useEffect(() => {
@@ -136,7 +136,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setLines((prev) => [
       ...prev,
       {
-        id: nextLineId++,
+        id: nextLineIdRef.current++,
         productId: product.id,
         productName: product.name,
         sku: product.sku,

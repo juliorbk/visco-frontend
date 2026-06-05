@@ -57,13 +57,52 @@ export function translateOrderType(type: string): string {
   return map[type] ?? type
 }
 
+export function translateOrderStatus(status: string): string {
+  const map: Record<string, string> = {
+    PENDING: "Pendiente",
+    AWAITING_APPROVAL: "Por Aprobar",
+    APPROVED: "Aprobada",
+    REJECTED: "Rechazada",
+    IN_TRANSIT: "En Tránsito",
+    DELIVERED: "Entregada",
+    COMPLETED: "Completada",
+    PARTIALLY_DELIVERED: "Entrega Parcial",
+    CANCELLED: "Cancelada",
+    WAITING_PAYMENT: "Esperando Pago",
+    HELD_AT_CUSTOMS: "Retenida en Aduana",
+  }
+  return map[status] ?? status
+}
+
+export function statusColor(status: string): [number, number, number] {
+  const map: Record<string, [number, number, number]> = {
+    PENDING: [234, 179, 8],
+    AWAITING_APPROVAL: [234, 179, 8],
+    APPROVED: [22, 163, 74],
+    REJECTED: [220, 38, 38],
+    IN_TRANSIT: [37, 99, 235],
+    DELIVERED: [22, 163, 74],
+    COMPLETED: [22, 163, 74],
+    PARTIALLY_DELIVERED: [234, 88, 12],
+    CANCELLED: [107, 114, 128],
+    WAITING_PAYMENT: [202, 138, 4],
+    HELD_AT_CUSTOMS: [220, 38, 38],
+  }
+  return map[status] ?? COLORS.textLight
+}
+
 export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, h: number) {
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x, y, w, h, 3, 3, "FD")
-  doc.setFontSize(10)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(14)
+  doc.setTextColor(...COLORS.primary)
+  doc.text("VISCO", x + w / 2, y + h / 2 + 2, { align: "center" })
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-doc.addImage("visco-logo.png", "PNG", x + w / 4, y + h / 4, w / 2, h / 2);
+  doc.text("ORINOCO", x + w / 2, y + h / 2 + 7, { align: "center" })
 }
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {

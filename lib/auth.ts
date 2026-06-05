@@ -1,6 +1,13 @@
+import "server-only"
 import { createHmac, timingSafeEqual } from "crypto"
 
-const SECRET = process.env.JWT_SECRET || "visco-dev-secret-key-2026"
+const SECRET = process.env.JWT_SECRET
+if (!SECRET) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable is required in production")
+  }
+}
+const ACTIVE_SECRET = SECRET ?? "visco-dev-secret-key-2026"
 const EXPIRY = "24h"
 
 interface JwtPayload {
@@ -32,7 +39,7 @@ export function signJwt(payload: Omit<JwtPayload, "iat" | "exp">): string {
 
   const header = base64url(JSON.stringify({ alg: "HS256", typ: "JWT" }))
   const body = base64url(JSON.stringify(full))
-  const signature = createHmac("sha256", SECRET)
+  const signature = createHmac("sha256", ACTIVE_SECRET)
     .update(`${header}.${body}`)
     .digest("base64")
     .replace(/=/g, "")
@@ -48,12 +55,12 @@ export function verifyJwt(token: string): JwtPayload | null {
     if (parts.length !== 3) return null
 
     const [header, body, signature] = parts
-    const expectedSig = createHmac("sha256", SECRET)
+    const expectedSig = createHmac("sha256", ACTIVE_SECRET)
       .update(`${header}.${body}`)
       .digest("base64")
       .replace(/=/g, "")
       .replace(/\+/g, "-")
-      .replace(/\//g, "_")
+    .replace(/\//g, "_")
 
     const sigBuf = Buffer.from(signature, "utf-8")
     const expectedBuf = Buffer.from(expectedSig, "utf-8")
