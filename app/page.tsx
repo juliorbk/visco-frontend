@@ -62,7 +62,7 @@ export default function LoginPage() {
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left panel */}
       <section className="relative bg-primary text-white px-5 py-8 sm:px-8 sm:py-10 lg:px-14 lg:py-14 flex flex-col">
-        <Logo size="md" />
+        <Logo size="md" variant="white" />
 
         <div className="my-auto max-w-md">
           <h2 className="font-serif italic text-4xl lg:text-5xl leading-tight text-balance">
