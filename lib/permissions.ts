@@ -32,3 +32,9 @@ export function canCreateSupplierFromPo(user: { role: UserRole } | null | undefi
 export function canManageRequisitions(user: { role: UserRole } | null | undefined): boolean {
   return hasRole(user, "ADMIN", "PROCUREMENT")
 }
+
+export function canManageSupplierCategories(
+  user: { role: UserRole } | null | undefined,
+): boolean {
+  return hasRole(user, "ADMIN", "MANAGER")
+}

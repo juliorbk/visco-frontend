@@ -1,6 +1,11 @@
 // ── Enums ──
 
-export type UserRole = "WAREHOUSEMAN" | "MANAGER" | "PROCUREMENT" | "ADMIN"
+export type UserRole =
+  | "WAREHOUSEMAN"
+  | "MANAGER"
+  | "PROCUREMENT"
+  | "ADMIN"
+  | "SUPERADMIN"
 
 export type PurchaseOrderStatus =
   | "PENDING"
@@ -39,6 +44,28 @@ export interface RegisterRequest {
   password: string
   role: UserRole
   costCenterId?: number | null
+  inviteToken: string
+}
+
+export interface InviteTokenDTO {
+  id: string
+  token: string
+  email: string
+  intendedRole: UserRole
+  costCenterId: number | null
+  createdById: string
+  createdAt: string
+  expiresAt: string
+  usedAt: string | null
+  usedByUserId: string | null
+  revoked: boolean
+}
+
+export interface CreateInviteRequest {
+  email: string
+  role: UserRole
+  costCenterId?: number | null
+  expiresAt?: string | null
 }
 
 export interface AuthResponse {
@@ -58,6 +85,15 @@ export interface UserDTO {
 
 // ── Supplier ──
 
+export interface SupplierCategoryDTO {
+  id: number
+  name: string
+  description: string
+  active: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
 export interface SupplierDTO {
   id: number
   name: string
@@ -70,6 +106,8 @@ export interface SupplierDTO {
   representatives: RepresentativeInfo[]
   rating?: number
   totalOrders?: number
+  categoryId?: number | null
+  categoryName?: string | null
 }
 
 export interface RepresentativeInfo {

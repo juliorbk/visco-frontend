@@ -15,6 +15,7 @@ import {
   DocumentTextIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import {
@@ -74,7 +75,7 @@ export function SupplierDetail({
   if (!supplier) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground h-full grid place-items-center lg:sticky lg:top-20">
-        Selecciona un proveedor para ver el detalle.
+        Select a supplier to view its details.
       </div>
     )
   }
@@ -86,7 +87,7 @@ export function SupplierDetail({
     <div className="rounded-xl border border-border bg-card shadow-xs lg:sticky lg:top-20">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <h3 className="font-serif text-lg font-semibold">Detalles del Proveedor</h3>
+        <h3 className="font-serif text-lg font-semibold">Supplier details</h3>
         {(canEdit || canDeactivate) && (
           <DropdownMenu>
             <DropdownMenuTrigger className="size-8 grid place-items-center rounded-md hover:bg-secondary text-muted-foreground">
@@ -95,11 +96,11 @@ export function SupplierDetail({
             <DropdownMenuContent align="end">
               {canEdit && (
                 <DropdownMenuItem onClick={() => onEdit?.(supplier)}>
-                  <PencilIcon className="size-3.5 mr-2" /> Editar
+                  <PencilIcon className="size-3.5 mr-2" /> Edit
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem>
-                <ClockIcon className="size-3.5 mr-2" /> Ver historial completo
+                <ClockIcon className="size-3.5 mr-2" /> View full history
               </DropdownMenuItem>
               {canDeactivate && (
                 <>
@@ -108,7 +109,7 @@ export function SupplierDetail({
                     className="text-red-600 focus:text-red-600"
                     onClick={() => onDeactivate?.(supplier)}
                   >
-                    <NoSymbolIcon className="size-3.5 mr-2" /> Desactivar proveedor
+                    <NoSymbolIcon className="size-3.5 mr-2" /> Deactivate supplier
                   </DropdownMenuItem>
                 </>
               )}
@@ -122,52 +123,64 @@ export function SupplierDetail({
         <div className="mx-auto size-16 rounded-full bg-[#fde8e8] grid place-items-center text-[#7b1a1a]">
           <BuildingOffice2Icon className="size-7" />
         </div>
-        <h4 className="mt-3 font-serif text-xl font-semibold">{supplier.name}</h4>
-        <p className="text-xs text-muted-foreground mt-1">
-          Moneda: {supplier.currency}
-        </p>
+        <h4 className="mt-3 font-serif text-xl font-semibold break-words">{supplier.name}</h4>
+        {supplier.categoryName ? (
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#fde8e8] text-[#7b1a1a] px-2.5 py-0.5 text-xs font-medium max-w-full">
+            <TagIcon className="size-3 shrink-0" />
+            <span className="truncate">{supplier.categoryName}</span>
+          </span>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">
+            Currency: {supplier.currency}
+          </p>
+        )}
+        {supplier.categoryName && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Currency: {supplier.currency}
+          </p>
+        )}
       </div>
 
-      {/* Información de Contacto */}
+      {/* Contact info */}
       <div className="px-5 py-4 border-b border-border space-y-3">
-        <SectionHeader>Información de Contacto</SectionHeader>
-        <InfoRow icon={<EnvelopeIcon className="size-3.5" />} label="Correo electrónico">
+        <SectionHeader>Contact information</SectionHeader>
+        <InfoRow icon={<EnvelopeIcon className="size-3.5" />} label="Email">
           {supplier.contactEmail}
         </InfoRow>
         {supplier.phoneNumbers.length > 0 && (
-          <InfoRow icon={<PhoneIcon className="size-3.5" />} label="Teléfono">
+          <InfoRow icon={<PhoneIcon className="size-3.5" />} label="Phone">
             {supplier.phoneNumbers[0]}
           </InfoRow>
         )}
         {hasRepresentatives && (
-          <InfoRow icon={<UserIcon className="size-3.5" />} label="Persona de contacto">
+          <InfoRow icon={<UserIcon className="size-3.5" />} label="Contact person">
             {supplier.representatives.map((r) => r.fullName).join(", ")}
           </InfoRow>
         )}
       </div>
 
-      {/* Ubicación */}
+      {/* Location */}
       {supplier.address && (
         <div className="px-5 py-4 border-b border-border space-y-3">
-          <SectionHeader>Ubicación</SectionHeader>
-          <InfoRow icon={<MapPinIcon className="size-3.5" />} label="Dirección">
+          <SectionHeader>Location</SectionHeader>
+          <InfoRow icon={<MapPinIcon className="size-3.5" />} label="Address">
             {supplier.address}
           </InfoRow>
         </div>
       )}
 
-      {/* Métricas y Rendimiento */}
+      {/* Metrics & performance */}
       {hasMetrics && (
         <div className="px-5 py-4 border-b border-border space-y-3">
-          <SectionHeader>Métricas y Rendimiento</SectionHeader>
+          <SectionHeader>Metrics & performance</SectionHeader>
           <div className="flex items-center gap-4">
             {supplier.rating !== undefined && (
-              <InfoRow icon={<StarIcon className="size-3.5 text-amber-500" />} label="Calificación">
+              <InfoRow icon={<StarIcon className="size-3.5 text-amber-500" />} label="Rating">
                 {supplier.rating.toFixed(1)}
               </InfoRow>
             )}
             {supplier.totalOrders !== undefined && (
-              <InfoRow icon={<ShoppingCartIcon className="size-3.5" />} label="Pedidos">
+              <InfoRow icon={<ShoppingCartIcon className="size-3.5" />} label="Orders">
                 {supplier.totalOrders}
               </InfoRow>
             )}
@@ -175,14 +188,14 @@ export function SupplierDetail({
         </div>
       )}
 
-      {/* Notas e Historial */}
+      {/* Notes & history */}
       {(supplier.description || hasRepresentatives) && (
         <div className="px-5 py-4 border-b border-border space-y-3">
-          <SectionHeader>Notas e Historial</SectionHeader>
+          <SectionHeader>Notes & history</SectionHeader>
           {hasRepresentatives && (
             <div>
               <span className="text-[11px] text-muted-foreground block leading-none mb-1">
-                Representantes Legales
+                Legal representatives
               </span>
               <ul className="space-y-0.5">
                 {supplier.representatives.map((r) => (
@@ -202,11 +215,11 @@ export function SupplierDetail({
                 className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-1 hover:text-foreground transition-colors"
               >
                 <DocumentTextIcon className="size-3" />
-                Descripción
+                Description
                 {showDesc ? <ChevronUpIcon className="size-3" /> : <ChevronDownIcon className="size-3" />}
               </button>
               {showDesc && (
-                <p className="text-sm text-foreground mt-1.5 leading-relaxed">
+                <p className="text-sm text-foreground mt-1.5 leading-relaxed break-words">
                   {supplier.description}
                 </p>
               )}
@@ -226,18 +239,18 @@ export function SupplierDetail({
                 className="bg-card"
                 onClick={() => onEdit?.(supplier)}
               >
-                <PencilIcon className="size-3.5 mr-1.5" /> Editar
+                <PencilIcon className="size-3.5 mr-1.5" /> Edit
               </Button>
             )}
             <Button variant="outline" size="sm" className="bg-card" asChild>
               <a href={`mailto:${supplier.contactEmail}`}>
-                <PaperAirplaneIcon className="size-3.5 mr-1.5" /> Enviar Correo
+                <PaperAirplaneIcon className="size-3.5 mr-1.5" /> Send email
               </a>
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" size="sm" className="bg-card">
-              <ClockIcon className="size-3.5 mr-1.5" /> Ver Historial
+              <ClockIcon className="size-3.5 mr-1.5" /> View history
             </Button>
             {canDeactivate && (
               <Button
@@ -246,7 +259,7 @@ export function SupplierDetail({
                 className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 bg-card"
                 onClick={() => onDeactivate?.(supplier)}
               >
-                <NoSymbolIcon className="size-3.5 mr-1.5" /> Desactivar
+                <NoSymbolIcon className="size-3.5 mr-1.5" /> Deactivate
               </Button>
             )}
           </div>

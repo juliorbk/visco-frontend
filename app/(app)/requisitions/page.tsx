@@ -20,6 +20,7 @@ import { fetchRequisitions } from "@/lib/services/requisitions"
 import type { RequisitionResponse, Page } from "@/lib/types"
 import { PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 
 const STATUS_FILTERS = [
@@ -40,6 +41,7 @@ export default function RequisitionsPage() {
   const [page, setPage] = useState(0)
   const [statusFilter, setStatusFilter] = useState("all")
   const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 300)
   const [convertRequisition, setConvertRequisition] = useState<RequisitionResponse | null>(null)
   const [poModalOpen, setPoModalOpen] = useState(false)
 
@@ -48,7 +50,13 @@ export default function RequisitionsPage() {
   const load = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true)
-      const res = await fetchRequisitions(page, 30, statusFilter !== "all" ? statusFilter : undefined, signal)
+      const res = await fetchRequisitions(
+        page,
+        30,
+        statusFilter !== "all" ? statusFilter : undefined,
+        signal,
+        debouncedSearch,
+      )
       if (!signal?.aborted) {
         setPageData(res)
         setSelectedId((prev) =>
@@ -64,7 +72,7 @@ export default function RequisitionsPage() {
         setLoading(false)
       }
     }
-  }, [page, statusFilter])
+  }, [page, statusFilter, debouncedSearch])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -74,16 +82,7 @@ export default function RequisitionsPage() {
 
   useEffect(() => {
     setPage(0)
-  }, [statusFilter])
-
-  const filtered = search
-    ? requisitions.filter(
-        (r) =>
-          r.requisitionNumber.toLowerCase().includes(search.toLowerCase()) ||
-          r.description.toLowerCase().includes(search.toLowerCase()) ||
-          r.requestedBy.toLowerCase().includes(search.toLowerCase()),
-      )
-    : requisitions
+  }, [statusFilter, debouncedSearch])
 
   const selected = requisitions.find((r) => r.id === selectedId) ?? null
 
@@ -171,14 +170,14 @@ export default function RequisitionsPage() {
                         <ArrowPathIcon className="size-5 animate-spin mx-auto" />
                       </td>
                     </tr>
-                  ) : filtered.length === 0 ? (
+                  ) : requisitions.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
                         No se encontraron requisiciones.
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((r) => (
+                    requisitions.map((r) => (
                       <tr
                         key={r.id}
                         onClick={() => setSelectedId(r.id)}

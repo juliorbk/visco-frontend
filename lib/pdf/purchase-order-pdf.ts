@@ -5,6 +5,7 @@ import {
   addLogoPlaceholder,
   addSectionTitle,
   addSeparator,
+  addWrappedText,
   formatDateShort,
   formatCurrency,
   translatePaymentMethod,
@@ -24,6 +25,7 @@ function addTable(
 ) {
   const rowH = 6
   const headH = 7
+  const cellPadding = 2
   const border = COLORS.border
   const primary = COLORS.primary
   const white = COLORS.white
@@ -37,7 +39,7 @@ function addTable(
 
   let cx = x
   head.forEach((h, i) => {
-    doc.text(h, cx + 2, y + headH / 2 + 2)
+    doc.text(h, cx + cellPadding, y + headH / 2 + 2)
     cx += colWidths[i]
     if (i < head.length - 1) {
       doc.setDrawColor(...white)
@@ -52,32 +54,48 @@ function addTable(
 
   let cy = y + headH
   body.forEach((row, ri) => {
-    if (ri % 2 === 1) {
-      doc.setFillColor(249, 250, 251)
-      doc.rect(x, cy, w, rowH, "F")
-    }
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
     doc.setTextColor(...text)
 
+    let maxLines = 1
     let rx = x
+    const cellTexts: string[][] = []
+
     row.forEach((cell, ci) => {
-      const lines = doc.splitTextToSize(cell, colWidths[ci] - 4)
-      doc.text(lines[0] ?? "", rx + 2, cy + rowH / 2 + 2)
+      const lines = doc.splitTextToSize(cell, colWidths[ci] - cellPadding * 2)
+      cellTexts.push(lines)
+      if (lines.length > maxLines) maxLines = lines.length
+    })
+
+    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
+
+    if (ri % 2 === 1) {
+      doc.setFillColor(249, 250, 251)
+      doc.rect(x, cy, w, rowHeight, "F")
+    }
+
+    rx = x
+    row.forEach((_, ci) => {
+      const lines = cellTexts[ci]
+      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
+      lines.forEach((line, li) => {
+        doc.text(line, rx + cellPadding, textY + li * 4.5)
+      })
       rx += colWidths[ci]
       if (ci < row.length - 1) {
-        doc.line(rx, cy, rx, cy + rowH)
+        doc.line(rx, cy, rx, cy + rowHeight)
       }
     })
 
-    cy += rowH
+    cy += rowHeight
     doc.line(x, cy, x + w, cy)
   })
 
   return cy
 }
 
-export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
+export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -97,7 +115,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
 
   // ── Logo + Title + Info ──
-  addLogoPlaceholder(doc, x0, y, 40, 20)
+  await addLogoPlaceholder(doc, x0, y, 40, 20)
 
   doc.setFontSize(20)
   doc.setFont("helvetica", "bold")
@@ -144,7 +162,7 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 38
+  const boxH = 42
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -154,14 +172,17 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  let by = y + 14
-  doc.text(supplier?.name ?? order.supplierName, x0 + 4, by)
-  by += 5
-  doc.text(supplier?.address ?? "—", x0 + 4, by)
-  by += 5
-  if (supplier?.email) { doc.text(supplier.email, x0 + 4, by); by += 5 }
+  let by = y + 15
+  by += addWrappedText(doc, supplier?.name ?? order.supplierName, x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, supplier?.address ?? "—", x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  if (supplier?.email) {
+    by += addWrappedText(doc, supplier.email, x0 + 4, by, boxW - 8, 4.5, 1)
+    by += 1.5
+  }
   if (supplier?.phoneNumbers?.length) {
-    doc.text("Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by)
+    addWrappedText(doc, "Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by, boxW - 8, 4.5, 1)
   }
 
   // Ship To box
@@ -171,21 +192,25 @@ export function generatePurchaseOrderPDF(order: PurchaseOrderResponse): jsPDF {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  by = y + 14
-  doc.text(warehouseName, x1 + 4, by)
-  by += 5
-  doc.text(warehouseAddress, x1 + 4, by)
-  by += 5
+  by = y + 15
+  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
   const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
   const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
   const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
-  if (extraInfo) doc.text(extraInfo, x1 + 4, by)
-  by += 5
+  if (extraInfo) {
+    by += addWrappedText(doc, extraInfo, x1 + 4, by, boxW - 8, 4, 1)
+    by += 1.5
+  }
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  if (warehouse?.description) { doc.text(warehouse.description, x1 + 4, by) }
+  if (warehouse?.description) {
+    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4.5, 2)
+  }
 
   y += boxH + 6
 

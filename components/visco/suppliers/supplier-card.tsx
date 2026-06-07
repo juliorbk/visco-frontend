@@ -1,6 +1,6 @@
 "use client"
 
-import { BuildingOffice2Icon, EnvelopeIcon, PhoneIcon, StarIcon, ShoppingCartIcon } from "@heroicons/react/24/outline"
+import { BuildingOffice2Icon, EnvelopeIcon, PhoneIcon, StarIcon, ShoppingCartIcon, TagIcon } from "@heroicons/react/24/outline"
 import type { SupplierDTO } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -45,9 +45,17 @@ export function SupplierCard({
       <h3 className="mt-4 font-serif text-lg font-semibold text-foreground leading-tight">
         {supplier.name}
       </h3>
-      <p className="text-xs text-muted-foreground mt-0.5">
-        {supplier.currency}
-      </p>
+      <div className="mt-1 flex items-center gap-2 flex-wrap">
+        <p className="text-xs text-muted-foreground">
+          {supplier.currency}
+        </p>
+        {supplier.categoryName && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#fde8e8] text-[#7b1a1a] px-2 py-0.5 text-[10px] font-medium max-w-full">
+            <TagIcon className="size-3 shrink-0" />
+            <span className="truncate">{supplier.categoryName}</span>
+          </span>
+        )}
+      </div>
 
       <div className="mt-4 space-y-1.5 text-xs">
         <div className="flex items-center gap-2 text-muted-foreground truncate">

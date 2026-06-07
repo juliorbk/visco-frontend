@@ -23,13 +23,13 @@ import {
 import { toast } from "sonner"
 
 const statusMap: Record<string, string> = {
-  DRAFT: "Borrador",
-  PENDING: "Pendiente",
-  AWAITING_APPROVAL: "Esperando Aprobación",
-  APPROVED: "Aprobado",
-  REJECTED: "Rechazado",
-  CANCELLED: "Cancelado",
-  CONVERTED: "Convertido a PO",
+  DRAFT: "Draft",
+  PENDING: "Pending",
+  AWAITING_APPROVAL: "Awaiting Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+  CANCELLED: "Cancelled",
+  CONVERTED: "Converted to PO",
 }
 
 export function RequisitionDetail({
@@ -47,7 +47,7 @@ export function RequisitionDetail({
     return (
       <div className="bg-white rounded-lg border border-border p-8 text-center">
         <p className="text-muted-foreground text-sm">
-          Selecciona una requisición de la tabla para ver los detalles
+          Select a requisition from the table to view its details
         </p>
       </div>
     )
@@ -97,27 +97,27 @@ export function RequisitionDetail({
       </div>
 
       <div className="px-5 py-4 space-y-3 text-sm">
-        <DetailRow label="Solicitante" value={requisition.requestedBy} />
-        <DetailRow label="Centro de Costo" value={requisition.areaName} />
-        <DetailRow label="Creada" value={new Date(requisition.createdAt).toLocaleDateString()} />
+        <DetailRow label="Requester" value={requisition.requestedBy} />
+        <DetailRow label="Cost Center" value={requisition.areaName} />
+        <DetailRow label="Created" value={new Date(requisition.createdAt).toLocaleDateString()} />
         {requisition.approvedBy && (
-          <DetailRow label="Aprobada por" value={requisition.approvedBy} />
+          <DetailRow label="Approved by" value={requisition.approvedBy} />
         )}
         {requisition.approvedAt && (
           <DetailRow
-            label="Fecha de aprobación"
+            label="Approval date"
             value={new Date(requisition.approvedAt).toLocaleDateString()}
           />
         )}
         {requisition.rejectionReason && (
           <div className="rounded-md bg-red-50 border border-red-200 p-3 text-xs text-red-700">
-            <div className="font-semibold mb-1">Motivo de rechazo</div>
+            <div className="font-semibold mb-1">Rejection reason</div>
             {requisition.rejectionReason}
           </div>
         )}
         {requisition.approvalNotes && (
           <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-700">
-            <div className="font-semibold mb-1">Notas de aprobación</div>
+            <div className="font-semibold mb-1">Approval notes</div>
             {requisition.approvalNotes}
           </div>
         )}
@@ -126,29 +126,31 @@ export function RequisitionDetail({
       {requisition.description && (
         <div className="px-5 py-3 border-t border-border">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
-            Descripción
+            Description
           </div>
-          <p className="text-sm text-foreground">{requisition.description}</p>
+          <p className="text-sm text-foreground break-words">{requisition.description}</p>
         </div>
       )}
 
       <div className="px-5 py-3 border-t border-border">
         <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-          Artículos ({totalItems})
+          Items ({totalItems})
         </div>
         <div className="space-y-2">
           {requisition.items.map((item, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-foreground truncate">
                   {item.productName}
                 </div>
-                <div className="text-xs text-muted-foreground font-mono">{item.productSku}</div>
+                <div className="text-xs text-muted-foreground font-mono truncate">
+                  {item.productSku}
+                </div>
               </div>
-              <span className="text-sm font-semibold tabular-nums ml-2">
+              <span className="text-sm font-semibold tabular-nums shrink-0">
                 x{item.quantity}
               </span>
             </div>
@@ -164,7 +166,7 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => submitRequisitionForApproval(requisition.id),
-                "Requisición enviada para aprobación"
+                "Requisition submitted for approval"
               )
             }
           >
@@ -173,7 +175,7 @@ export function RequisitionDetail({
             ) : (
               <PaperAirplaneIcon className="size-4 mr-2" />
             )}
-            Enviar para Aprobación
+            Submit for Approval
           </Button>
         )}
         {canApprove && (
@@ -183,12 +185,12 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => approveRequisition(requisition.id, user!.id),
-                "Requisición aprobada"
+                "Requisition approved"
               )
             }
           >
             <CheckCircleIcon className="size-4 mr-2" />
-            Aprobar
+            Approve
           </Button>
         )}
         {canReject && (
@@ -197,16 +199,16 @@ export function RequisitionDetail({
             className="w-full border-red-300 text-red-600 hover:bg-red-50"
             disabled={loading}
             onClick={() => {
-              const reason = prompt("Motivo de rechazo:")
+              const reason = prompt("Rejection reason:")
               if (!reason) return
               handleAction(
                 () => rejectRequisition(requisition.id, user!.id, reason),
-                "Requisición rechazada"
+                "Requisition rejected"
               )
             }}
           >
             <XCircleIcon className="size-4 mr-2" />
-            Rechazar
+            Reject
           </Button>
         )}
         {canConvertToPO && (
@@ -215,7 +217,7 @@ export function RequisitionDetail({
             onClick={() => onConvert(requisition)}
           >
             <ShoppingCartIcon className="size-4 mr-2" />
-            Convertir a Pedido de Compra
+            Convert to Purchase Order
           </Button>
         )}
         {canCancel && (
@@ -226,12 +228,12 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => cancelRequisition(requisition.id),
-                "Requisición cancelada"
+                "Requisition cancelled"
               )
             }
           >
             <NoSymbolIcon className="size-4 mr-2" />
-            Cancelar Requisición
+            Cancel Requisition
           </Button>
         )}
       </div>
@@ -241,9 +243,9 @@ export function RequisitionDetail({
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-muted-foreground text-xs">{label}</span>
-      <span className="text-foreground font-medium text-sm">{value}</span>
+    <div className="flex items-center justify-between gap-3 min-w-0">
+      <span className="text-muted-foreground text-xs shrink-0">{label}</span>
+      <span className="text-foreground font-medium text-sm truncate min-w-0 text-right">{value}</span>
     </div>
   )
 }

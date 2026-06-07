@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { BellIcon, Cog6ToothIcon, InformationCircleIcon, MagnifyingGlassIcon, ArrowRightStartOnRectangleIcon, UserIcon, Bars3Icon } from "@heroicons/react/24/outline"
 import { Input } from "@/components/ui/input"
 import { Avatar } from "@/components/ui/avatar"
@@ -22,6 +23,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const router = useRouter()
   const { user, setUser } = useCurrentUser()
+  const [search, setSearch] = useState("")
 
   const initials = user
     ? user.name
@@ -43,6 +45,14 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     router.push("/")
   }
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = search.trim()
+    if (!q) return
+    router.push(`/inventory?search=${encodeURIComponent(q)}`)
+    setSearch("")
+  }
+
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-2 md:gap-4 border-b border-border bg-card px-3 md:px-6">
       <button
@@ -53,18 +63,23 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <Bars3Icon className="size-5" />
       </button>
 
-      <div className="relative flex-1 max-w-xl mx-auto">
+      <form
+        onSubmit={handleSearchSubmit}
+        className="relative flex-1 max-w-xl mx-auto"
+      >
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <Input
           type="search"
-          placeholder="Buscar pedidos, productos, proveedores…"
+          placeholder="Buscar productos… (Enter para buscar)"
           className={cn(
             "pl-9 bg-[#f5f5f7] border-transparent focus-visible:border-input",
             "max-md:w-full max-md:placeholder:text-xs",
           )}
           aria-label="Buscar"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
-      </div>
+      </form>
 
       <div className="flex items-center gap-0.5 md:gap-1">
         <button

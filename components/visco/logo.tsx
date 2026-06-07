@@ -4,33 +4,45 @@ interface LogoProps {
   className?: string
   showSubtitle?: boolean
   size?: "sm" | "md" | "lg"
-  // Si necesitas que la imagen sea blanca en modo oscuro, considera usar un SVG 
-  // o pasar un prop de imagen diferente (ej. srcWhite / srcBrand).
+  /**
+   * `default` renders the logo with its original brand colors
+   * (use on light/neutral backgrounds).
+   * `white` inverts the logo so it stays visible on dark surfaces
+   * (the `--primary` / `--sidebar` brand backgrounds) without
+   * shipping a second PNG asset.
+   */
+  variant?: "default" | "white"
 }
 
-/**
- * "VISCO ORINOCO" logo.
- * Utiliza el archivo visco-logo.png en lugar de texto.
- */
-export function Logo({ className, showSubtitle = true, size = "md" }: LogoProps) {
-  // Ajustamos el tamaño basándonos en el ancho (w) en lugar del tamaño de fuente
+export function Logo({
+  className,
+  showSubtitle = true,
+  size = "md",
+  variant = "default",
+}: LogoProps) {
   const sizeClass =
     size === "sm" ? "w-20" : size === "lg" ? "w-40" : "w-28"
 
+  const isWhite = variant === "white"
+
   return (
     <div className={cn("flex flex-col items-start tracking-tight", className)}>
-      
-      <img 
-        src="/visco-logo.png" // Asegúrate de que la ruta apunte correctamente a tu imagen
+      <img
+        src="/visco-logo.png"
         alt="Visco Orinoco Logo"
-        className={cn("object-contain", sizeClass)}
+        className={cn(
+          "object-contain",
+          sizeClass,
+          isWhite && "brightness-0 invert",
+        )}
       />
 
       {showSubtitle && (
         <span
           className={cn(
-            "mt-1.5 font-sans uppercase tracking-[0.18em] not-italic text-sidebar-primary/70",
-            size === "sm" ? "text-[9px]" : "text-[10px]"
+            "mt-1.5 font-sans uppercase tracking-[0.18em] not-italic",
+            isWhite ? "text-white/80" : "text-sidebar-primary/70",
+            size === "sm" ? "text-[9px]" : "text-[10px]",
           )}
         >
           OriFlow | Visco Orinoco

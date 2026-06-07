@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { EyeIcon, EyeSlashIcon, ArrowPathIcon, UserPlusIcon } from "@heroicons/react/24/outline"
+import { EyeIcon, EyeSlashIcon, ArrowPathIcon, UserPlusIcon, EnvelopeIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 import type {
   RegisterRequest,
@@ -43,15 +43,24 @@ export function RegisterModal({
   open,
   onOpenChange,
   onRegistered,
+  inviteToken,
+  inviteEmail,
+  inviteRole,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
   onRegistered?: () => void
+  /** When provided, the form is locked to the invite and only asks
+   *  for name + password. The token is sent in the registration body. */
+  inviteToken?: string
+  inviteEmail?: string
+  inviteRole?: UserRole
 }) {
+  const isInvite = Boolean(inviteToken)
   const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(() => inviteEmail ?? "")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState<UserRole>("WAREHOUSEMAN")
+  const [role, setRole] = useState<UserRole>(() => inviteRole ?? "WAREHOUSEMAN")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
   const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
@@ -68,6 +77,9 @@ export function RegisterModal({
 
   useEffect(() => {
     if (!open) return
+    // Skip the cost-centers cascade fetch when locked by an invite: those
+    // values come from the backend at registration time.
+    if (isInvite) return
     Promise.all([
       fetch(`${BASE_URL}/api/cost-centers/all`, { credentials: "include" }).then((r) => {
         if (!r.ok) throw new Error()
@@ -88,7 +100,7 @@ export function RegisterModal({
         setGeneralManagements(gg)
       })
       .catch(() => toast.error("Error al cargar datos"))
-  }, [open])
+  }, [open, isInvite])
 
   const filteredManagements = managements.filter(
     (m) => !selectedGgId || m.generalManagementId === selectedGgId,
@@ -100,9 +112,9 @@ export function RegisterModal({
 
   const reset = () => {
     setName("")
-    setEmail("")
+    setEmail(inviteEmail ?? "")
     setPassword("")
-    setRole("WAREHOUSEMAN")
+    setRole(inviteRole ?? "WAREHOUSEMAN")
     setCostCenterId(null)
     setSelectedGgId(null)
     setSelectedMgmtId(null)
@@ -125,6 +137,10 @@ export function RegisterModal({
       toast.error("La contraseña debe tener al menos 8 caracteres")
       return
     }
+    if (isInvite && !inviteToken) {
+      toast.error("Token de invitación inválido")
+      return
+    }
     setSaving(true)
     try {
       const body: RegisterRequest = {
@@ -132,7 +148,8 @@ export function RegisterModal({
         email,
         password,
         role,
-        costCenterId: costCenterId || null,
+        costCenterId: isInvite ? null : (costCenterId || null),
+        inviteToken: inviteToken ?? "",
       }
       const regRes = await fetch(`${BASE_URL}/api/auth/register`, {
         method: "POST",
@@ -145,7 +162,7 @@ export function RegisterModal({
         const msg = err.errors?.[0]?.defaultMessage ?? err.error ?? err.detail ?? `Error ${regRes.status}`
         throw new Error(msg)
       }
-      toast.success(`Usuario ${name} registrado exitosamente`)
+      toast.success(`Bienvenido a Visco Orinoco, ${name}`)
       onRegistered?.()
       close()
     } catch (err) {
@@ -169,12 +186,33 @@ export function RegisterModal({
         <DialogHeader>
           <DialogTitle className="font-serif flex items-center gap-2">
             <UserPlusIcon className="size-5" />
-            Registrar Usuario
+            {isInvite ? "Completa tu registro" : "Registrar Usuario"}
           </DialogTitle>
           <DialogDescription>
-            Crea una nueva cuenta de usuario para el sistema.
+            {isInvite
+              ? "Estás siendo invitado a Visco Orinoco. Solo necesitas tu nombre y una contraseña."
+              : "Crea una nueva cuenta de usuario para el sistema."}
           </DialogDescription>
         </DialogHeader>
+
+        {isInvite && (
+          <div className="rounded-md border border-[#fde8e8] bg-[#fde8e8]/40 p-3 text-xs space-y-1">
+            <div className="flex items-center gap-2 font-medium text-foreground">
+              <ShieldCheckIcon className="size-4 text-[#7b1a1a]" />
+              Invitación verificada
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <EnvelopeIcon className="size-3.5" />
+              <span className="truncate">{inviteEmail}</span>
+            </div>
+            <div className="text-muted-foreground">
+              Rol asignado:{" "}
+              <span className="font-medium text-foreground">
+                {ROLES.find((r) => r.value === inviteRole)?.label ?? inviteRole}
+              </span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
@@ -195,7 +233,7 @@ export function RegisterModal({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={saving}
+              disabled={saving || isInvite}
               placeholder="ana@visco.com"
             />
           </div>
@@ -240,6 +278,7 @@ export function RegisterModal({
             )}
           </div>
 
+          {!isInvite && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Rol</Label>
@@ -319,6 +358,7 @@ export function RegisterModal({
               </div>
             </div>
           </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close} disabled={saving}>
@@ -330,9 +370,9 @@ export function RegisterModal({
               disabled={saving}
             >
               {saving ? (
-                <><ArrowPathIcon className="size-4 animate-spin" /> Registrando…</>
+                <><ArrowPathIcon className="size-4 animate-spin" /> {isInvite ? "Creando cuenta…" : "Registrando…"}</>
               ) : (
-                "Registrar"
+                isInvite ? "Crear cuenta" : "Registrar"
               )}
             </Button>
           </DialogFooter>

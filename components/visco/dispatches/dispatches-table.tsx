@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { ChevronLeftIcon, ChevronRightIcon, MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import type { DispatchResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -9,26 +8,23 @@ interface DispatchesTableProps {
   dispatches: DispatchResponse[]
   onSelectDispatch: (dispatch: DispatchResponse) => void
   selectedDispatchId?: number
+  searchQuery: string
+  onSearchChange: (value: string) => void
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
 }
 
-export function DispatchesTable({ dispatches, onSelectDispatch, selectedDispatchId }: DispatchesTableProps) {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-
-  const itemsPerPage = 6
-  const filtered = dispatches.filter((d) =>
-    d.dispatchNumber.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage)
-  const startIdx = (currentPage - 1) * itemsPerPage
-  const displayed = filtered.slice(startIdx, startIdx + itemsPerPage)
-
-  const handleClearFilters = () => {
-    setSearchQuery("")
-    setCurrentPage(1)
-  }
-
+export function DispatchesTable({
+  dispatches,
+  onSelectDispatch,
+  selectedDispatchId,
+  searchQuery,
+  onSearchChange,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: DispatchesTableProps) {
   return (
     <div className="flex-1">
       <div className="bg-white rounded-lg border border-[#f3f4f6] p-3 md:p-4 mb-4 space-y-3 md:space-y-4">
@@ -39,18 +35,15 @@ export function DispatchesTable({ dispatches, onSelectDispatch, selectedDispatch
               type="text"
               placeholder="Buscar por # despacho..."
               value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
-              }}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
             />
           </div>
         </div>
 
-        {(searchQuery) && (
+        {searchQuery && (
           <button
-            onClick={handleClearFilters}
+            onClick={() => onSearchChange("")}
             className="text-sm text-[#7b1a1a] hover:text-[#5c1212] font-medium flex items-center gap-1"
           >
             <XMarkIcon className="w-4 h-4" />
@@ -59,7 +52,7 @@ export function DispatchesTable({ dispatches, onSelectDispatch, selectedDispatch
         )}
       </div>
 
-      {displayed.length > 0 ? (
+      {dispatches.length > 0 ? (
         <div className="bg-white rounded-lg border border-[#f3f4f6] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -73,7 +66,7 @@ export function DispatchesTable({ dispatches, onSelectDispatch, selectedDispatch
                 </tr>
               </thead>
               <tbody>
-                {displayed.map((dispatch) => {
+                {dispatches.map((dispatch) => {
                   const isSelected = selectedDispatchId === dispatch.id
                   return (
                     <tr
@@ -112,27 +105,29 @@ export function DispatchesTable({ dispatches, onSelectDispatch, selectedDispatch
             </table>
           </div>
 
-          <div className="flex items-center justify-between px-6 py-4 border-t border-[#f3f4f6] bg-[#f5f5f7]">
-            <span className="text-sm text-[#6b7280]">
-              Página {currentPage} de {totalPages}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeftIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRightIcon className="w-4 h-4" />
-              </button>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[#f3f4f6] bg-[#f5f5f7]">
+              <span className="text-sm text-[#6b7280]">
+                Página {currentPage} de {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-[#f3f4f6] hover:bg-[#f5f5f7] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-[#f3f4f6] p-12 text-center">

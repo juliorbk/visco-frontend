@@ -45,7 +45,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         )}
       >
         <div className="flex items-center justify-between px-5 py-6 border-b border-sidebar-border">
-          <Logo size="md" />
+          <Link
+            href="/dashboard"
+            onClick={onClose}
+            className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
+            aria-label="Go to dashboard"
+          >
+            <Logo size="md" variant="white" />
+          </Link>
           <button
             onClick={onClose}
             className="md:hidden size-8 grid place-items-center rounded-md hover:bg-sidebar-accent text-sidebar-foreground/80"

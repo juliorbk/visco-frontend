@@ -50,10 +50,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Initial fetch only when we don't have a cached value
   useEffect(() => {
-    if (user === undefined) {
+    if (user === undefined || user === null) {
       refresh()
     }
-  }, [user, refresh])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <UserContext.Provider value={{ user, refresh, setUser }}>
@@ -65,7 +66,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 export function useCurrentUser(): UserContextValue {
   const ctx = useContext(UserContext)
   if (!ctx) {
-    throw new Error("useCurrentUser must be used within a UserProvider")
+    return { user: undefined, refresh: async () => {}, setUser: () => {} }
   }
   return ctx
 }

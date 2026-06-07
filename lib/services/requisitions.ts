@@ -5,10 +5,12 @@ export async function fetchRequisitions(
   page = 0,
   size = 20,
   status?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  search?: string
 ): Promise<Page<RequisitionResponse>> {
   const params = new URLSearchParams({ page: String(page), size: String(size) })
   if (status) params.set("status", status)
+  if (search && search.trim()) params.set("search", search.trim())
   return api.get<Page<RequisitionResponse>>(`/api/requisitions?${params}`, signal)
 }
 

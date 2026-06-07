@@ -91,7 +91,45 @@ export function statusColor(status: string): [number, number, number] {
   return map[status] ?? COLORS.textLight
 }
 
-export function addLogoPlaceholder(doc: jsPDF, x: number, y: number, w: number, h: number) {
+let cachedLogoDataUrl: string | null = null
+
+async function loadLogoDataUrl(): Promise<string | null> {
+  if (cachedLogoDataUrl) return cachedLogoDataUrl
+  try {
+    const res = await fetch("/visco-logo.png")
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return await new Promise<string | null>((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        cachedLogoDataUrl = (reader.result as string) ?? null
+        resolve(cachedLogoDataUrl)
+      }
+      reader.onerror = () => resolve(null)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function addLogoPlaceholder(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const dataUrl = await loadLogoDataUrl()
+  if (dataUrl) {
+    try {
+      const format = dataUrl.includes("data:image/jpeg") ? "JPEG" : "PNG"
+      doc.addImage(dataUrl, format, x, y, w, h)
+      return
+    } catch {
+      // fall through to text placeholder
+    }
+  }
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x, y, w, h, 3, 3, "FD")
@@ -118,4 +156,21 @@ export function addSeparator(doc: jsPDF, x: number, y: number, w: number, color?
   doc.setDrawColor(...(color ?? COLORS.primary))
   doc.setLineWidth(0.8)
   doc.line(x, y, x + w, y)
+}
+
+export function addWrappedText(
+  doc: jsPDF,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number = 5,
+  maxLines?: number,
+): number {
+  const lines = doc.splitTextToSize(text, maxWidth)
+  const finalLines = maxLines ? lines.slice(0, maxLines) : lines
+  finalLines.forEach((line: string, i: number) => {
+    doc.text(line, x, y + i * lineHeight)
+  })
+  return finalLines.length * lineHeight
 }

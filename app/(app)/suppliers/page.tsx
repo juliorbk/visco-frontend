@@ -1,21 +1,45 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { SupplierPerformanceChart } from "@/components/visco/suppliers/performance-chart"
 import { SupplierCard } from "@/components/visco/suppliers/supplier-card"
 import { SupplierDetail } from "@/components/visco/suppliers/supplier-detail"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
-import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from "@/lib/services/suppliers"
-import type { SupplierDTO } from "@/lib/types"
+import { SupplierCategoryManagerModal } from "@/components/visco/suppliers/supplier-category-manager-modal"
+import {
+  fetchSuppliers,
+  fetchSuppliersByCategory,
+  fetchActiveSupplierCategories,
+  createSupplier,
+  updateSupplier,
+  deactivateSupplier,
+} from "@/lib/services/suppliers"
+import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
-import { canCreateSupplier } from "@/lib/permissions"
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
+import { canCreateSupplier, canManageSupplierCategories } from "@/lib/permissions"
+import { useDebounce } from "@/hooks/use-debounce"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
+  TagIcon,
+} from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 12
+const ALL_CATEGORIES = "__all__"
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
@@ -28,27 +52,46 @@ export default function SuppliersPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
   const [search, setSearch] = useState("")
-
-  const filtered = useMemo(
-    () => suppliers.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())),
-    [suppliers, search],
-  )
+  const debouncedSearch = useDebounce(search, 300)
+  const [categoryFilter, setCategoryFilter] = useState<string>(ALL_CATEGORIES)
+  const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
+  const [categoriesManagerOpen, setCategoriesManagerOpen] = useState(false)
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetchSuppliers(page, PAGE_SIZE)
+      const res =
+        categoryFilter === ALL_CATEGORIES
+          ? await fetchSuppliers(page, PAGE_SIZE, debouncedSearch)
+          : await fetchSuppliersByCategory(Number(categoryFilter), page, PAGE_SIZE, debouncedSearch)
       const list = res.content ?? []
       setSuppliers(list)
       setTotalPages(res.page.totalPages)
       setTotalElements(res.page.totalElements)
-      setSelectedId((prev) => (prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null))
+      setSelectedId((prev) =>
+        prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null,
+      )
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar proveedores")
+      toast.error(
+        err instanceof Error ? err.message : "Error loading suppliers",
+      )
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [page, categoryFilter, debouncedSearch])
+
+  const loadCategories = useCallback(async () => {
+    try {
+      const res = await fetchActiveSupplierCategories(0, 200)
+      setCategories(res.content ?? [])
+    } catch {
+      setCategories([])
+    }
+  }, [])
+
+  useEffect(() => {
+    loadCategories()
+  }, [loadCategories])
 
   useEffect(() => {
     load()
@@ -57,24 +100,38 @@ export default function SuppliersPage() {
   const user = getCachedUser()
   const selected = suppliers.find((s) => s.id === selectedId) ?? null
 
+  const handleCategoryFilterChange = (v: string) => {
+    setCategoryFilter(v)
+    setPage(0)
+    setSelectedId(null)
+  }
+
+  const handleSearchChange = (v: string) => {
+    setSearch(v)
+    setPage(0)
+    setSelectedId(null)
+  }
+
   const handleSave = async (data: Partial<SupplierDTO>, id?: number) => {
     try {
       setSaving(true)
       if (id) {
         const updated = await updateSupplier(id, data)
         setSuppliers((prev) => prev.map((s) => (s.id === id ? updated : s)))
-        toast.success("Proveedor actualizado")
+        toast.success("Supplier updated")
       } else {
         const created = await createSupplier(data)
         setSuppliers((prev) => [created, ...prev])
         setSelectedId(created.id)
         setPage(0)
-        toast.success("Proveedor creado")
+        toast.success("Supplier created")
       }
       setModalOpen(false)
       setEditing(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al guardar proveedor")
+      toast.error(
+        err instanceof Error ? err.message : "Error saving supplier",
+      )
     } finally {
       setSaving(false)
     }
@@ -84,31 +141,45 @@ export default function SuppliersPage() {
     try {
       await deactivateSupplier(s.id)
       setSuppliers((prev) => prev.filter((x) => x.id !== s.id))
-      toast.success(`${s.name} desactivado`)
+      toast.success(`${s.name} deactivated`)
       if (selectedId === s.id) setSelectedId(null)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al desactivar proveedor")
+      toast.error(
+        err instanceof Error ? err.message : "Error deactivating supplier",
+      )
     }
   }
 
   return (
     <div>
       <PageHeader
-        title="Gestión de Proveedores"
-        subtitle="Catálogo completo, desempeño histórico y cumplimiento normativo."
+        title="Supplier management"
+        subtitle="Complete catalog, historical performance and compliance tracking."
         actions={
-          canCreateSupplier(user) ? (
-            <Button
-              size="sm"
-              className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
-              onClick={() => {
-                setEditing(null)
-                setModalOpen(true)
-              }}
-            >
-              <PlusIcon className="size-4 mr-2" /> Nuevo Proveedor
-            </Button>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {canManageSupplierCategories(user) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="bg-card"
+                onClick={() => setCategoriesManagerOpen(true)}
+              >
+                <TagIcon className="size-4 mr-2" /> Manage categories
+              </Button>
+            )}
+            {canCreateSupplier(user) && (
+              <Button
+                size="sm"
+                className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
+                onClick={() => {
+                  setEditing(null)
+                  setModalOpen(true)
+                }}
+              >
+                <PlusIcon className="size-4 mr-2" /> New supplier
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -116,16 +187,29 @@ export default function SuppliersPage() {
         <SupplierPerformanceChart />
       </div>
 
-      <div className="mb-4">
-        <div className="relative max-w-xs">
+      <div className="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative max-w-xs w-full">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nombre…"
+            placeholder="Search by name…"
             className="pl-9 h-10"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
+        <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
+          <SelectTrigger className="h-10 w-full sm:w-[220px]">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -134,14 +218,18 @@ export default function SuppliersPage() {
             {loading ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
                 <ArrowPathIcon className="size-5 animate-spin" />
-                Cargando proveedores…
+                Loading suppliers…
               </div>
-            ) : filtered.length === 0 ? (
+            ) : suppliers.length === 0 ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-                {search ? "No hay proveedores que coincidan con la búsqueda." : "No hay proveedores disponibles."}
+                {debouncedSearch
+                  ? "No suppliers match the search."
+                  : categoryFilter !== ALL_CATEGORIES
+                    ? "No suppliers in this category."
+                    : "No suppliers available."}
               </div>
             ) : (
-              filtered.map((s) => (
+              suppliers.map((s) => (
                 <SupplierCard
                   key={s.id}
                   supplier={s}
@@ -162,11 +250,11 @@ export default function SuppliersPage() {
                 className={page === 0 ? "opacity-50 cursor-not-allowed" : ""}
               >
                 <ChevronLeftIcon className="size-4 mr-1" />
-                Anterior
+                Previous
               </Button>
 
               <span className="text-sm text-muted-foreground">
-                Página {page + 1} de {totalPages} · {totalElements} proveedores
+                Page {page + 1} of {totalPages} · {totalElements} suppliers
               </span>
 
               <Button
@@ -176,7 +264,7 @@ export default function SuppliersPage() {
                 onClick={() => setPage((p) => p + 1)}
                 className={page >= totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""}
               >
-                Siguiente
+                Next
                 <ChevronRightIcon className="size-4 ml-1" />
               </Button>
             </div>
@@ -204,6 +292,14 @@ export default function SuppliersPage() {
         editing={editing}
         onSave={handleSave}
         saving={saving}
+      />
+
+      <SupplierCategoryManagerModal
+        open={categoriesManagerOpen}
+        onOpenChange={(o) => {
+          setCategoriesManagerOpen(o)
+          if (!o) loadCategories()
+        }}
       />
     </div>
   )

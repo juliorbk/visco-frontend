@@ -9,32 +9,45 @@ import { DispatchDetailPanel } from "@/components/visco/dispatches/dispatch-deta
 import { NuevoDespachoModal } from "@/components/visco/dispatches/nuevo-despacho-modal"
 import { fetchDispatches } from "@/lib/services/warehouse"
 import type { DispatchResponse } from "@/lib/types"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+const PAGE_SIZE = 6
 
 export default function DispatchesPage() {
   const [dispatches, setDispatches] = useState<DispatchResponse[]>([])
+  const [totalPages, setTotalPages] = useState(1)
   const [loading, setLoading] = useState(true)
   const [selectedDispatch, setSelectedDispatch] = useState<DispatchResponse | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [page, setPage] = useState(0)
+  const [search, setSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 300)
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetchDispatches(0, 50)
+      const res = await fetchDispatches(page, PAGE_SIZE, debouncedSearch)
       const sorted = (res.content ?? []).sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
       setDispatches(sorted)
+      setTotalPages(res.page.totalPages)
+      if (page === 0) setSelectedDispatch(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cargar despachos")
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page, debouncedSearch])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    setPage(0)
+  }, [debouncedSearch])
 
   const handleNewDispatch = async () => {
     load()
@@ -64,6 +77,11 @@ export default function DispatchesPage() {
               dispatches={dispatches}
               onSelectDispatch={setSelectedDispatch}
               selectedDispatchId={selectedDispatch?.id}
+              searchQuery={search}
+              onSearchChange={setSearch}
+              currentPage={page + 1}
+              totalPages={totalPages}
+              onPageChange={(p) => setPage(p - 1)}
             />
           </div>
           <div className="lg:col-span-1">

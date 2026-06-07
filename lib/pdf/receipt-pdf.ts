@@ -4,6 +4,7 @@ import {
   COLORS,
   addLogoPlaceholder,
   addSeparator,
+  addWrappedText,
   formatDateLong,
   formatCurrency,
 } from "./pdf-utils"
@@ -19,6 +20,7 @@ function addTable(
 ) {
   const rowH = 6
   const headH = 7
+  const cellPadding = 2
   const border = COLORS.border
   const primary = COLORS.primary
   const white = COLORS.white
@@ -32,7 +34,7 @@ function addTable(
 
   let cx = x
   head.forEach((h, i) => {
-    doc.text(h, cx + 2, y + headH / 2 + 2)
+    doc.text(h, cx + cellPadding, y + headH / 2 + 2)
     cx += colWidths[i]
     if (i < head.length - 1) {
       doc.setDrawColor(...white)
@@ -47,32 +49,48 @@ function addTable(
 
   let cy = y + headH
   body.forEach((row, ri) => {
-    if (ri % 2 === 1) {
-      doc.setFillColor(249, 250, 251)
-      doc.rect(x, cy, w, rowH, "F")
-    }
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
     doc.setTextColor(...text)
 
+    let maxLines = 1
     let rx = x
+    const cellTexts: string[][] = []
+
     row.forEach((cell, ci) => {
-      const lines = doc.splitTextToSize(cell, colWidths[ci] - 4)
-      doc.text(lines[0] ?? "", rx + 2, cy + rowH / 2 + 2)
+      const lines = doc.splitTextToSize(cell, colWidths[ci] - cellPadding * 2)
+      cellTexts.push(lines)
+      if (lines.length > maxLines) maxLines = lines.length
+    })
+
+    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
+
+    if (ri % 2 === 1) {
+      doc.setFillColor(249, 250, 251)
+      doc.rect(x, cy, w, rowHeight, "F")
+    }
+
+    rx = x
+    row.forEach((_, ci) => {
+      const lines = cellTexts[ci]
+      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
+      lines.forEach((line, li) => {
+        doc.text(line, rx + cellPadding, textY + li * 4.5)
+      })
       rx += colWidths[ci]
       if (ci < row.length - 1) {
-        doc.line(rx, cy, rx, cy + rowH)
+        doc.line(rx, cy, rx, cy + rowHeight)
       }
     })
 
-    cy += rowH
+    cy += rowHeight
     doc.line(x, cy, x + w, cy)
   })
 
   return cy
 }
 
-export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): jsPDF {
+export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: PurchaseOrderReceiptSummary | null): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -95,7 +113,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   const supplierAddress = supplier?.address ?? "—"
 
   // ── Header ──
-  addLogoPlaceholder(doc, x0, y, 40, 22)
+  await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(22)
   doc.setFont("helvetica", "bold")
@@ -137,7 +155,7 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
 
   // ── Supplier & Warehouse Info ──
   const boxW = (contentW - 8) / 2
-  const boxH = 36
+  const boxH = 42
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -150,13 +168,19 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  doc.text(supplierName, x0 + 4, y + 12)
-  doc.text(supplierAddress, x0 + 4, y + 18)
-  if (supplier?.email) doc.text(supplier.email, x0 + 4, y + 24)
+  let by = y + 13
+  by += addWrappedText(doc, supplierName, x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, supplierAddress, x0 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  if (supplier?.email) {
+    by += addWrappedText(doc, supplier.email, x0 + 4, by, boxW - 8, 4.5, 1)
+    by += 1.5
+  }
   if (supplier?.phoneNumbers?.length) {
     doc.setFontSize(8)
     doc.setTextColor(...COLORS.textLight)
-    doc.text("Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, y + 30)
+    addWrappedText(doc, "Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by, boxW - 8, 4, 1)
   }
 
   // Warehouse box
@@ -169,17 +193,25 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  doc.text(warehouseName, x1 + 4, y + 12)
-  doc.text(warehouseAddress, x1 + 4, y + 18)
+  by = y + 13
+  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
+  by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
+  by += 1.5
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
   const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
   const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
   const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
-  if (extraInfo) doc.text(extraInfo, x1 + 4, y + 24)
+  if (extraInfo) {
+    by += addWrappedText(doc, extraInfo, x1 + 4, by, boxW - 8, 4, 1)
+    by += 1.5
+  }
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  if (warehouse?.description) doc.text(warehouse.description, x1 + 4, y + 30)
+  if (warehouse?.description) {
+    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4.5, 2)
+  }
 
   y += boxH + 6
 
@@ -320,7 +352,8 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
 
   // Observations box
   const obsX = x0 + footBoxW + 8
-  doc.roundedRect(obsX, y, footBoxW, 40, 2, 2, "FD")
+  const obsBoxH = 40
+  doc.roundedRect(obsX, y, footBoxW, obsBoxH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
@@ -329,8 +362,8 @@ export function generateReceiptPDF(receipt: GoodReceiptResponse, summary?: Purch
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
   const obsText = receipt.notes || "Sin observaciones."
-  const obsLines = doc.splitTextToSize(obsText, footBoxW - 8)
-  doc.text(obsLines, obsX + 4, y + 14)
+  const maxObsLines = Math.floor((obsBoxH - 14) / 4)
+  addWrappedText(doc, obsText, obsX + 4, y + 13, footBoxW - 8, 4, maxObsLines)
 
   return doc
 }
