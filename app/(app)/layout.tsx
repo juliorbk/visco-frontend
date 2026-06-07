@@ -1,7 +1,6 @@
 import type React from "react"
 import { UserProvider } from "@/lib/user-context"
 import { AuthGuard } from "@/components/auth-guard"
-import { UserProvider } from "@/lib/user-context"
 import { AppLayoutClient } from "./layout-client"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

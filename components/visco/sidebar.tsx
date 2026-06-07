@@ -2,30 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Squares2X2Icon as LayoutDashboard, CubeIcon as Package, ShoppingCartIcon, BuildingOffice2Icon, ChartBarIcon, TruckIcon, DocumentTextIcon, PlusIcon, XMarkIcon, ShieldCheckIcon, Cog6ToothIcon, BuildingStorefrontIcon, PaperAirplaneIcon as DispatchesIcon } from "@heroicons/react/24/outline"
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { Logo } from "./logo"
 import { useCurrentUser } from "@/lib/user-context"
 import { cn } from "@/lib/utils"
-
-const BASE_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/inventory", label: "Inventory", icon: Package },
-  { href: "/requisitions", label: "Requisitions", icon: DocumentTextIcon },
-  { href: "/procurement", label: "Procurement", icon: ShoppingCartIcon },
-  { href: "/inbounds", label: "Inbounds", icon: TruckIcon },
-  { href: "/suppliers", label: "Suppliers", icon: BuildingOffice2Icon },
-  { href: "/dispatches", label: "Dispatches", icon: DispatchesIcon },
-  { href: "/warehouses", label: "Warehouses", icon: BuildingStorefrontIcon },
-  { href: "/reports", label: "Reports", icon: ChartBarIcon },
-]
+import { getVisibleNav } from "@/lib/config/navigation"
+import { canCreatePurchaseOrder } from "@/lib/permissions"
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname()
   const { user } = useCurrentUser()
 
-  const NAV = user?.role === "ADMIN"
-    ? [...BASE_NAV,   { href: "/admin", label: "Admin", icon: ShieldCheckIcon }]
-    : BASE_NAV
+  const NAV = getVisibleNav(user)
 
   return (
     <>
@@ -86,16 +74,18 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           })}
         </nav>
 
-        <div className="p-3 border-t border-sidebar-border">
-          <Link
-            href="/procurement?new=1"
-            onClick={onClose}
-            className="flex items-center justify-center gap-1.5 w-full rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-3 py-2.5 transition-colors"
-          >
-            <PlusIcon className="size-3.5" />
-            New Purchase Order
-          </Link>
-        </div>
+        {canCreatePurchaseOrder(user) && (
+          <div className="p-3 border-t border-sidebar-border">
+            <Link
+              href="/procurement?new=1"
+              onClick={onClose}
+              className="flex items-center justify-center gap-1.5 w-full rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-3 py-2.5 transition-colors"
+            >
+              <PlusIcon className="size-3.5" />
+              New Purchase Order
+            </Link>
+          </div>
+        )}
       </aside>
     </>
   )

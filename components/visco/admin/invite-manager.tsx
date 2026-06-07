@@ -44,21 +44,14 @@ import type {
 } from "@/lib/types"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { ROLE_LABELS, ROLE_BADGE } from "@/lib/config/roles"
 
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: "WAREHOUSEMAN", label: "Almacenista" },
-  { value: "PROCUREMENT", label: "Compras" },
-  { value: "MANAGER", label: "Gerente" },
-  { value: "ADMIN", label: "Administrador" },
+  { value: "WAREHOUSEMAN", label: ROLE_LABELS.WAREHOUSEMAN },
+  { value: "PROCUREMENT", label: ROLE_LABELS.PROCUREMENT },
+  { value: "MANAGER", label: ROLE_LABELS.MANAGER },
+  { value: "ADMIN", label: ROLE_LABELS.ADMIN },
 ]
-
-const ROLE_BADGE: Record<UserRole, string> = {
-  SUPERADMIN: "bg-purple-100 text-purple-800 ring-purple-200",
-  ADMIN: "bg-red-100 text-red-800 ring-red-200",
-  MANAGER: "bg-blue-100 text-blue-800 ring-blue-200",
-  PROCUREMENT: "bg-amber-100 text-amber-800 ring-amber-200",
-  WAREHOUSEMAN: "bg-green-100 text-green-800 ring-green-200",
-}
 
 const NO_CC = "__none__"
 const NO_GG = "__none__"
@@ -497,7 +490,7 @@ export function InviteManager() {
                           <Badge
                             className={ROLE_BADGE[inv.intendedRole] ?? "bg-gray-100 text-gray-700"}
                           >
-                            {inv.intendedRole}
+                            {ROLE_LABELS[inv.intendedRole]}
                           </Badge>
                         </td>
                         <td className="px-5 py-3">

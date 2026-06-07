@@ -28,15 +28,15 @@ import type {
   ManagementDTO,
   GeneralManagementDTO,
 } from "@/lib/types"
+import { ROLE_LABELS } from "@/lib/config/roles"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
-
 const ROLES: { value: UserRole; label: string }[] = [
-  { value: "WAREHOUSEMAN", label: "Almacenista" },
-  { value: "PROCUREMENT", label: "Compras" },
-  { value: "MANAGER", label: "Gerente" },
-  { value: "ADMIN", label: "Administrador" },
+  { value: "WAREHOUSEMAN", label: ROLE_LABELS.WAREHOUSEMAN },
+  { value: "PROCUREMENT", label: ROLE_LABELS.PROCUREMENT },
+  { value: "MANAGER", label: ROLE_LABELS.MANAGER },
+  { value: "ADMIN", label: ROLE_LABELS.ADMIN },
 ]
 
 export function RegisterModal({

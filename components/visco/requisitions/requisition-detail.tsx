@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import type { RequisitionResponse } from "@/lib/types"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { getCachedUser } from "@/lib/auth-client"
+import { canApproveRequisitions } from "@/lib/permissions"
 import {
   submitRequisitionForApproval,
   approveRequisition,
@@ -54,7 +55,7 @@ export function RequisitionDetail({
   }
 
   const user = getCachedUser()
-  const isApprover = user?.role === "MANAGER" || user?.role === "ADMIN"
+  const isApprover = canApproveRequisitions(user)
 
   const handleAction = async (
     action: () => Promise<unknown>,

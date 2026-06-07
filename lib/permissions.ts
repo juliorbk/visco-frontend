@@ -1,40 +1,52 @@
 import type { UserRole } from "@/lib/types"
+import { isAtLeast, isExactly } from "@/lib/config/roles"
 
-function hasRole(user: { role: UserRole } | null | undefined, ...allowed: UserRole[]): boolean {
-  if (!user) return false
-  return allowed.includes(user.role)
+type UserRef = { role: UserRole } | null | undefined
+
+export function canViewSuppliers(user: UserRef): boolean {
+  return isAtLeast(user, "WAREHOUSEMAN")
 }
 
-export function canViewSuppliers(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "MANAGER", "PROCUREMENT", "WAREHOUSEMAN")
+export function canCreateSupplier(user: UserRef): boolean {
+  return isAtLeast(user, "PROCUREMENT")
 }
 
-export function canCreateSupplier(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "MANAGER", "PROCUREMENT")
+export function canEditSupplier(user: UserRef): boolean {
+  return isAtLeast(user, "PROCUREMENT")
 }
 
-export function canEditSupplier(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "MANAGER", "PROCUREMENT")
+export function canDeactivateSupplier(user: UserRef): boolean {
+  return isAtLeast(user, "MANAGER")
 }
 
-export function canDeactivateSupplier(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "MANAGER")
+export function canDeleteSupplier(user: UserRef): boolean {
+  return isExactly(user, "SUPERADMIN")
 }
 
-export function canCreatePurchaseOrder(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "PROCUREMENT")
+export function canCreatePurchaseOrder(user: UserRef): boolean {
+  return isAtLeast(user, "PROCUREMENT")
 }
 
-export function canCreateSupplierFromPo(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "PROCUREMENT")
+export function canCreateSupplierFromPo(user: UserRef): boolean {
+  return isAtLeast(user, "PROCUREMENT")
 }
 
-export function canManageRequisitions(user: { role: UserRole } | null | undefined): boolean {
-  return hasRole(user, "ADMIN", "PROCUREMENT")
+export function canManageRequisitions(user: UserRef): boolean {
+  return isAtLeast(user, "PROCUREMENT")
 }
 
-export function canManageSupplierCategories(
-  user: { role: UserRole } | null | undefined,
-): boolean {
-  return hasRole(user, "ADMIN", "MANAGER")
+export function canApproveRequisitions(user: UserRef): boolean {
+  return isAtLeast(user, "MANAGER")
+}
+
+export function canManageSupplierCategories(user: UserRef): boolean {
+  return isAtLeast(user, "MANAGER")
+}
+
+export function canViewAdminPanel(user: UserRef): boolean {
+  return isAtLeast(user, "ADMIN")
+}
+
+export function canDelete(user: UserRef): boolean {
+  return isExactly(user, "SUPERADMIN")
 }
