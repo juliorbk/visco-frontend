@@ -71,14 +71,14 @@ export async function fetchActiveSupplierCategories(
 }
 
 export async function createSupplierCategory(
-  body: { name: string; description?: string; icon?: string; color?: string },
+  body: { name: string; description?: string },
 ): Promise<SupplierCategoryDTO> {
   return api.post<SupplierCategoryDTO>("/api/supplier-categories", body)
 }
 
 export async function updateSupplierCategory(
   id: number,
-  body: Partial<Pick<SupplierCategoryDTO, "name" | "description" | "active" | "icon" | "color">>,
+  body: Partial<Pick<SupplierCategoryDTO, "name" | "description" | "active">>,
 ): Promise<SupplierCategoryDTO> {
   return api.put<SupplierCategoryDTO>(`/api/supplier-categories/${id}`, body)
 }

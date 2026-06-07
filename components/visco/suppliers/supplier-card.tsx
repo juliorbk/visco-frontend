@@ -1,24 +1,18 @@
 "use client"
 
-import { EnvelopeIcon, PhoneIcon, StarIcon, ShoppingCartIcon } from "@heroicons/react/24/outline"
-import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
+import { BuildingOffice2Icon, EnvelopeIcon, PhoneIcon, StarIcon, ShoppingCartIcon, TagIcon } from "@heroicons/react/24/outline"
+import type { SupplierDTO } from "@/lib/types"
 import { cn } from "@/lib/utils"
-import { getCategoryIcon, getCategoryColorHex } from "@/lib/config/supplier-category-icons"
 
 export function SupplierCard({
   supplier,
   selected,
   onSelect,
-  categories,
 }: {
   supplier: SupplierDTO
   selected?: boolean
   onSelect: (s: SupplierDTO) => void
-  categories: SupplierCategoryDTO[]
 }) {
-  const category = categories.find((c) => c.id === supplier.categoryId)
-  const CategoryIcon = getCategoryIcon(category?.icon)
-  const categoryColor = getCategoryColorHex(category?.color)
   const statusLabel = supplier.active ? "ACTIVO" : "INACTIVO"
   const statusClass = supplier.active
     ? "bg-emerald-100 text-emerald-700"
@@ -35,8 +29,8 @@ export function SupplierCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="size-10 rounded-lg grid place-items-center shrink-0" style={{ backgroundColor: `${categoryColor}1a`, color: categoryColor }}>
-          <CategoryIcon className="size-5" />
+        <div className="size-10 rounded-lg bg-[#fde8e8] grid place-items-center text-[#7b1a1a] shrink-0">
+          <BuildingOffice2Icon className="size-5" />
         </div>
         <span
           className={cn(
@@ -56,8 +50,8 @@ export function SupplierCard({
           {supplier.currency}
         </p>
         {supplier.categoryName && (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium max-w-full" style={{ backgroundColor: `${categoryColor}1a`, color: categoryColor }}>
-            <CategoryIcon className="size-3 shrink-0" />
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#fde8e8] text-[#7b1a1a] px-2 py-0.5 text-[10px] font-medium max-w-full">
+            <TagIcon className="size-3 shrink-0" />
             <span className="truncate">{supplier.categoryName}</span>
           </span>
         )}

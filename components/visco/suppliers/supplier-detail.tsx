@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  BuildingOffice2Icon,
   EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
@@ -14,6 +15,7 @@ import {
   DocumentTextIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,10 +25,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
+import type { SupplierDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
 import { canEditSupplier, canDeactivateSupplier } from "@/lib/permissions"
-import { getCategoryIcon, getCategoryColorHex } from "@/lib/config/supplier-category-icons"
 import { useState } from "react"
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
@@ -61,12 +62,10 @@ export function SupplierDetail({
   supplier,
   onEdit,
   onDeactivate,
-  categories,
 }: {
   supplier: SupplierDTO | null
   onEdit?: (s: SupplierDTO) => void
   onDeactivate?: (s: SupplierDTO) => void
-  categories: SupplierCategoryDTO[]
 }) {
   const [showDesc, setShowDesc] = useState(false)
   const user = getCachedUser()
@@ -83,9 +82,6 @@ export function SupplierDetail({
 
   const hasMetrics = supplier.rating !== undefined || supplier.totalOrders !== undefined
   const hasRepresentatives = supplier.representatives.length > 0
-  const category = categories.find((c) => c.id === supplier.categoryId)
-  const CategoryIcon = getCategoryIcon(category?.icon)
-  const categoryColor = getCategoryColorHex(category?.color)
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs lg:sticky lg:top-20">
@@ -124,13 +120,13 @@ export function SupplierDetail({
 
       {/* Avatar + Name */}
       <div className="px-5 py-5 text-center border-b border-border">
-        <div className="mx-auto size-16 rounded-full grid place-items-center" style={{ backgroundColor: `${categoryColor}1a`, color: categoryColor }}>
-          <CategoryIcon className="size-7" />
+        <div className="mx-auto size-16 rounded-full bg-[#fde8e8] grid place-items-center text-[#7b1a1a]">
+          <BuildingOffice2Icon className="size-7" />
         </div>
         <h4 className="mt-3 font-serif text-xl font-semibold break-words">{supplier.name}</h4>
         {supplier.categoryName ? (
-          <span className="mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium max-w-full" style={{ backgroundColor: `${categoryColor}1a`, color: categoryColor }}>
-            <CategoryIcon className="size-3 shrink-0" />
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#fde8e8] text-[#7b1a1a] px-2.5 py-0.5 text-xs font-medium max-w-full">
+            <TagIcon className="size-3 shrink-0" />
             <span className="truncate">{supplier.categoryName}</span>
           </span>
         ) : (

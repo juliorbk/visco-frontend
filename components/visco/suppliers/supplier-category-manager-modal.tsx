@@ -22,21 +22,14 @@ import {
 } from "@/lib/services/suppliers"
 import type { SupplierCategoryDTO } from "@/lib/types"
 import {
-  CATEGORY_ICONS,
-  CATEGORY_COLORS,
-  getCategoryIcon,
-  getCategoryColorHex,
-  DEFAULT_CATEGORY_COLOR,
-} from "@/lib/config/supplier-category-icons"
-import {
   ArrowPathIcon,
   PlusIcon,
   PencilIcon,
   CheckCircleIcon,
   NoSymbolIcon,
   XMarkIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline"
-import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export function SupplierCategoryManagerModal({
@@ -54,10 +47,6 @@ export function SupplierCategoryManagerModal({
   const [editName, setEditName] = useState("")
   const [editDescription, setEditDescription] = useState("")
   const [saving, setSaving] = useState(false)
-  const [icon, setIcon] = useState("")
-  const [color, setColor] = useState("")
-  const [editIcon, setEditIcon] = useState("")
-  const [editColor, setEditColor] = useState("")
 
   const load = useCallback(async () => {
     try {
@@ -80,24 +69,18 @@ export function SupplierCategoryManagerModal({
   const resetCreate = () => {
     setName("")
     setDescription("")
-    setIcon("")
-    setColor("")
   }
 
   const startEdit = (cat: SupplierCategoryDTO) => {
     setEditingId(cat.id)
     setEditName(cat.name)
     setEditDescription(cat.description ?? "")
-    setEditIcon(cat.icon ?? "")
-    setEditColor(cat.color ?? "")
   }
 
   const cancelEdit = () => {
     setEditingId(null)
     setEditName("")
     setEditDescription("")
-    setEditIcon("")
-    setEditColor("")
   }
 
   const handleCreate = async () => {
@@ -108,8 +91,6 @@ export function SupplierCategoryManagerModal({
       await createSupplierCategory({
         name: trimmed,
         description: description.trim() || undefined,
-        icon: icon || undefined,
-        color: color || undefined,
       })
       toast.success(`Category "${trimmed}" created`)
       resetCreate()
@@ -131,8 +112,6 @@ export function SupplierCategoryManagerModal({
       await updateSupplierCategory(id, {
         name: trimmed,
         description: editDescription.trim() || undefined,
-        icon: editIcon || undefined,
-        color: editColor || undefined,
       })
       toast.success("Category updated")
       cancelEdit()
@@ -223,52 +202,6 @@ export function SupplierCategoryManagerModal({
               disabled={saving}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Icon</Label>
-            <div className="flex gap-1 flex-wrap">
-              {CATEGORY_ICONS.map((opt) => {
-                const IconComp = opt.icon
-                const selected = icon === opt.key
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    title={opt.label}
-                    onClick={() => setIcon(selected ? "" : opt.key)}
-                    className={cn(
-                      "size-8 grid place-items-center rounded-md border transition-colors",
-                      selected
-                        ? "border-[#7b1a1a] bg-[#fde8e8] text-[#7b1a1a]"
-                        : "border-border hover:border-[#7b1a1a]/40 text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <IconComp className="size-4" />
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Color</Label>
-            <div className="flex gap-1.5 flex-wrap">
-              {CATEGORY_COLORS.map((opt) => {
-                const selected = color === opt.key
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    title={opt.label}
-                    onClick={() => setColor(selected ? "" : opt.key)}
-                    className={cn(
-                      "size-7 rounded-full border-2 transition-all",
-                      selected ? "border-[#7b1a1a] scale-110" : "border-transparent hover:scale-105",
-                    )}
-                    style={{ backgroundColor: opt.value }}
-                  />
-                )
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Category list */}
@@ -324,52 +257,6 @@ export function SupplierCategoryManagerModal({
                     className="text-sm"
                     disabled={saving}
                   />
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Icon</Label>
-                    <div className="flex gap-1 flex-wrap">
-                      {CATEGORY_ICONS.map((opt) => {
-                        const IconComp = opt.icon
-                        const selected = editIcon === opt.key
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            title={opt.label}
-                            onClick={() => setEditIcon(selected ? "" : opt.key)}
-                            className={cn(
-                              "size-8 grid place-items-center rounded-md border transition-colors",
-                              selected
-                                ? "border-[#7b1a1a] bg-[#fde8e8] text-[#7b1a1a]"
-                                : "border-border hover:border-[#7b1a1a]/40 text-muted-foreground hover:text-foreground",
-                            )}
-                          >
-                            <IconComp className="size-4" />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Color</Label>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {CATEGORY_COLORS.map((opt) => {
-                        const selected = editColor === opt.key
-                        return (
-                          <button
-                            key={opt.key}
-                            type="button"
-                            title={opt.label}
-                            onClick={() => setEditColor(selected ? "" : opt.key)}
-                            className={cn(
-                              "size-7 rounded-full border-2 transition-all",
-                              selected ? "border-[#7b1a1a] scale-110" : "border-transparent hover:scale-105",
-                            )}
-                            style={{ backgroundColor: opt.value }}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div
@@ -378,13 +265,7 @@ export function SupplierCategoryManagerModal({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      {(() => {
-                        const CatIcon = getCategoryIcon(cat.icon)
-                        const catColor = getCategoryColorHex(cat.color)
-                        return (
-                          <CatIcon className="size-4 shrink-0" style={{ color: catColor }} />
-                        )
-                      })()}
+                      <TagIcon className="size-4 text-[#7b1a1a] shrink-0" />
                       <span className="text-sm font-semibold truncate">
                         {cat.name}
                       </span>
