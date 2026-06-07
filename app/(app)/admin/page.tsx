@@ -19,15 +19,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { fetchUsers, updateUser, deactivateUser, activateUser } from "@/lib/services/admin"
+import { fetchUsers, updateUser, deactivateUser, activateUser, deleteUser } from "@/lib/services/admin"
 import { getCachedUser } from "@/lib/auth-client"
 import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
 import { InviteManager } from "@/components/visco/admin/invite-manager"
 import type { UserDTO, UserRole } from "@/lib/types"
-import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon } from "@heroicons/react/24/outline"
+import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { ROLE_LABELS, ROLE_BADGE } from "@/lib/config/roles"
+import { canDelete } from "@/lib/permissions"
 import { toast } from "sonner"
 
 const ROLES: UserRole[] = [
@@ -47,6 +48,7 @@ export default function AdminPage() {
   const [editingUser, setEditingUser] = useState<UserDTO | null>(null)
   const [newRole, setNewRole] = useState<UserRole | null>(null)
   const [saving, setSaving] = useState(false)
+  const [deletingUser, setDeletingUser] = useState<UserDTO | null>(null)
   const [areaManagerOpen, setAreaManagerOpen] = useState(false)
 
   const currentUser = getCachedUser()
@@ -98,6 +100,21 @@ export default function AdminPage() {
       setNewRole(null)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar rol")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingUser) return
+    setSaving(true)
+    try {
+      await deleteUser(deletingUser.id)
+      setUsers((prev) => prev.filter((x) => x.id !== deletingUser.id))
+      toast.success(`${deletingUser.name} eliminado permanentemente`)
+      setDeletingUser(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al eliminar usuario")
     } finally {
       setSaving(false)
     }
@@ -237,6 +254,17 @@ export default function AdminPage() {
                                   Reactivar
                                 </Button>
                               )}
+                              {canDelete(currentUser) && u.id !== currentUser?.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs text-red-700 hover:text-red-800"
+                                  onClick={() => setDeletingUser(u)}
+                                  title="Eliminar permanentemente"
+                                >
+                                  <TrashIcon className="size-3.5" />
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -282,6 +310,27 @@ export default function AdminPage() {
                   disabled={saving || !newRole}
                 >
                   {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Guardando…</> : "Guardar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={!!deletingUser} onOpenChange={(o) => { if (!o) setDeletingUser(null) }}>
+            <DialogContent className="sm:max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="font-serif">Eliminar usuario permanentemente</DialogTitle>
+                <DialogDescription>
+                  Esta accion no se puede deshacer. Se eliminara a <strong>{deletingUser?.name}</strong> ({deletingUser?.email}) y todos sus datos asociados del sistema.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={() => setDeletingUser(null)}>Cancelar</Button>
+                <Button
+                  className="bg-red-700 hover:bg-red-800 text-white"
+                  onClick={handleDelete}
+                  disabled={saving}
+                >
+                  {saving ? <><ArrowPathIcon className="size-4 animate-spin" /> Eliminando…</> : "Eliminar"}
                 </Button>
               </DialogFooter>
             </DialogContent>

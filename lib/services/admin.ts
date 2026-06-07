@@ -31,6 +31,10 @@ export async function activateUser(id: string): Promise<void> {
   await api.patch(`/api/users/${id}/activate`)
 }
 
+export async function deleteUser(id: string): Promise<void> {
+  await api.delete(`/api/users/${id}`)
+}
+
 export async function fetchAllManagements(): Promise<ManagementDTO[]> {
   return api.get<ManagementDTO[]>("/api/management")
 }
