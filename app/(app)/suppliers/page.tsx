@@ -235,6 +235,7 @@ export default function SuppliersPage() {
                   supplier={s}
                   selected={selectedId === s.id}
                   onSelect={(sup) => setSelectedId(sup.id)}
+                  categories={categories}
                 />
               ))
             )}
@@ -274,6 +275,7 @@ export default function SuppliersPage() {
         <div className="lg:col-span-1 lg:self-start">
           <SupplierDetail
             supplier={selected}
+            categories={categories}
             onEdit={(s) => {
               setEditing(s)
               setModalOpen(true)

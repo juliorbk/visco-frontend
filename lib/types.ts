@@ -90,6 +90,8 @@ export interface SupplierCategoryDTO {
   name: string
   description: string
   active: boolean
+  icon?: string | null
+  color?: string | null
   createdAt?: string
   updatedAt?: string
 }
