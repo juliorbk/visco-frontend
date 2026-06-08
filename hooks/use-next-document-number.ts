@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 
 interface DocItem {
-  requisitionNumber?: string
-  orderNumber?: string
+  requisitionNumber?: string | null
+  orderNumber?: string | null
 }
 
 function parseSequential(prefix: string, num: string | undefined, currentYear: number) {
