@@ -1,56 +1,54 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { PlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/visco/page-header"
 import { DispatchesTable } from "@/components/visco/dispatches/dispatches-table"
 import { DispatchDetailPanel } from "@/components/visco/dispatches/dispatch-detail-panel"
 import { NuevoDespachoModal } from "@/components/visco/dispatches/nuevo-despacho-modal"
-import { fetchDispatches } from "@/lib/services/warehouse"
-import type { DispatchResponse } from "@/lib/types"
+import { useQuery } from "@/hooks/use-query"
+import { api } from "@/lib/api"
 import { useDebounce } from "@/hooks/use-debounce"
+import type { DispatchResponse, Page } from "@/lib/types"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 6
 
 export default function DispatchesPage() {
-  const [dispatches, setDispatches] = useState<DispatchResponse[]>([])
-  const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
   const [selectedDispatch, setSelectedDispatch] = useState<DispatchResponse | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetchDispatches(page, PAGE_SIZE, debouncedSearch)
-      const sorted = (res.content ?? []).sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
-      setDispatches(sorted)
-      setTotalPages(res.page.totalPages)
-      if (page === 0) setSelectedDispatch(null)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar despachos")
-    } finally {
-      setLoading(false)
-    }
-  }, [page, debouncedSearch])
+  const {
+    data: dispatchesData,
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery<Page<DispatchResponse>>(
+    (signal) => api.get(`/api/warehouse/dispatches?page=${page}&size=${PAGE_SIZE}&search=${debouncedSearch}`, signal),
+    [page, debouncedSearch]
+  )
+
+  const dispatches = dispatchesData?.content ?? []
+  const totalPages = dispatchesData?.page.totalPages ?? 1
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (error) toast.error("Error al cargar despachos")
+  }, [error])
 
   useEffect(() => {
     setPage(0)
   }, [debouncedSearch])
 
+  useEffect(() => {
+    if (page === 0) setSelectedDispatch(null)
+  }, [page])
+
   const handleNewDispatch = async () => {
-    load()
+    refetch()
     setIsModalOpen(false)
   }
 

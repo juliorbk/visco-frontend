@@ -27,11 +27,12 @@ import {
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchCategories } from "@/lib/services/categories"
 import type { ProductDTO, Category } from "@/lib/types"
-import { InventoryStatusBadge } from "@/components/visco/status-badge"
+import { InventoryStatusBadge, computeInventoryStatus } from "@/components/visco/status-badge"
 import { ItemDetailPanel } from "@/components/visco/inventory/item-detail-panel"
 import { AddItemModal } from "@/components/visco/inventory/add-item-modal"
 import { CategoryManagerModal } from "@/components/visco/inventory/category-manager-modal"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 
 export default function InventoryPage() {
@@ -43,7 +44,7 @@ export default function InventoryPage() {
 
   // Búsqueda con debounce
   const [search, setSearch] = useState(initialSearch)
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
+  const debouncedSearch = useDebounce(search, 500)
 
   // Filtros y ordenamiento
   const [category, setCategory] = useState<string>("all")
@@ -73,14 +74,10 @@ export default function InventoryPage() {
     loadCategories()
   }, [loadCategories])
 
-  // Debounce: reinicia página al cambiar búsqueda
+  // Reinicia página al cambiar búsqueda
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search)
-      setPage(0)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [search])
+    setPage(0)
+  }, [debouncedSearch])
 
   // Fetch unificado con AbortController:
   // - Cancela el request anterior si el usuario cambia filtros
@@ -145,13 +142,6 @@ export default function InventoryPage() {
     })
     return map
   }, [categories])
-
-  const computeStatus = (p: ProductDTO) => {
-    if (p.totalStock <= 0) return "Sin stock"
-    if (p.totalStock < p.reorderPoint) return "Bajo stock"
-    if (p.maxStock != null && p.totalStock >= p.maxStock) return "Stock excedido"
-    return "En stock"
-  }
 
   const toggleStockSort = () => {
     setStockSort((current) => {
@@ -352,7 +342,7 @@ export default function InventoryPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3">
-                      <InventoryStatusBadge status={computeStatus(p)} />
+                      <InventoryStatusBadge status={computeInventoryStatus(p)} />
                     </td>
                   </tr>
                 ))

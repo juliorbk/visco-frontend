@@ -9,3 +9,5 @@ export const UOM_OPTIONS = [
 export const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "CHECK", "USDT", "PAYPAL", "OTHER"]
 
 export const ORDER_TYPES = ["SERVICES", "MATERIALS", "MRO", "CAPITAL_EQUIPMENT"]
+
+export const DEFAULT_PAGE_SIZE = 20

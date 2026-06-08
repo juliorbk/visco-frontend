@@ -1,32 +1,17 @@
 import type { UserDTO } from "./types"
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
-
-if (typeof window !== "undefined" && !BASE_URL) {
-  console.error("[Auth] NEXT_PUBLIC_API_URL is not configured. Frontend cannot reach the backend API.")
-}
+import { api } from "./api"
 
 /**
  * Fetches the currently authenticated user from the backend.
  * Safe to call on the server (returns null) and the browser.
+ * Uses the shared api helper with skipAuthRedirect to prevent
+ * redirect loops when checking auth status.
  */
 export async function fetchUser(): Promise<UserDTO | null> {
-  if (!BASE_URL) {
-    console.warn("[Auth] fetchUser skipped: BASE_URL is empty")
-    return null
-  }
+  if (typeof window === "undefined") return null
   try {
-    const url = `${BASE_URL}/api/auth/me`
-    console.debug(`[Auth] Fetching user from: ${url}`)
-    const res = await fetch(url, {
-      credentials: "include",
-    })
-    console.debug(`[Auth] /api/auth/me responded with status: ${res.status}`)
-    if (res.status === 401 || res.status === 403) return null
-    if (!res.ok) return null
-    return (await res.json()) as UserDTO
-  } catch (err) {
-    console.error("[Auth] fetchUser failed:", err)
+    return await api.get<UserDTO>("/api/auth/me", undefined, true)
+  } catch {
     return null
   }
 }

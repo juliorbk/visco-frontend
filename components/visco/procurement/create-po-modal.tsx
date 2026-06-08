@@ -196,8 +196,6 @@ export function CreatePOModal({
     return () => controller.abort()
   }, [debouncedFinderQuery, finderOpen])
 
-  const filteredProducts = useMemo(() => products, [products])
-
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
 
   const reset = () => {
@@ -563,9 +561,9 @@ export function CreatePOModal({
                     Buscando…
                   </div>
                 )}
-                {finderOpen && !loadingProducts && filteredProducts.length > 0 && (
+                {finderOpen && !loadingProducts && products.length > 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-48 overflow-y-auto">
-                    {filteredProducts.map((p) => (
+                    {products.map((p) => (
                       <button
                         key={p.id}
                         type="button"
@@ -584,7 +582,7 @@ export function CreatePOModal({
                     ))}
                   </div>
                 )}
-                {finderOpen && !loadingProducts && finderQuery && filteredProducts.length === 0 && (
+                {finderOpen && !loadingProducts && finderQuery && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No se encontraron productos
                   </div>

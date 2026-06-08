@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -19,13 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useQuery } from "@/hooks/use-query"
 import { fetchUsers, updateUser, deactivateUser, activateUser, deleteUser } from "@/lib/services/admin"
 import { getCachedUser } from "@/lib/auth-client"
 import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
 import { InviteManager } from "@/components/visco/admin/invite-manager"
-import type { UserDTO, UserRole } from "@/lib/types"
-import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline"
+import type { UserDTO, UserRole, Page } from "@/lib/types"
+import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline
 import { cn } from "@/lib/utils"
 import { ROLE_LABELS, ROLE_BADGE } from "@/lib/config/roles"
 import { canDelete } from "@/lib/permissions"
@@ -43,31 +44,37 @@ type Tab = "users" | "invites" | "employees"
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("users")
-  const [users, setUsers] = useState<UserDTO[]>([])
-  const [loading, setLoading] = useState(true)
   const [editingUser, setEditingUser] = useState<UserDTO | null>(null)
   const [newRole, setNewRole] = useState<UserRole | null>(null)
   const [saving, setSaving] = useState(false)
   const [deletingUser, setDeletingUser] = useState<UserDTO | null>(null)
   const [areaManagerOpen, setAreaManagerOpen] = useState(false)
 
+  const [users, setUsers] = useState<UserDTO[]>([])
+
   const currentUser = getCachedUser()
 
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true)
-      const res = await fetchUsers(0, 100)
-      setUsers(res.content ?? [])
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar usuarios")
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const {
+    data: usersPage,
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery<Page<UserDTO>>(
+    (signal) => fetchUsers(0, 100),
+    []
+  )
 
   useEffect(() => {
-    loadUsers()
-  }, [loadUsers])
+    if (usersPage?.content) {
+      setUsers(usersPage.content)
+    }
+  }, [usersPage])
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message ?? "Error al cargar usuarios")
+    }
+  }, [error])
 
   const handleDeactivate = async (u: UserDTO) => {
     try {
@@ -136,7 +143,7 @@ export default function AdminPage() {
             <Button variant="outline" size="sm" className="bg-card" onClick={() => setAreaManagerOpen(true)}>
               <BuildingOffice2Icon className="size-4" /> Áreas
             </Button>
-            <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={loadUsers}>
+            <Button size="sm" className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white" onClick={refetch}>
               <ShieldCheckIcon className="size-4" /> Recargar
             </Button>
           </>

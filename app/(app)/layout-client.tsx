@@ -8,6 +8,7 @@ import { useCurrentUser } from "@/lib/user-context"
 import { isAtLeast } from "@/lib/config/roles"
 import { getRequiredRoleForPath } from "@/lib/config/navigation"
 import { ForbiddenPage } from "@/app/(app)/forbidden/page"
+import { AuthRedirectHandler } from "@/components/auth-redirect-handler"
 
 export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -19,6 +20,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
   if (user && requiredRole && !isAtLeast(user, requiredRole)) {
     return (
       <>
+        <AuthRedirectHandler />
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="md:pl-[220px]">
           <Topbar onMenuClick={() => setSidebarOpen((v) => !v)} />
@@ -32,6 +34,7 @@ export function AppLayoutClient({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      <AuthRedirectHandler />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="md:pl-[220px]">
         <Topbar onMenuClick={() => setSidebarOpen((v) => !v)} />

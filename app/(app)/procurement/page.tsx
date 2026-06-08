@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
@@ -28,51 +28,65 @@ export default function ProcurementPage() {
   const [receiveOpen, setReceiveOpen] = useState(false)
   const [page, setPage] = useState(0)
   const [fullOrder, setFullOrder] = useState<PurchaseOrderResponse | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   const orders = pageData?.content ?? []
 
   useEffect(() => {
     if (!selectedId) { setFullOrder(null); return }
-    fetchOrder(selectedId).then(setFullOrder).catch(() => setFullOrder(null))
+    const controller = new AbortController()
+    fetchOrder(selectedId, controller.signal).then(setFullOrder).catch(() => setFullOrder(null))
+    return () => controller.abort()
   }, [selectedId])
 
   const load = useCallback(async () => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     try {
       setLoading(true)
-      const res = await fetchOrders(page, 50)
-      // Don't mutate res.content in place; copy and sort the copy.
-      res.content = [...res.content].sort(
+      const res = await fetchOrders(page, 50, controller.signal)
+      if (controller.signal.aborted) return
+      const sortedContent = [...res.content].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
-      setPageData(res)
+      setPageData({ ...res, content: sortedContent })
       setSelectedId((prev) =>
-        prev && res.content.find((o) => o.id === prev) ? prev : res.content[0]?.id ?? null
+        prev && sortedContent.find((o) => o.id === prev) ? prev : sortedContent[0]?.id ?? null
       )
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar pedidos")
+      if (!controller.signal.aborted) {
+        toast.error(err instanceof Error ? err.message : "Error al cargar pedidos")
+      }
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) {
+        setLoading(false)
+      }
     }
   }, [page])
 
   useEffect(() => {
     load()
+    return () => abortRef.current?.abort()
   }, [load])
+
+  const handleSelect = useCallback((id: number) => {
+    setSelectedId(id)
+  }, [])
 
   const selected = fullOrder ?? orders.find((o) => o.id === selectedId) ?? null
 
-  // Patches local state for a single order without a full reload
-  const patchOrder = (updated: PurchaseOrderResponse) => {
+  const patchOrder = useCallback((updated: PurchaseOrderResponse) => {
     setPageData((prev) =>
       prev
         ? { ...prev, content: prev.content.map((x) => (x.id === updated.id ? updated : x)) }
         : prev
     )
-    if (updated.id === selectedId) setFullOrder(updated)
-  }
+    setFullOrder((prev) => (prev?.id === updated.id ? updated : prev))
+  }, [])
 
-  // PENDING → AWAITING_APPROVAL
-  const handleSubmit = async (o: PurchaseOrderResponse) => {
+  const handleSubmit = useCallback(async (o: PurchaseOrderResponse) => {
     try {
       const updated = await submitForApproval(o.id)
       patchOrder(updated)
@@ -80,11 +94,9 @@ export default function ProcurementPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al enviar a aprobación")
     }
-  }
+  }, [patchOrder])
 
-  // AWAITING_APPROVAL → APPROVED
-  // userId is resolved server-side from the JWT cookie, no need to pass it here
-  const handleApprove = async (o: PurchaseOrderResponse) => {
+  const handleApprove = useCallback(async (o: PurchaseOrderResponse) => {
     try {
       const updated = await approveOrder(o.id)
       patchOrder(updated)
@@ -92,9 +104,9 @@ export default function ProcurementPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al aprobar")
     }
-  }
+  }, [patchOrder])
 
-  const handleCancel = async (o: PurchaseOrderResponse) => {
+  const handleCancel = useCallback(async (o: PurchaseOrderResponse) => {
     try {
       const updated = await cancelOrder(o.id)
       patchOrder(updated)
@@ -102,12 +114,12 @@ export default function ProcurementPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al cancelar")
     }
-  }
+  }, [patchOrder])
 
-  const handleReceive = (o: PurchaseOrderResponse) => {
+  const handleReceive = useCallback((o: PurchaseOrderResponse) => {
     setSelectedId(o.id)
     setReceiveOpen(true)
-  }
+  }, [])
 
   return (
     <div>
@@ -170,7 +182,7 @@ export default function ProcurementPage() {
                     orders.map((o) => (
                       <tr
                         key={o.id}
-                        onClick={() => setSelectedId(o.id)}
+                        onClick={() => handleSelect(o.id)}
                         className={cn(
                           "border-t border-border cursor-pointer",
                           selectedId === o.id ? "bg-[#fde8e8]/40" : "hover:bg-[#fafafa]",

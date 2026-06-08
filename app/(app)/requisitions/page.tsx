@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import type { RequisitionResponse, Page } from "@/lib/types"
 import { PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
+import { useQuery } from "@/hooks/use-query"
 import { toast } from "sonner"
 
 const STATUS_FILTERS = [
@@ -34,8 +35,6 @@ const STATUS_FILTERS = [
 ]
 
 export default function RequisitionsPage() {
-  const [pageData, setPageData] = useState<Page<RequisitionResponse> | null>(null)
-  const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [page, setPage] = useState(0)
@@ -45,40 +44,32 @@ export default function RequisitionsPage() {
   const [convertRequisition, setConvertRequisition] = useState<RequisitionResponse | null>(null)
   const [poModalOpen, setPoModalOpen] = useState(false)
 
-  const requisitions = pageData?.content ?? []
-
-  const load = useCallback(async (signal?: AbortSignal) => {
-    try {
-      setLoading(true)
-      const res = await fetchRequisitions(
+  const { data: pageData, isLoading, error, refetch } = useQuery<Page<RequisitionResponse>>(
+    (signal) =>
+      fetchRequisitions(
         page,
         30,
         statusFilter !== "all" ? statusFilter : undefined,
         signal,
         debouncedSearch,
-      )
-      if (!signal?.aborted) {
-        setPageData(res)
-        setSelectedId((prev) =>
-          prev && res.content.find((r) => r.id === prev) ? prev : res.content[0]?.id ?? null,
-        )
-      }
-    } catch (err) {
-      if (!signal?.aborted) {
-        toast.error(err instanceof Error ? err.message : "Error al cargar requisiciones")
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false)
-      }
-    }
-  }, [page, statusFilter, debouncedSearch])
+      ),
+    [page, statusFilter, debouncedSearch],
+  )
+
+  const requisitions = pageData?.content ?? []
 
   useEffect(() => {
-    const controller = new AbortController()
-    load(controller.signal)
-    return () => controller.abort()
-  }, [load])
+    if (!pageData) return
+    setSelectedId((prev) =>
+      prev && pageData.content.find((r) => r.id === prev) ? prev : pageData.content[0]?.id ?? null,
+    )
+  }, [pageData])
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message)
+    }
+  }, [error])
 
   useEffect(() => {
     setPage(0)
@@ -94,7 +85,7 @@ export default function RequisitionsPage() {
   const handlePoCreated = () => {
     setPoModalOpen(false)
     setConvertRequisition(null)
-    load()
+    refetch()
   }
 
   return (
@@ -164,7 +155,7 @@ export default function RequisitionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
+                  {isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-5 py-10 text-center">
                         <ArrowPathIcon className="size-5 animate-spin mx-auto" />
@@ -230,7 +221,7 @@ export default function RequisitionsPage() {
         <div className="lg:col-span-1">
           <RequisitionDetail
             requisition={selected}
-            onUpdate={load}
+            onUpdate={refetch}
             onConvert={handleConvert}
           />
         </div>
@@ -239,7 +230,7 @@ export default function RequisitionsPage() {
       <CreateRequisitionModal
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onCreated={load}
+        onCreated={refetch}
       />
 
       <CreatePOModal

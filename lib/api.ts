@@ -34,7 +34,7 @@ async function request<T>(
 
   if (res.status === 401 || res.status === 403) {
     if (!skipAuthRedirect && typeof window !== "undefined") {
-      window.location.href = "/"
+      window.dispatchEvent(new Event("visco:auth-expired"))
     }
     throw new Error("Sesión expirada")
   }

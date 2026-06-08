@@ -1,13 +1,16 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { ReportAnalyticsDTO } from "@/lib/types"
-
-const Chart = dynamic(
-  () => import("./reports-trend-inner").then((m) => m.ReportsTrendInner),
-  { ssr: false, loading: () => <ChartSkeleton /> },
-)
 
 export function ReportsTrend({
   data,
@@ -16,37 +19,61 @@ export function ReportsTrend({
   data: ReportAnalyticsDTO | null
   loading: boolean
 }) {
-  const hasData = (data?.monthlyTrend?.length ?? 0) > 0
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <Skeleton className="h-5 w-40 mb-4" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    )
+  }
+
+  const chartData = data?.monthlyTrend ?? []
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-      <h3 className="font-serif text-lg font-semibold mb-1">
-        Reportes generados por mes
-      </h3>
-      <p className="text-xs text-muted-foreground mb-4">
-        Últimos 6 meses
-      </p>
-      <div className="h-[280px]">
-        {loading ? (
-          <ChartSkeleton />
-        ) : !hasData ? (
+      <h3 className="font-serif text-lg font-semibold mb-4">Reportes por Mes</h3>
+      <div className="h-48">
+        {chartData.length === 0 ? (
           <div className="h-full grid place-items-center text-xs text-muted-foreground">
-            Sin datos disponibles
+            Sin datos
           </div>
         ) : (
-          <Chart data={data!.monthlyTrend} />
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11, fill: "#6b7280" }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11, fill: "#6b7280" }}
+                allowDecimals={false}
+                width={28}
+              />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: 8,
+                  border: "1px solid #f3f4f6",
+                  fontSize: 12,
+                  padding: "8px 10px",
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="count"
+                stroke="#7b1a1a"
+                strokeWidth={2}
+                dot={{ fill: "#7b1a1a", r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         )}
       </div>
-    </div>
-  )
-}
-
-function ChartSkeleton() {
-  return (
-    <div className="h-full flex items-end gap-2 px-1">
-      {[30, 45, 60, 35, 55, 70].map((h, i) => (
-        <Skeleton key={i} className="flex-1 rounded-t-md" style={{ height: `${h}%` }} />
-      ))}
     </div>
   )
 }

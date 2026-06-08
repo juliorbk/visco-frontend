@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -13,83 +13,86 @@ import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
 import { fetchStockSummary, fetchWarehouses, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
 import type { WarehouseResponse, WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
+import { useQuery } from "@/hooks/use-query"
 import { PlusIcon, ArrowsRightLeftIcon, EqualsIcon, BuildingStorefrontIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 20
 
 export default function WarehousesPage() {
-  const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
-  const [stockSummary, setStockSummary] = useState<WarehouseStockSummary[]>([])
-  const [loadingSummary, setLoadingSummary] = useState(true)
   const [selectedWhId, setSelectedWhId] = useState<number | null>(null)
-  const [warehouseDetail, setWarehouseDetail] = useState<WarehouseDetailResponse | null>(null)
-  const [loadingDetail, setLoadingDetail] = useState(false)
 
-  const [movements, setMovements] = useState<InventoryMovementResponse[]>([])
-  const [loadingMovements, setLoadingMovements] = useState(true)
   const [movementsPage, setMovementsPage] = useState(0)
-  const [movementsTotalPages, setMovementsTotalPages] = useState(0)
   const [movementTypeFilter, setMovementTypeFilter] = useState("all")
 
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [transferModalOpen, setTransferModalOpen] = useState(false)
   const [adjustModalOpen, setAdjustModalOpen] = useState(false)
 
-  const loadSummary = useCallback(async () => {
-    try {
-      setLoadingSummary(true)
-      const [whData, summaryData] = await Promise.all([
+  const { data: summaryData, isLoading: loadingSummary, error: summaryError, refetch: refetchSummary } = useQuery(
+    async (_signal) => {
+      const [whData, sumData] = await Promise.all([
         fetchWarehouses(),
         fetchStockSummary(),
       ])
-      setWarehouses(whData)
-      setStockSummary(summaryData)
-      if (whData.length > 0 && selectedWhId === null) {
-        setSelectedWhId(whData[0].id)
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar resumen")
-    } finally {
-      setLoadingSummary(false)
-    }
-  }, [selectedWhId])
+      return { warehouses: whData, summary: sumData }
+    },
+    []
+  )
 
-  const loadDetail = useCallback(async () => {
-    if (selectedWhId === null) return
-    try {
-      setLoadingDetail(true)
-      const data = await fetchWarehouseById(selectedWhId)
-      const summary = stockSummary.find((s) => s.warehouseId === selectedWhId)
-      setWarehouseDetail({
-        ...data,
-        totalStock: data.totalStock ?? summary?.totalStock ?? 0,
-        totalProducts: data.totalProducts ?? 0,
-      })
-    } catch {
-      setWarehouseDetail(null)
-    } finally {
-      setLoadingDetail(false)
+  useEffect(() => {
+    if (summaryError) {
+      toast.error(summaryError.message)
     }
-  }, [selectedWhId])
+  }, [summaryError])
 
-  const loadMovements = useCallback(async () => {
-    try {
-      setLoadingMovements(true)
+  const warehouses = summaryData?.warehouses ?? []
+  const stockSummary = summaryData?.summary ?? []
+
+  useEffect(() => {
+    if (warehouses.length > 0 && selectedWhId === null) {
+      setSelectedWhId(warehouses[0].id)
+    }
+  }, [warehouses])
+
+  const { data: detail, isLoading: loadingDetail, refetch: refetchDetail } = useQuery(
+    async (_signal) => {
+      if (selectedWhId === null) return null
+      return fetchWarehouseById(selectedWhId)
+    },
+    [selectedWhId]
+  )
+
+  const warehouseDetail = useMemo(() => {
+    if (!detail) return null
+    const summary = stockSummary.find((s) => s.warehouseId === selectedWhId)
+    return {
+      ...detail,
+      totalStock: detail.totalStock ?? summary?.totalStock ?? 0,
+      totalProducts: detail.totalProducts ?? 0,
+    } as WarehouseDetailResponse
+  }, [detail, stockSummary, selectedWhId])
+
+  const { data: movementsData, isLoading: loadingMovements, error: movementsError, refetch: refetchMovements } = useQuery(
+    async (_signal) => {
       const type = movementTypeFilter === "all" ? undefined : movementTypeFilter
       const res = await fetchMovements(movementsPage, PAGE_SIZE, selectedWhId ?? undefined, type)
-      setMovements(res.content ?? [])
-      setMovementsTotalPages(res.page.totalPages)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Error al cargar movimientos")
-    } finally {
-      setLoadingMovements(false)
-    }
-  }, [movementsPage, movementTypeFilter, selectedWhId])
+      return {
+        movements: (res.content ?? []) as InventoryMovementResponse[],
+        totalPages: res.page.totalPages,
+      }
+    },
+    [movementsPage, movementTypeFilter, selectedWhId]
+  )
 
-  useEffect(() => { loadSummary() }, [loadSummary])
-  useEffect(() => { loadDetail() }, [loadDetail])
-  useEffect(() => { loadMovements() }, [loadMovements])
+  useEffect(() => {
+    if (movementsError) {
+      toast.error(movementsError.message)
+    }
+  }, [movementsError])
+
+  const movements = movementsData?.movements ?? []
+  const movementsTotalPages = movementsData?.totalPages ?? 0
 
   const selectedSummary = stockSummary.find((s) => s.warehouseId === selectedWhId) ?? null
 
@@ -212,19 +215,19 @@ export default function WarehousesPage() {
       <CreateWarehouseModal
         open={createModalOpen}
         onOpenChange={setCreateModalOpen}
-        onCreated={loadSummary}
+        onCreated={refetchSummary}
       />
 
       <TransferModal
         open={transferModalOpen}
         onOpenChange={setTransferModalOpen}
-        onDone={() => { loadSummary(); loadMovements() }}
+        onDone={() => { refetchSummary(); refetchMovements() }}
       />
 
       <AdjustModal
         open={adjustModalOpen}
         onOpenChange={setAdjustModalOpen}
-        onDone={() => { loadSummary(); loadMovements() }}
+        onDone={() => { refetchSummary(); refetchMovements() }}
       />
     </div>
   )

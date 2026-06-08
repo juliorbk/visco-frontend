@@ -28,6 +28,7 @@ import type { SupplierDTO, SupplierCategoryDTO } from "@/lib/types"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplier, canManageSupplierCategories } from "@/lib/permissions"
 import { useDebounce } from "@/hooks/use-debounce"
+import { useQuery } from "@/hooks/use-query"
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -42,13 +43,9 @@ const PAGE_SIZE = 12
 const ALL_CATEGORIES = "__all__"
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<SupplierDTO[]>([])
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [page, setPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(0)
-  const [totalElements, setTotalElements] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<SupplierDTO | null>(null)
   const [search, setSearch] = useState("")
@@ -57,28 +54,35 @@ export default function SuppliersPage() {
   const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
   const [categoriesManagerOpen, setCategoriesManagerOpen] = useState(false)
 
-  const load = useCallback(async () => {
-    try {
-      setLoading(true)
+  const fetchSuppliersData = useCallback(
+    async (signal: AbortSignal) => {
       const res =
         categoryFilter === ALL_CATEGORIES
           ? await fetchSuppliers(page, PAGE_SIZE, debouncedSearch)
           : await fetchSuppliersByCategory(Number(categoryFilter), page, PAGE_SIZE, debouncedSearch)
-      const list = res.content ?? []
-      setSuppliers(list)
-      setTotalPages(res.page.totalPages)
-      setTotalElements(res.page.totalElements)
-      setSelectedId((prev) =>
-        prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null,
-      )
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Error loading suppliers",
-      )
-    } finally {
-      setLoading(false)
+      return res
+    },
+    [page, categoryFilter, debouncedSearch],
+  )
+
+  const { data, isLoading: loading, error, refetch } = useQuery(fetchSuppliersData, [page, categoryFilter, debouncedSearch])
+
+  const suppliers = data?.content ?? []
+  const totalPages = data?.page?.totalPages ?? 0
+  const totalElements = data?.page?.totalElements ?? 0
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message)
     }
-  }, [page, categoryFilter, debouncedSearch])
+  }, [error])
+
+  useEffect(() => {
+    const list = suppliers
+    setSelectedId((prev) =>
+      prev && list.find((s) => s.id === prev) ? prev : list[0]?.id ?? null,
+    )
+  }, [suppliers])
 
   const loadCategories = useCallback(async () => {
     try {
@@ -93,38 +97,34 @@ export default function SuppliersPage() {
     loadCategories()
   }, [loadCategories])
 
-  useEffect(() => {
-    load()
-  }, [load])
-
   const user = getCachedUser()
   const selected = suppliers.find((s) => s.id === selectedId) ?? null
 
-  const handleCategoryFilterChange = (v: string) => {
+  const handleCategoryFilterChange = useCallback((v: string) => {
     setCategoryFilter(v)
     setPage(0)
     setSelectedId(null)
-  }
+  }, [])
 
-  const handleSearchChange = (v: string) => {
+  const handleSearchChange = useCallback((v: string) => {
     setSearch(v)
     setPage(0)
     setSelectedId(null)
-  }
+  }, [])
 
-  const handleSave = async (data: Partial<SupplierDTO>, id?: number) => {
+  const handleSave = useCallback(async (data: Partial<SupplierDTO>, id?: number) => {
     try {
       setSaving(true)
       if (id) {
-        const updated = await updateSupplier(id, data)
-        setSuppliers((prev) => prev.map((s) => (s.id === id ? updated : s)))
+        await updateSupplier(id, data)
         toast.success("Supplier updated")
+        refetch()
       } else {
         const created = await createSupplier(data)
-        setSuppliers((prev) => [created, ...prev])
+        toast.success("Supplier created")
         setSelectedId(created.id)
         setPage(0)
-        toast.success("Supplier created")
+        refetch()
       }
       setModalOpen(false)
       setEditing(null)
@@ -135,20 +135,20 @@ export default function SuppliersPage() {
     } finally {
       setSaving(false)
     }
-  }
+  }, [refetch])
 
-  const handleDeactivate = async (s: SupplierDTO) => {
+  const handleDeactivate = useCallback(async (s: SupplierDTO) => {
     try {
       await deactivateSupplier(s.id)
-      setSuppliers((prev) => prev.filter((x) => x.id !== s.id))
       toast.success(`${s.name} deactivated`)
       if (selectedId === s.id) setSelectedId(null)
+      refetch()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error deactivating supplier",
       )
     }
-  }
+  }, [refetch, selectedId])
 
   return (
     <div>

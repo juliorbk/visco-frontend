@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils"
-import type { PurchaseOrderStatus } from "@/lib/types"
+import type { PurchaseOrderStatus, ProductDTO } from "@/lib/types"
+
+export function computeInventoryStatus(p: ProductDTO): string {
+  if (p.totalStock <= 0) return "Sin stock"
+  if (p.totalStock < p.reorderPoint) return "Bajo stock"
+  if (p.maxStock != null && p.totalStock >= p.maxStock) return "Stock excedido"
+  return "En stock"
+}
 
 type Variant =
   | "completed"

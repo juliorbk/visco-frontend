@@ -1,18 +1,13 @@
 import type { Metadata } from "next"
-import { Rethink_Sans, Lora } from "next/font/google"
+import { Questrial } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 import { Analytics } from "@vercel/analytics/next"
 
-const rethinkSans = Rethink_Sans({
+const questrial = Questrial({
   subsets: ["latin"],
-  variable: "--font-rethink-sans",
-  display: "swap",
-})
-
-const lora = Lora({
-  subsets: ["latin"],
-  variable: "--font-lora",
+  weight: "400",
+  variable: "--font-questrial",
   display: "swap",
 })
 
@@ -31,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={`${rethinkSans.variable} ${lora.variable} bg-background`}>
+    <html lang="es" className={`${questrial.variable} bg-background`}>
       <body className="font-sans antialiased text-foreground">
         {children}
         <Toaster position="top-right" richColors />

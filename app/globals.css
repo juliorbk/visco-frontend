@@ -96,8 +96,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-rethink-sans), system-ui, sans-serif;
-  --font-serif: var(--font-lora), Georgia, serif;
+  --font-sans: var(--font-questrial), system-ui, sans-serif;
+  --font-serif: var(--font-questrial), Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, monospace;
 
   --color-background: var(--background);
