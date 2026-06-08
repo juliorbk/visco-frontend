@@ -164,7 +164,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 42
+  const boxH = 52
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -195,10 +195,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
   by = y + 15
-  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 4.5, 2)
-  by += 1.5
-  by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
-  by += 1.5
+  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 5, 2)
+  by += 1
+  if (warehouseAddress !== "—") {
+    by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
+    by += 1
+  }
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
   const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
@@ -206,9 +208,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
   if (extraInfo) {
     by += addWrappedText(doc, extraInfo, x1 + 4, by, boxW - 8, 4, 1)
-    by += 1.5
+    by += 1
   }
-  doc.setFontSize(9)
+  doc.setFontSize(8.5)
   doc.setTextColor(...COLORS.text)
   if (warehouse?.description) {
     addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4.5, 2)

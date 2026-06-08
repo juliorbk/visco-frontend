@@ -73,7 +73,11 @@ export function OrderDetail({
         {order.requisitionNumber && (
           <Stat label="Requisition" value={order.requisitionNumber} />
         )}
-        <Stat label="Destination warehouse" value={order.destinationWarehouseName ?? "-"} className="sm:col-span-2" />
+        <Stat label="Destination warehouse" value={
+          order.destinationWarehouse
+            ? `${order.destinationWarehouse.name} — ${order.destinationWarehouse.physicalAddress}${order.destinationWarehouse.sapCenterCode ? ` · SAP: ${order.destinationWarehouse.sapCenterCode}` : ""}${order.destinationWarehouse.responsibleUserName ? ` · Resp: ${order.destinationWarehouse.responsibleUserName}` : ""}${order.destinationWarehouse.description ? ` · ${order.destinationWarehouse.description}` : ""}`
+            : order.destinationWarehouseName ?? "-"
+        } className="sm:col-span-2" />
       </div>
 
       {/* ── Items ── */}
