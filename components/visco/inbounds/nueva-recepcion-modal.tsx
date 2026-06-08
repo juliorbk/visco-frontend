@@ -245,11 +245,13 @@ export function NuevaRecepcionModal({
                         <input
                           type="number"
                           value={received}
-                          onChange={(e) =>
-                            handleQuantityChange(item.productId, parseInt(e.target.value) || 0)
-                          }
+                          onChange={(e) => {
+                            const v = Math.min(parseInt(e.target.value) || 0, basePending)
+                            handleQuantityChange(item.productId, v)
+                          }}
                           className="w-full max-w-24 justify-self-center text-center px-3 py-2 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                           min="0"
+                          max={basePending}
                           disabled={saving}
                         />
                         <span

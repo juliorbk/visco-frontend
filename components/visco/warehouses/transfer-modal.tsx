@@ -102,6 +102,10 @@ export function TransferModal({
     if (qty <= 0) { toast.error("La cantidad debe ser mayor a cero"); return }
     if (fromWarehouseId === toWarehouseId) { toast.error("Origen y destino deben ser diferentes"); return }
     if (!productId) { toast.error("Selecciona un producto"); return }
+    if (selectedProduct && qty > selectedProduct.currentStock) {
+      toast.error(`Stock insuficiente. Disponible: ${selectedProduct.currentStock}`)
+      return
+    }
 
     setSaving(true)
     try {
@@ -236,7 +240,10 @@ export function TransferModal({
 
               <div className="space-y-1.5">
                 <Label>Cantidad</Label>
-                <Input type="number" min="1" required value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={saving} />
+                {selectedProduct && (
+                  <p className="text-xs text-muted-foreground">Stock disponible: {selectedProduct.currentStock}</p>
+                )}
+                <Input type="number" min="1" max={selectedProduct?.currentStock} required value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={saving} />
               </div>
 
               <div className="space-y-1.5">

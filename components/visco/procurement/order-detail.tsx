@@ -70,6 +70,9 @@ export function OrderDetail({
         <Stat label="Requester" value={order.createdBy} />
         <Stat label="Type"        value={order.type} />
         <Stat label="Items"   value={`${order.items.length}`} />
+        {order.requisitionNumber && (
+          <Stat label="Requisition" value={order.requisitionNumber} />
+        )}
         <Stat label="Destination warehouse" value={order.destinationWarehouseName ?? "-"} className="sm:col-span-2" />
       </div>
 

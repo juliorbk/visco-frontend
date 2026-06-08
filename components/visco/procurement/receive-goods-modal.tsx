@@ -158,6 +158,11 @@ export function ReceiveGoodsModal({
                   <div className="font-medium text-foreground truncate">{it.productName}</div>
                   <div className="text-xs text-muted-foreground">SKU: {it.productSku}</div>
                 </div>
+                {summaryItem && summaryItem.receivedQuantity > 0 && (
+                  <div className="mb-2 text-xs text-blue-700 font-medium">
+                    Ya recibido anteriormente: {summaryItem.receivedQuantity} uds.
+                  </div>
+                )}
                 <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                   <span className="text-xs text-[#6b7280] font-medium whitespace-nowrap">
                     Esperado: {ordered}
@@ -165,14 +170,14 @@ export function ReceiveGoodsModal({
                   <Input
                     type="number"
                     value={rcv}
-                    onChange={(e) =>
-                      setReceived((prev) => ({
-                        ...prev,
-                        [it.productId]: Number(e.target.value) || 0,
-                      }))
-                    }
+                    onChange={(e) => {
+                      const v = Math.min(Number(e.target.value) || 0, basePending)
+                      setReceived((prev) => ({ ...prev, [it.productId]: v }))
+                    }}
                     className="w-full max-w-24 justify-self-center text-center"
                     disabled={saving}
+                    min={0}
+                    max={basePending}
                   />
                   <span
                     className={`text-xs font-semibold whitespace-nowrap text-right ${

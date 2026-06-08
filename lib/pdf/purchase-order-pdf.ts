@@ -142,7 +142,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     ["TYPE:", translateOrderType(order.type)],
     ["PAYMENT:", translatePaymentMethod(order.paymentMethod)],
   ]
-  if (order.requisitionId != null) {
+  if (order.requisitionNumber) {
+    infoLines.push(["REQ:", order.requisitionNumber])
+  } else if (order.requisitionId != null) {
     infoLines.push(["REQ. ID:", `#${order.requisitionId}`])
   }
   doc.setFontSize(7)

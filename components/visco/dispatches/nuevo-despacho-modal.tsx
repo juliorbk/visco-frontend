@@ -125,6 +125,10 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
       toast.error("Cantidad debe ser mayor a cero")
       return
     }
+    if (qty > product.currentStock) {
+      toast.error(`Stock insuficiente. Disponible: ${product.currentStock}`)
+      return
+    }
     if (!price || price <= 0) {
       toast.error(`Ingresa un precio de salida para ${product.name}`)
       return
