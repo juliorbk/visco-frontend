@@ -6,6 +6,7 @@ import { CubeIcon } from "@heroicons/react/24/outline"
 interface WarehouseCardData {
   id: number
   name: string
+  sapCenterCode: string
   totalStock: number
   totalPendingStock: number
 }
@@ -38,7 +39,7 @@ export function WarehouseCard({
           <div className="min-w-0">
             <p className="font-medium text-sm truncate">{warehouse.name}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              ID: {warehouse.id}
+              SAP: {warehouse.sapCenterCode}
             </p>
           </div>
         </div>
