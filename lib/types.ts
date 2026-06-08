@@ -667,6 +667,20 @@ export const REPORT_STATUS_COLORS: Record<ReportStatus, string> = {
   FAILED: "text-red-600 bg-red-50",
 }
 
+// ── Report Analytics ──
+
+export interface ReportAnalyticsDTO {
+  totalReports: number
+  totalScheduledReports: number
+  completedReports: number
+  failedReports: number
+  pendingReports: number
+  totalRecordsExported: number
+  reportsByType: Record<ReportType, number>
+  reportsByStatus: Record<ReportStatus, number>
+  monthlyTrend: { month: string; count: number }[]
+}
+
 // ── Spring Page wrapper ──
 
 export interface Page<T> {

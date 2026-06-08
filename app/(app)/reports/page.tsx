@@ -74,12 +74,14 @@ import {
   updateScheduledReport,
   deleteScheduledReport,
   executeScheduledReport,
+  fetchReportAnalytics,
 } from "@/lib/services/reports"
 import {
   fetchWarehouses,
 } from "@/lib/services/warehouse"
 import { fetchCategories } from "@/lib/services/categories"
 import type {
+  ReportAnalyticsDTO,
   ReportDTO,
   ScheduledReportDTO,
   ReportType,
@@ -92,8 +94,13 @@ import type {
 } from "@/lib/types"
 import { REPORT_TYPE_LABELS, REPORT_STATUS_COLORS } from "@/lib/types"
 
+import { ReportKpis } from "@/components/visco/reports/report-kpis"
+import { ReportsTrend } from "@/components/visco/reports/reports-trend"
+import { ReportsByType } from "@/components/visco/reports/reports-by-type"
+import { ReportsStatusPie } from "@/components/visco/reports/reports-status-pie"
+
 export default function ReportsPage() {
-  const [tab, setTab] = useState("generate")
+  const [tab, setTab] = useState("dashboard")
   const [loading, setLoading] = useState(false)
 
   return (
@@ -105,6 +112,9 @@ export default function ReportsPage() {
 
       <Tabs value={tab} onValueChange={setTab} className="mt-4">
         <TabsList className="bg-card border border-border">
+          <TabsTrigger value="dashboard" className="gap-2">
+            <ChartBarIcon className="size-4" /> Dashboard
+          </TabsTrigger>
           <TabsTrigger value="generate" className="gap-2">
             <DocumentTextIcon className="size-4" /> Generar Reporte
           </TabsTrigger>
@@ -115,6 +125,10 @@ export default function ReportsPage() {
             <CalendarIcon className="size-4" /> Programados
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="mt-4">
+          <ReportsDashboardTab />
+        </TabsContent>
 
         <TabsContent value="generate" className="mt-4">
           <GenerateReportTab />
@@ -128,6 +142,33 @@ export default function ReportsPage() {
           <ScheduledReportsTab />
         </TabsContent>
       </Tabs>
+    </div>
+  )
+}
+
+// ─── Reports Dashboard Tab ────────────────────────────────────
+
+function ReportsDashboardTab() {
+  const [data, setData] = useState<ReportAnalyticsDTO | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchReportAnalytics()
+      .then(setData)
+      .catch(() => toast.error("Error al cargar analíticas"))
+      .finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <div className="space-y-5">
+      <ReportKpis data={data} loading={loading} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <ReportsTrend data={data} loading={loading} />
+        <ReportsByType data={data} loading={loading} />
+      </div>
+
+      <ReportsStatusPie data={data} loading={loading} />
     </div>
   )
 }

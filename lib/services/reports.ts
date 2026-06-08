@@ -1,5 +1,6 @@
 import { api } from "@/lib/api"
 import type {
+  ReportAnalyticsDTO,
   ReportDTO,
   ScheduledReportDTO,
   CreateReportRequest,
@@ -45,6 +46,10 @@ export function getReportDownloadUrl(id: number): string {
 
 export async function fetchReportTemplates(): Promise<{ type: string; displayName: string }[]> {
   return api.get<{ type: string; displayName: string }[]>("/api/reports/templates")
+}
+
+export async function fetchReportAnalytics(): Promise<ReportAnalyticsDTO> {
+  return api.get<ReportAnalyticsDTO>("/api/reports/analytics")
 }
 
 // Scheduled reports
