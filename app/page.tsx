@@ -1,16 +1,21 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import dynamic from "next/dynamic"
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, CubeIcon, CheckCircleIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
 import { Logo } from "@/components/visco/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { RegisterModal } from "@/components/visco/auth/register-modal"
 import { toast } from "sonner"
 import { fetchUser, persistUser } from "@/lib/auth-client"
+
+const RegisterModal = dynamic(
+  () => import("@/components/visco/auth/register-modal").then(m => ({ default: m.RegisterModal })),
+  { ssr: false }
+)
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -25,13 +30,13 @@ function LoginPageInner() {
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
   const [registerOpen, setRegisterOpen] = useState(false)
+  const invitedShown = useRef(false)
 
-  // If the URL has ?invite=TOKEN, auto-open the registration modal with
-  // the token so the admin's "Copy registration link" just works.
   useEffect(() => {
-    if (inviteToken) {
+    if (inviteToken && !invitedShown.current) {
+      invitedShown.current = true
       setRegisterOpen(true)
-      toast.info("Tienes una invitación. Completa tu registro.")
+      toast.info("Tienes una invitacion. Completa tu registro.")
     }
   }, [inviteToken])
 

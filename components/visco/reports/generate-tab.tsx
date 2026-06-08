@@ -37,8 +37,8 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
   const [format, setFormat] = useState<ReportFormat>("EXCEL")
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
-  const [categoryId, setCategoryId] = useState("")
-  const [warehouseId, setWarehouseId] = useState("")
+  const [categoryId, setCategoryId] = useState("all")
+  const [warehouseId, setWarehouseId] = useState("all")
   const [search, setSearch] = useState("")
   const [generating, setGenerating] = useState(false)
 
@@ -69,8 +69,8 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
         startDate: `${startDate}T00:00:00`,
         endDate: `${endDate}T23:59:59`,
         search: search || undefined,
-        categoryId: categoryId ? Number(categoryId) : undefined,
-        warehouseId: warehouseId ? Number(warehouseId) : undefined,
+        categoryId: categoryId !== "all" ? Number(categoryId) : undefined,
+        warehouseId: warehouseId !== "all" ? Number(warehouseId) : undefined,
       }
       const report = await generateReport(body)
       toast.success(`Reporte "${report.name}" generado exitosamente`)
@@ -146,7 +146,7 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   {warehouses.map((w) => (
                     <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
                   ))}
@@ -160,7 +160,7 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>
                   ))}

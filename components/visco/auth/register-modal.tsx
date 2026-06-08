@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { EyeIcon, EyeSlashIcon, ArrowPathIcon, UserPlusIcon, EnvelopeIcon, ShieldCheckIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { AvatarUpload } from "./avatar-upload"
 import type {
   RegisterRequest,
   UserRole,
@@ -40,6 +41,8 @@ const ROLES: { value: UserRole; label: string }[] = [
   { value: "MANAGER", label: ROLE_LABELS.MANAGER },
   { value: "ADMIN", label: ROLE_LABELS.ADMIN },
 ]
+
+const STRENGTH_LEVELS = ["weak", "medium", "strong"] as const
 
 export function RegisterModal({
   open,
@@ -67,6 +70,7 @@ export function RegisterModal({
   const [selectedGgId, setSelectedGgId] = useState<number | null>(null)
   const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
   const [showPwd, setShowPwd] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onOpenChangeRef = useRef(onOpenChange)
   onOpenChangeRef.current = onOpenChange
@@ -152,6 +156,7 @@ export function RegisterModal({
     setSelectedGgId(null)
     setSelectedMgmtId(null)
     setShowPwd(false)
+    setImageUrl(null)
     setResolvedInvite(null)
     setInviteLoading(false)
   }
@@ -185,6 +190,7 @@ export function RegisterModal({
         role,
         costCenterId: isInvite ? null : (costCenterId || null),
         inviteToken: inviteToken ?? "",
+        imageUrl: imageUrl || null,
       }
       const regRes = await fetch(`${BASE_URL}/api/auth/register`, {
         method: "POST",
@@ -230,7 +236,7 @@ export function RegisterModal({
           </DialogDescription>
         </DialogHeader>
 
-        {isInvite && (
+        {isInvite ? (
           <div className="rounded-md border border-[#fde8e8] bg-[#fde8e8]/40 p-3 text-xs space-y-1">
             <div className="flex items-center gap-2 font-medium text-foreground">
               <ShieldCheckIcon className="size-4 text-[#7b1a1a]" />
@@ -251,7 +257,7 @@ export function RegisterModal({
               </>
             )}
           </div>
-        )}
+        ) : null}
 
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
@@ -264,6 +270,8 @@ export function RegisterModal({
               placeholder="Ana Rodríguez"
             />
           </div>
+
+          <AvatarUpload value={imageUrl} onChange={setImageUrl} disabled={saving || inviteLoading} />
 
           <div className="space-y-1.5">
             <Label htmlFor="reg-email">Correo electrónico</Label>
@@ -299,7 +307,7 @@ export function RegisterModal({
             </div>
             {password.length > 0 && (
               <div className="flex gap-1 mt-1">
-                {(["weak", "medium", "strong"] as const).map((level) => (
+                {STRENGTH_LEVELS.map((level) => (
                   <div
                     key={level}
                     className={`h-1 flex-1 rounded-full transition-colors ${

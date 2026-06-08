@@ -45,6 +45,7 @@ export interface RegisterRequest {
   role: UserRole
   costCenterId?: number | null
   inviteToken: string
+  imageUrl?: string | null
 }
 
 export interface InviteTokenDTO {
@@ -81,6 +82,7 @@ export interface UserDTO {
   active: boolean
   costCenterId: number | null
   costCenterName: string | null
+  imageUrl?: string | null
 }
 
 // ── Supplier ──

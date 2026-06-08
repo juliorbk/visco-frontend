@@ -5,6 +5,7 @@ import { BellIcon, Cog6ToothIcon, InformationCircleIcon, MagnifyingGlassIcon, Ar
 import { Input } from "@/components/ui/input"
 import { Avatar } from "@/components/ui/avatar"
 import { AvatarFallback } from "@/components/ui/avatar-fallback"
+import { AvatarImage } from "@/components/ui/avatar-image"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -104,6 +105,9 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <DropdownMenu>
           <DropdownMenuTrigger className="ml-1 md:ml-2 outline-none">
             <Avatar className="size-8 md:size-9 ring-1 ring-border">
+              {user?.imageUrl && (
+                <AvatarImage src={user.imageUrl} alt={user.name} />
+              )}
               <AvatarFallback className="bg-[#7b1a1a] text-white text-xs font-medium">
                 {initials}
               </AvatarFallback>

@@ -52,14 +52,14 @@ export default function ReportHistoryTab({ refreshTrigger }: { refreshTrigger: n
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
-  const [typeFilter, setTypeFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
   const [manualRefresh, setManualRefresh] = useState(0)
 
   const loadReports = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetchReports(page, 20, typeFilter || undefined, statusFilter || undefined)
+      const res = await fetchReports(page, 20, typeFilter === "all" ? undefined : typeFilter, statusFilter === "all" ? undefined : statusFilter)
       setReports(res.content ?? [])
       setTotalPages(res.page.totalPages)
       setTotalElements(res.page.totalElements)
@@ -98,7 +98,7 @@ export default function ReportHistoryTab({ refreshTrigger }: { refreshTrigger: n
             <SelectValue placeholder="Todos los tipos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los tipos</SelectItem>
+            <SelectItem value="all">Todos los tipos</SelectItem>
             {Object.entries(REPORT_TYPE_LABELS).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v}</SelectItem>
             ))}
@@ -109,7 +109,7 @@ export default function ReportHistoryTab({ refreshTrigger }: { refreshTrigger: n
             <SelectValue placeholder="Todos los estados" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los estados</SelectItem>
+            <SelectItem value="all">Todos los estados</SelectItem>
             <SelectItem value="COMPLETED">Completado</SelectItem>
             <SelectItem value="PENDING">Pendiente</SelectItem>
             <SelectItem value="PROCESSING">Procesando</SelectItem>
