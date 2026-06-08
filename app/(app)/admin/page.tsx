@@ -26,7 +26,7 @@ import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
 import { InviteManager } from "@/components/visco/admin/invite-manager"
 import type { UserDTO, UserRole, Page } from "@/lib/types"
-import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline
+import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import { ROLE_LABELS, ROLE_BADGE } from "@/lib/config/roles"
 import { canDelete } from "@/lib/permissions"

@@ -27,7 +27,7 @@ export function ReportsByType({
     )
   }
 
-  const byType = data?.reportsByType ?? {}
+  const byType = (data?.reportsByType ?? {}) as Record<string, number>
   const total = Object.values(byType).reduce((s, c) => s + c, 0) || 1
 
   return (
