@@ -15,6 +15,7 @@ import type {
   DispatchRequest,
   DispatchResponse,
   LocationDTO,
+  CreateLocationRequest,
   Page,
 } from "@/lib/types"
 
@@ -159,4 +160,12 @@ export async function fetchLocationsByWarehouse(
   let url = `/api/warehouse/locations/warehouse/${warehouseId}?page=${page}&size=${size}`
   if (search) url += `&search=${encodeURIComponent(search)}`
   return api.get<Page<LocationDTO>>(url)
+}
+
+export async function createLocation(data: CreateLocationRequest): Promise<LocationDTO> {
+  return api.post<LocationDTO>("/api/warehouse/locations", data)
+}
+
+export async function deleteLocation(id: number): Promise<void> {
+  await api.delete(`/api/warehouse/locations/${id}`)
 }

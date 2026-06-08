@@ -27,7 +27,9 @@ import type {
   CostCenter,
   ManagementDTO,
   GeneralManagementDTO,
+  InviteTokenDTO,
 } from "@/lib/types"
+import { resolveInvite } from "@/lib/services/invites"
 import { ROLE_LABELS } from "@/lib/config/roles"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL
@@ -66,7 +68,11 @@ export function RegisterModal({
   const [selectedMgmtId, setSelectedMgmtId] = useState<number | null>(null)
   const [showPwd, setShowPwd] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onOpenChangeRef = useRef(onOpenChange)
+  onOpenChangeRef.current = onOpenChange
   const [saving, setSaving] = useState(false)
+  const [inviteLoading, setInviteLoading] = useState(false)
+  const [resolvedInvite, setResolvedInvite] = useState<InviteTokenDTO | null>(null)
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
   const [managements, setManagements] = useState<ManagementDTO[]>([])
   const [generalManagements, setGeneralManagements] = useState<GeneralManagementDTO[]>([])
@@ -74,6 +80,33 @@ export function RegisterModal({
   useEffect(() => {
     return () => clearTimeout(closeTimerRef.current ?? undefined)
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    if (!inviteToken) {
+      setResolvedInvite(null)
+      return
+    }
+    setInviteLoading(true)
+    setResolvedInvite(null)
+    resolveInvite(inviteToken)
+      .then((dto) => {
+        if (dto.usedAt || dto.revoked || new Date(dto.expiresAt) < new Date()) {
+          toast.error("Esta invitación ya no es válida")
+          onOpenChangeRef.current(false)
+          return
+        }
+        setResolvedInvite(dto)
+        setEmail(dto.email)
+        setRole(dto.intendedRole)
+      })
+      .catch(() => {
+        toast.error("Invitación inválida o expirada")
+        onOpenChangeRef.current(false)
+      })
+      .finally(() => setInviteLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, inviteToken])
 
   useEffect(() => {
     if (!open) return
@@ -119,6 +152,8 @@ export function RegisterModal({
     setSelectedGgId(null)
     setSelectedMgmtId(null)
     setShowPwd(false)
+    setResolvedInvite(null)
+    setInviteLoading(false)
   }
 
   const close = () => {
@@ -199,18 +234,22 @@ export function RegisterModal({
           <div className="rounded-md border border-[#fde8e8] bg-[#fde8e8]/40 p-3 text-xs space-y-1">
             <div className="flex items-center gap-2 font-medium text-foreground">
               <ShieldCheckIcon className="size-4 text-[#7b1a1a]" />
-              Invitación verificada
+              {inviteLoading ? "Verificando invitación..." : "Invitación verificada"}
             </div>
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <EnvelopeIcon className="size-3.5" />
-              <span className="truncate">{inviteEmail}</span>
-            </div>
-            <div className="text-muted-foreground">
-              Rol asignado:{" "}
-              <span className="font-medium text-foreground">
-                {ROLES.find((r) => r.value === inviteRole)?.label ?? inviteRole}
-              </span>
-            </div>
+            {resolvedInvite && (
+              <>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <EnvelopeIcon className="size-3.5" />
+                  <span className="truncate">{email}</span>
+                </div>
+                <div className="text-muted-foreground">
+                  Rol asignado:{" "}
+                  <span className="font-medium text-foreground">
+                    {ROLES.find((r) => r.value === role)?.label ?? role}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -221,7 +260,7 @@ export function RegisterModal({
               id="reg-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={saving}
+              disabled={saving || inviteLoading}
               placeholder="Ana Rodríguez"
             />
           </div>
@@ -246,7 +285,7 @@ export function RegisterModal({
                 type={showPwd ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={saving}
+                disabled={saving || inviteLoading}
                 placeholder="Mínimo 8 caracteres"
                 className="pr-10"
               />
@@ -361,13 +400,13 @@ export function RegisterModal({
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={close} disabled={saving}>
+            <Button type="button" variant="outline" onClick={close} disabled={saving || inviteLoading}>
               Cancelar
             </Button>
             <Button
               type="submit"
               className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
-              disabled={saving}
+              disabled={saving || inviteLoading}
             >
               {saving ? (
                 <><ArrowPathIcon className="size-4 animate-spin" /> {isInvite ? "Creando cuenta…" : "Registrando…"}</>

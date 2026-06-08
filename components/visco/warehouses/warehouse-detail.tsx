@@ -4,6 +4,7 @@ import { CubeIcon, MapPinIcon, UserIcon, DocumentTextIcon } from "@heroicons/rea
 import type { WarehouseDetailResponse } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { LocationManager } from "./location-manager"
 
 export function WarehouseDetailSkeleton() {
   return (
@@ -74,6 +75,11 @@ export function WarehouseDetail({
           <p className="text-xs text-muted-foreground">Productos</p>
         </div>
       </div>
+
+      <LocationManager
+        warehouseId={warehouse.id}
+        warehouseName={warehouse.name}
+      />
     </div>
   )
 }

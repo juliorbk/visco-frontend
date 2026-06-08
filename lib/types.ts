@@ -171,6 +171,11 @@ export interface LocationDTO {
   warehouseName: string | null
 }
 
+export interface CreateLocationRequest {
+  code: string
+  warehouseId: number
+}
+
 // ── Purchase Order ──
 
 export interface PurchaseOrderResponse {
@@ -312,6 +317,7 @@ export interface WarehouseStockSummary {
   warehouseName: string
   totalStock: number
   totalPendingStock: number
+  productCount: number
 }
 
 export interface ProductStockBreakdown {

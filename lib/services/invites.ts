@@ -12,3 +12,7 @@ export async function listInvites(): Promise<InviteTokenDTO[]> {
 export async function revokeInvite(id: string): Promise<InviteTokenDTO> {
   return api.delete<InviteTokenDTO>(`/api/invites/${id}`)
 }
+
+export async function resolveInvite(token: string): Promise<InviteTokenDTO> {
+  return api.get<InviteTokenDTO>(`/api/invites/by-token/${token}`, undefined, true)
+}

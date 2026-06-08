@@ -7,7 +7,7 @@ interface WarehouseCardData {
   id: number
   name: string
   sapCenterCode: string
-  totalStock: number
+  productCount: number
   totalPendingStock: number
 }
 
@@ -47,8 +47,8 @@ export function WarehouseCard({
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-muted/50 p-2 text-center">
-          <p className="font-semibold text-foreground">{warehouse.totalStock}</p> 
-          <p className="text-muted-foreground">En stock</p>
+          <p className="font-semibold text-foreground">{warehouse.productCount}</p> 
+          <p className="text-muted-foreground">Productos</p>
         </div>
         <div className="rounded-lg bg-muted/50 p-2 text-center">
           <p className="font-semibold text-foreground">{warehouse.totalPendingStock}</p>

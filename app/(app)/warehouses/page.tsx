@@ -100,7 +100,7 @@ export default function WarehousesPage() {
     const summary = stockSummary.find((s) => s.warehouseId === w.id)
     return {
       ...w,
-      totalStock: summary?.totalStock ?? 0,
+      productCount: summary?.productCount ?? 0,
       totalPendingStock: summary?.totalPendingStock ?? 0,
     }
   })
