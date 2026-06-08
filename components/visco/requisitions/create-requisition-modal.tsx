@@ -20,10 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createRequisition } from "@/lib/services/requisitions"
+import { createRequisition, fetchRequisitions } from "@/lib/services/requisitions"
 import { fetchAllCostCenters } from "@/lib/services/admin"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
+import { useNextDocumentNumber } from "@/hooks/use-next-document-number"
 import type { CostCenter, ProductDTO } from "@/lib/types"
 import { CheckIcon, ArrowPathIcon, PlusIcon, MagnifyingGlassIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
@@ -51,7 +52,11 @@ export function CreateRequisitionModal({
 }) {
   const [step, setStep] = useState(0)
   const nextLineIdRef = useRef(1)
-  const [reqNumber, setReqNumber] = useState(`REQ-${Date.now().toString().slice(-4)}`)
+  const { nextNumber: reqNumber, loading: numberLoading } = useNextDocumentNumber(
+    open,
+    "REQ",
+    () => fetchRequisitions(0, 500).then((r) => r.content ?? []),
+  )
   const [description, setDescription] = useState("")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
@@ -238,7 +243,13 @@ export function CreateRequisitionModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="reqNum">Requisition Number</Label>
-              <Input id="reqNum" value={reqNumber} onChange={(e) => setReqNumber(e.target.value)} />
+              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm font-mono font-medium">
+                {numberLoading ? (
+                  <span className="text-muted-foreground">Generando…</span>
+                ) : (
+                  reqNumber
+                )}
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Centro de Costo</Label>

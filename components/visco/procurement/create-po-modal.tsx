@@ -21,13 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createOrder } from "@/lib/services/procurement"
+import { createOrder, fetchOrders } from "@/lib/services/procurement"
 import { fetchWarehouses } from "@/lib/services/warehouse"
 import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse, SupplierDTO } from "@/lib/types"
 import { fetchSuppliers, createSupplier } from "@/lib/services/suppliers"
 import { fetchProducts } from "@/lib/services/inventory"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
+import { useNextDocumentNumber } from "@/hooks/use-next-document-number"
 import { canCreateSupplierFromPo } from "@/lib/permissions"
 import { CheckIcon, ArrowPathIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon, XMarkIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
@@ -58,7 +59,11 @@ export function CreatePOModal({
 }) {
   const [step, setStep] = useState(0)
   const nextLineIdRef = useRef(1)
-  const [orderNumber, setOrderNumber] = useState(`PO-${Date.now().toString().slice(-4)}`)
+  const { nextNumber: orderNumber, loading: numberLoading } = useNextDocumentNumber(
+    open,
+    "PO",
+    () => fetchOrders(0, 500).then((r) => r.content ?? []),
+  )
   const [description, setDescription] = useState("")
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
   const [type, setType] = useState(ORDER_TYPES[1])
@@ -281,10 +286,6 @@ export function CreatePOModal({
   }
 
   const submit = async () => {
-    if (!orderNumber.trim()) {
-      toast.error("El número de orden es requerido")
-      return
-    }
     if (!description.trim()) {
       toast.error("La descripción es requerida")
       return
@@ -382,7 +383,13 @@ export function CreatePOModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="ord">Order Number</Label>
-              <Input id="ord" value={orderNumber} onChange={(e) => setOrderNumber(e.target.value)} />
+              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm font-mono font-medium">
+                {numberLoading ? (
+                  <span className="text-muted-foreground">Generando…</span>
+                ) : (
+                  orderNumber
+                )}
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Proveedor</Label>
