@@ -5,7 +5,7 @@ interface DocItem {
   orderNumber?: string | null
 }
 
-function parseSequential(prefix: string, num: string | undefined, currentYear: number) {
+function parseSequential(prefix: string, num: string | undefined | null, currentYear: number) {
   if (!num) return 0
   const regex = new RegExp(`^${prefix}-(\\d{4})/(\\d{4})$`)
   const match = num.match(regex)
