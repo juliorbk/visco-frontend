@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface DocItem {
   requisitionNumber?: string
@@ -22,6 +22,8 @@ export function useNextDocumentNumber(
 ) {
   const [nextNumber, setNextNumber] = useState("")
   const [loading, setLoading] = useState(false)
+  const fetchFnRef = useRef(fetchFn)
+  fetchFnRef.current = fetchFn
   const year = new Date().getFullYear()
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export function useNextDocumentNumber(
     const compute = async () => {
       setLoading(true)
       try {
-        const items = await fetchFn()
+        const items = await fetchFnRef.current()
         if (cancelled) return
         let maxSeq = 0
         for (const item of items) {
@@ -53,7 +55,7 @@ export function useNextDocumentNumber(
 
     compute()
     return () => { cancelled = true }
-  }, [open, prefix, year, fetchFn])
+  }, [open, prefix, year])
 
   return { nextNumber, loading }
 }
