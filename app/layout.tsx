@@ -14,7 +14,7 @@ const questrial = Questrial({
 export const metadata: Metadata = {
   title: "OriFlow | Visco Orinoco",
   description:
-    "Procurement, inventory and supplier management platform for enterprise operations.",
+    "Plataforma de compras, inventario y gestion de proveedores para operaciones empresariales.",
   icons: {
     icon: "/visco-logo.png",
   },

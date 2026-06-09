@@ -228,10 +228,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
     : null
 
   const columns = hasUnitPrices
-    ? ["CANT.", "PRODUCTO", "SKU", "P/U", "TOTAL"]
+    ? ["CANT.", "PRODUCTO", "SKU", "UBICACION", "P/U", "TOTAL"]
     : summary
-      ? ["RECIBIDO", "PRODUCTO", "SKU", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
-      : ["CANT.", "PRODUCTO", "SKU", "ESPERADO", "DIF."]
+      ? ["RECIBIDO", "PRODUCTO", "SKU", "UBICACION", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
+      : ["CANT.", "PRODUCTO", "SKU", "UBICACION", "ESPERADO", "DIF."]
 
   const bodyRows = receipt.items.map((item) => {
     const sm = summaryMap?.get(item.productId)
@@ -241,6 +241,7 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
         String(item.receivedQuantity),
         item.productName,
         item.productSku,
+        item.locationCode ?? "—",
         item.unitPrice != null ? formatCurrency(item.unitPrice) : "—",
         item.totalPrice != null
           ? formatCurrency(item.totalPrice)
@@ -256,6 +257,7 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
         String(item.receivedQuantity),
         item.productName,
         item.productSku,
+        item.locationCode ?? "—",
         String(sm.orderedQuantity),
         String(Math.max(0, recibidoAntes)),
         String(sm.pendingQuantity),
@@ -266,16 +268,17 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
       String(item.receivedQuantity),
       item.productName,
       item.productSku,
+      item.locationCode ?? "—",
       String(item.expectedQuantity),
       String(item.expectedQuantity - item.receivedQuantity),
     ]
   })
 
   const colWidths = hasUnitPrices
-    ? [18, contentW - 18 - 28 - 22 - 22, 28, 22, 22]
+    ? [18, contentW - 18 - 28 - 22 - 22 - 22, 28, 22, 22, 22]
     : summary
-      ? [18, contentW - 18 - 28 - 22 - 22 - 22, 22, 22, 22, 22]
-      : [18, contentW - 18 - 28 - 22 - 22, 28, 22, 22]
+      ? [18, contentW - 18 - 28 - 22 - 22 - 22 - 22, 22, 22, 22, 22, 22]
+      : [18, contentW - 18 - 28 - 22 - 22 - 22, 28, 22, 22, 22]
 
   y = addTable(doc, x0, y, contentW, columns, bodyRows, colWidths)
   y += 6

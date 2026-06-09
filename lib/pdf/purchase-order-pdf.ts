@@ -120,7 +120,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFontSize(20)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text("PURCHASE ORDER", pageW / 2, y + 8, { align: "center" })
+  doc.text("ORDEN DE COMPRA", pageW / 2, y + 8, { align: "center" })
 
   // Status badge under title
   const statusLabel = translateOrderStatus(order.status).toUpperCase()
@@ -137,10 +137,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   const infoX = 135
   const infoLines: [string, string][] = [
-    ["DATE:", formatDateShort(order.createdAt)],
-    ["PO #:", order.orderNumber],
-    ["TYPE:", translateOrderType(order.type)],
-    ["PAYMENT:", translatePaymentMethod(order.paymentMethod)],
+    ["FECHA:", formatDateShort(order.createdAt)],
+    ["OC #:", order.orderNumber],
+    ["TIPO:", translateOrderType(order.type)],
+    ["PAGO:", translatePaymentMethod(order.paymentMethod)],
   ]
   if (order.requisitionNumber) {
     infoLines.push(["REQ:", order.requisitionNumber])
@@ -170,7 +170,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
   doc.roundedRect(x0, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x0, y, boxW, "SUPPLIER")
+  addSectionTitle(doc, x0, y, boxW, "PROVEEDOR")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
@@ -190,7 +190,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   // Ship To box
   const x1 = x0 + boxW + 6
   doc.roundedRect(x1, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x1, y, boxW, "SHIP TO")
+  addSectionTitle(doc, x1, y, boxW, "ENVIAR A")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
@@ -220,10 +220,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ─ Terms Row ──
   const terms = [
-    ["PURCHASER", order.createdBy],
-    ["LEAD TIME", order.leadTime ? `${order.leadTime} days` : "—"],
+    ["COMPRADOR", order.createdBy],
+    ["TIEMPO ENTREGA", order.leadTime ? `${order.leadTime} dias` : "—"],
     ["F.O.B.", "—"],
-    ["SHIP CONDITIONS", order.paymentTerms ?? "—"],
+    ["COND. ENVIO", order.paymentTerms ?? "—"],
   ]
   const colW = contentW / 4
   terms.forEach(([title, value], i) => {
@@ -246,7 +246,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
   const colWidths = [12, contentW - 12 - 18 - 28 - 28, 18, 28, 28]
-  const head = ["#", "DESCRIPTION", "QTY", "UNIT PRICE", "TOTAL"]
+  const head = ["#", "DESCRIPCION", "CANT", "P/UNIT", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
     `${item.productName}  ${item.productSku}`,
@@ -264,9 +264,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const totalX = pageW - margin - 70
   const totalW = 70
   const totals = [["SUBTOTAL", formatCurrency(subtotal)]]
-  if (order.taxAmount != null) totals.push(["TAX", formatCurrency(order.taxAmount)])
-  if (order.shippingCost != null) totals.push(["SHIPPING", formatCurrency(order.shippingCost)])
-  if (order.otherCost != null) totals.push(["OTHER", formatCurrency(order.otherCost)])
+  if (order.taxAmount != null) totals.push(["IMPUESTO", formatCurrency(order.taxAmount)])
+  if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
+  if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
 
   totals.forEach(([label, value], i) => {
     doc.setFontSize(8)
@@ -291,7 +291,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   // ── Approval / Rejection info ──
   if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
     const isRejected = !!order.rejectionReason
-    const sectionLabel = isRejected ? "Rejection Info" : "Approval Info"
+    const sectionLabel = isRejected ? "Info de Rechazo" : "Info de Aprobacion"
     addSectionTitle(doc, x0, y, contentW, sectionLabel)
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
@@ -331,7 +331,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ── Comments ──
   const commentsText = order.specialConditions || order.description || "—"
-  addSectionTitle(doc, x0, y, contentW, "Comments or Special Instructions")
+  addSectionTitle(doc, x0, y, contentW, "Comentarios o Instrucciones Especiales")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)

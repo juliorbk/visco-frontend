@@ -48,7 +48,7 @@ export function ReceiptDetailPanel({
   return (
     <div className="w-full bg-white rounded-lg border border-[#f3f4f6] p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
       <div className="flex items-center justify-between mb-6 gap-2">
-        <h3 className="text-lg font-semibold text-[#111827] truncate min-w-0">Receipt Details</h3>
+        <h3 className="text-lg font-semibold text-[#111827] truncate min-w-0">Detalles de Recepcion</h3>
         <button onClick={onClose} className="p-1 hover:bg-[#f5f5f7] rounded-lg transition-colors shrink-0">
           <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
         </button>
@@ -62,21 +62,21 @@ export function ReceiptDetailPanel({
           <button
             onClick={handleCopy}
             className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors shrink-0"
-            title="Copy number"
+            title="Copiar numero"
           >
             <DocumentDuplicateIcon className="w-4 h-4 text-[#6b7280]" />
           </button>
         </div>
 
-        {copied && <p className="text-xs text-green-600">Copied to clipboard</p>}
+        {copied && <p className="text-xs text-green-600">Copiado al portapapeles</p>}
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="min-w-0">
-            <p className="text-[#6b7280] font-medium">Order</p>
+            <p className="text-[#6b7280] font-medium">Orden</p>
             <p className="text-[#7b1a1a] font-semibold mt-1 truncate">#{receipt.orderNumber}</p>
           </div>
           <div className="min-w-0">
-            <p className="text-[#6b7280] font-medium">Status</p>
+            <p className="text-[#6b7280] font-medium">Estado</p>
             <div className="mt-1">
               <span
                 className={cn(
@@ -86,14 +86,14 @@ export function ReceiptDetailPanel({
                     : "bg-orange-100 text-orange-700",
                 )}
               >
-                {receipt.updatedStatus === "DELIVERED" ? "COMPLETED" : "PARTIAL"}
+                {receipt.updatedStatus === "DELIVERED" ? "COMPLETADA" : "PARCIAL"}
               </span>
             </div>
           </div>
           <div className="col-span-2 min-w-0">
-            <p className="text-[#6b7280] font-medium">Receipt date</p>
+            <p className="text-[#6b7280] font-medium">Fecha de recepcion</p>
             <p className="text-[#111827] mt-1">
-              {new Date(receipt.receivedAt).toLocaleDateString("en-US", {
+              {new Date(receipt.receivedAt).toLocaleDateString("es-VE", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -104,17 +104,17 @@ export function ReceiptDetailPanel({
       </div>
 
       <div className="mb-6">
-        <h4 className="font-semibold text-[#111827] mb-4">Items received</h4>
+        <h4 className="font-semibold text-[#111827] mb-4">Items recibidos</h4>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[#f3f4f6]">
-                <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCT</th>
+                <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCTO</th>
                 <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">SKU</th>
-                <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">LOCATION</th>
-                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">EXPECTED</th>
-                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">RECEIVED</th>
-                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">DIFFERENCE</th>
+                <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">UBICACION</th>
+                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">ESPERADO</th>
+                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">RECIBIDO</th>
+                <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">DIFERENCIA</th>
               </tr>
             </thead>
             <tbody>
@@ -156,17 +156,17 @@ export function ReceiptDetailPanel({
         <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
           <h4 className="font-semibold text-[#111827] mb-4 flex items-center gap-2">
             <ExclamationTriangleIcon className="w-4 h-4 text-orange-500 shrink-0" />
-            <span className="truncate">Cumulative PO status ({summary.totalReceipts} receipts)</span>
+            <span className="truncate">Estado acumulado de la OC ({summary.totalReceipts} recepciones)</span>
           </h4>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#f3f4f6]">
-                  <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCT</th>
-                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">ORDERED</th>
-                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">RECEIVED</th>
-                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">PENDING</th>
-                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">STATUS</th>
+                  <th className="text-left py-2 px-0 font-semibold text-[#6b7280]">PRODUCTO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">ORDENADO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">RECIBIDO</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">PENDIENTE</th>
+                  <th className="text-right py-2 px-0 font-semibold text-[#6b7280] whitespace-nowrap">ESTADO</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,11 +179,11 @@ export function ReceiptDetailPanel({
                     <td className="py-3 px-0 text-right whitespace-nowrap">
                       {item.fullyReceived ? (
                         <span className="text-green-700 flex items-center justify-end gap-1">
-                          <CheckCircleIcon className="w-4 h-4" /> Complete
+                          <CheckCircleIcon className="w-4 h-4" /> Completo
                         </span>
                       ) : (
                         <span className="text-orange-600 flex items-center justify-end gap-1">
-                          <ExclamationTriangleIcon className="w-4 h-4" /> Pending
+                          <ExclamationTriangleIcon className="w-4 h-4" /> Pendiente
                         </span>
                       )}
                     </td>
@@ -193,15 +193,15 @@ export function ReceiptDetailPanel({
             </table>
           </div>
           <p className="text-xs text-[#6b7280] mt-3">
-            This PO has {summary.totalReceipts} receipt{summary.totalReceipts !== 1 ? "s" : ""}.
-            The values shown are the cumulative total of all receipts.
+            Esta OC tiene {summary.totalReceipts} recepcion{summary.totalReceipts !== 1 ? "es" : ""}.
+            Los valores mostrados son el total acumulado de todas las recepciones.
           </p>
         </div>
       )}
 
       {receipt.notes && (
         <div className="mb-6 pb-6 border-b border-[#f3f4f6]">
-          <h4 className="font-semibold text-[#111827] mb-3">Notes</h4>
+          <h4 className="font-semibold text-[#111827] mb-3">Notas</h4>
           <div className="bg-[#f5f5f7] rounded-lg p-4 text-sm text-[#6b7280] break-words">
             {receipt.notes}
           </div>
@@ -211,7 +211,7 @@ export function ReceiptDetailPanel({
       <div className="space-y-3">
         <button className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2">
           <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-          View Purchase Order
+          Ver Orden de Compra
         </button>
         <ExportPDFButton
           onExport={async () => {

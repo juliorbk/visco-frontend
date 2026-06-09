@@ -11,9 +11,9 @@ export const ROLE_LEVELS: Record<UserRole, number> = {
 export const ROLE_LABELS: Record<UserRole, string> = {
   SUPERADMIN: "Super Admin",
   ADMIN: "Admin",
-  MANAGER: "Manager",
-  PROCUREMENT: "Procurement",
-  WAREHOUSEMAN: "Warehouseman",
+  MANAGER: "Gerente",
+  PROCUREMENT: "Compras",
+  WAREHOUSEMAN: "Almacenista",
 }
 
 export const ROLE_BADGE: Record<UserRole, string> = {

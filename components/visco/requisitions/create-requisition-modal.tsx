@@ -13,20 +13,29 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { createRequisition, fetchRequisitions } from "@/lib/services/requisitions"
+import { createRequisition } from "@/lib/services/requisitions"
 import { fetchAllCostCenters } from "@/lib/services/admin"
 import { fetchProducts } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
-import { useNextDocumentNumber } from "@/hooks/use-next-document-number"
 import type { CostCenter, ProductDTO } from "@/lib/types"
-import { CheckIcon, ArrowPathIcon, PlusIcon, MagnifyingGlassIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline"
+import {
+  CheckIcon,
+  ArrowPathIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  TrashIcon,
+  XMarkIcon,
+  ChevronUpDownIcon,
+} from "@heroicons/react/24/outline"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -52,11 +61,6 @@ export function CreateRequisitionModal({
 }) {
   const [step, setStep] = useState(0)
   const nextLineIdRef = useRef(1)
-  const { nextNumber: reqNumber, loading: numberLoading } = useNextDocumentNumber(
-    open,
-    "REQ",
-    () => fetchRequisitions(0, 500).then((r) => r.content ?? []),
-  )
   const [description, setDescription] = useState("")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
@@ -64,6 +68,7 @@ export function CreateRequisitionModal({
   const [pickQty, setPickQty] = useState("1")
   const [pickNotes, setPickNotes] = useState("")
   const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+  const [openCc, setOpenCc] = useState(false)
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
 
@@ -181,14 +186,13 @@ export function CreateRequisitionModal({
     }
     setSaving(true)
     try {
-      await createRequisition({
-        requisitionNumber: reqNumber,
+      const created = await createRequisition({
         description,
         requestedById: user.id,
         costCenterId,
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, notes: l.notes || undefined })),
       })
-      toast.success(`Requisición ${reqNumber} creada`)
+      toast.success(`Requisición ${created.requisitionNumber} creada`)
       onCreated()
       close()
     } catch (err) {
@@ -242,32 +246,68 @@ export function CreateRequisitionModal({
         {step === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="reqNum">Requisition Number</Label>
-              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm font-mono font-medium">
-                {numberLoading ? (
-                  <span className="text-muted-foreground">Generando…</span>
-                ) : (
-                  reqNumber
-                )}
+              <Label>Número de Requisición</Label>
+              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
+                Se asignará automáticamente
               </div>
             </div>
             <div className="space-y-1.5">
               <Label>Centro de Costo</Label>
-              <Select
-                value={String(costCenterId ?? "")}
-                onValueChange={(v) => setCostCenterId(Number(v))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {costCenters.map((cc) => (
-                    <SelectItem key={cc.id} value={String(cc.id)}>
-                      {cc.fullDescription}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={openCc} onOpenChange={setOpenCc}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCc}
+                    className="w-full justify-between font-normal bg-background h-9"
+                  >
+                    {costCenterId
+                      ? (() => {
+                          const cc = costCenters.find((c) => c.id === costCenterId)
+                          return cc
+                            ? `${cc.code} — ${cc.fullDescription}`
+                            : "Seleccionar…"
+                        })()
+                      : "Seleccionar…"}
+                    <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar centro de costo…" />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron centros de costo.</CommandEmpty>
+                      <CommandGroup>
+                        {costCenters.map((cc) => (
+                          <CommandItem
+                            key={cc.id}
+                            value={`${cc.code} ${cc.fullDescription}`}
+                            onSelect={() => {
+                              setCostCenterId(cc.id)
+                              setOpenCc(false)
+                            }}
+                          >
+                            <CheckIcon
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                costCenterId === cc.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{cc.code} — {cc.fullDescription}</span>
+                              {cc.managementDescription && (
+                                <span className="text-xs text-muted-foreground">
+                                  Gerencia: {cc.managementDescription}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="sm:col-span-2 space-y-1.5">
               <Label htmlFor="desc">Descripción</Label>
@@ -317,7 +357,7 @@ export function CreateRequisitionModal({
                   </div>
                   <Input
                     type="number"
-                    placeholder="Cant"
+                    placeholder="Cant."
                     className="w-20"
                     value={pickQty}
                     onChange={(e) => setPickQty(e.target.value)}
@@ -413,8 +453,17 @@ export function CreateRequisitionModal({
         {/* Step 2: Review */}
         {step === 2 && (
           <div className="space-y-3 text-sm">
-            <ReviewRow label="Requisition #" value={reqNumber} />
-            <ReviewRow label="Centro de Costo" value={costCenters.find((c) => c.id === costCenterId)?.fullDescription ?? "-"} />
+            <ReviewRow
+              label="Centro de Costo"
+              value={
+                (() => {
+                  const cc = costCenters.find((c) => c.id === costCenterId)
+                  return cc
+                    ? `${cc.code} — ${cc.fullDescription}${cc.managementDescription ? ` (${cc.managementDescription})` : ""}`
+                    : "-"
+                })()
+              }
+            />
             <ReviewRow label="Productos" value={`${lines.length}`} />
             {description && (
               <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">

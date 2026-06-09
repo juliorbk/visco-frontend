@@ -231,7 +231,7 @@ export interface PurchaseOrderItemResponse {
 }
 
 export interface CreatePurchaseOrderRequest {
-  orderNumber: string
+  orderNumber?: string
   description: string
   supplierId: number
   destinationWarehouseId: number
@@ -494,7 +494,7 @@ export interface RequisitionItemResponse {
 }
 
 export interface CreateRequisitionRequest {
-  requisitionNumber: string
+  requisitionNumber?: string
   description: string
   requestedById: string
   costCenterId: number

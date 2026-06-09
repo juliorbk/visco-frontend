@@ -55,7 +55,7 @@ export function SupplierCategoryManagerModal({
       setCategories(res.content ?? [])
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Error loading categories",
+        err instanceof Error ? err.message : "Error al cargar categorias",
       )
     } finally {
       setLoading(false)
@@ -92,12 +92,12 @@ export function SupplierCategoryManagerModal({
         name: trimmed,
         description: description.trim() || undefined,
       })
-      toast.success(`Category "${trimmed}" created`)
+      toast.success(`Categoria "${trimmed}" creada`)
       resetCreate()
       load()
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Error creating category",
+        err instanceof Error ? err.message : "Error al crear categoria",
       )
     } finally {
       setSaving(false)
@@ -113,12 +113,12 @@ export function SupplierCategoryManagerModal({
         name: trimmed,
         description: editDescription.trim() || undefined,
       })
-      toast.success("Category updated")
+      toast.success("Categoria actualizada")
       cancelEdit()
       load()
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Error updating category",
+        err instanceof Error ? err.message : "Error al actualizar categoria",
       )
     } finally {
       setSaving(false)
@@ -126,16 +126,16 @@ export function SupplierCategoryManagerModal({
   }
 
   const handleDeactivate = async (cat: SupplierCategoryDTO) => {
-    if (!confirm(`Deactivate category "${cat.name}"?`)) return
+    if (!confirm(`Desactivar categoria "${cat.name}"?`)) return
     try {
       await deactivateSupplierCategory(cat.id)
-      toast.success(`Category "${cat.name}" deactivated`)
+      toast.success(`Categoria "${cat.name}" desactivada`)
       load()
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
-          : "Error deactivating category",
+          : "Error al desactivar categoria",
       )
     }
   }
@@ -143,13 +143,13 @@ export function SupplierCategoryManagerModal({
   const handleActivate = async (cat: SupplierCategoryDTO) => {
     try {
       await activateSupplierCategory(cat.id)
-      toast.success(`Category "${cat.name}" activated`)
+      toast.success(`Categoria "${cat.name}" activada`)
       load()
     } catch (err) {
       toast.error(
         err instanceof Error
           ? err.message
-          : "Error activating category",
+          : "Error al activar categoria",
       )
     }
   }
@@ -158,9 +158,9 @@ export function SupplierCategoryManagerModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-serif">Manage supplier categories</DialogTitle>
+          <DialogTitle className="font-serif">Gestionar categorias de proveedores</DialogTitle>
           <DialogDescription>
-            Group suppliers by category to organize your catalog and filter the list.
+            Agrupa proveedores por categoria para organizar tu catalogo y filtrar la lista.
           </DialogDescription>
         </DialogHeader>
 
@@ -168,12 +168,12 @@ export function SupplierCategoryManagerModal({
         <div className="space-y-3 p-3 rounded-lg border border-border bg-[#fafafa]">
           <div className="space-y-1.5">
             <Label htmlFor="new-category-name" className="text-xs">
-              New category name
+              Nombre de nueva categoria
             </Label>
             <div className="flex items-center gap-2">
               <Input
                 id="new-category-name"
-                placeholder="e.g. Logistics, Raw materials, IT services"
+                placeholder="ej. Logistica, Materias primas, Servicios TI"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
@@ -191,12 +191,12 @@ export function SupplierCategoryManagerModal({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new-category-desc" className="text-xs">
-              Description <span className="text-muted-foreground">(optional)</span>
+              Descripcion <span className="text-muted-foreground">(opcional)</span>
             </Label>
             <Textarea
               id="new-category-desc"
               rows={2}
-              placeholder="Short description of what this category covers"
+              placeholder="Breve descripcion de lo que cubre esta categoria"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={saving}
@@ -212,7 +212,7 @@ export function SupplierCategoryManagerModal({
             </div>
           ) : categories.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              No categories yet.
+              No hay categorias aun.
             </p>
           ) : (
             categories.map((cat) =>
@@ -238,7 +238,7 @@ export function SupplierCategoryManagerModal({
                       onClick={() => handleUpdate(cat.id)}
                       disabled={saving}
                     >
-                      Save
+                      Guardar
                     </Button>
                     <Button
                       size="sm"
@@ -251,7 +251,7 @@ export function SupplierCategoryManagerModal({
                   </div>
                   <Textarea
                     rows={2}
-                    placeholder="Description (optional)"
+                    placeholder="Descripcion (opcional)"
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     className="text-sm"
@@ -276,7 +276,7 @@ export function SupplierCategoryManagerModal({
                             : "inline-flex items-center rounded-full bg-gray-200 text-gray-600 px-2 py-0.5 text-[10px] font-medium shrink-0"
                         }
                       >
-                        {cat.active ? "ACTIVE" : "INACTIVE"}
+                        {cat.active ? "ACTIVO" : "INACTIVO"}
                       </span>
                     </div>
                     {cat.description && (
@@ -290,7 +290,7 @@ export function SupplierCategoryManagerModal({
                       type="button"
                       onClick={() => startEdit(cat)}
                       className="size-7 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
-                      title="Edit"
+                      title="Editar"
                     >
                       <PencilIcon className="size-3.5" />
                     </button>
@@ -299,7 +299,7 @@ export function SupplierCategoryManagerModal({
                         type="button"
                         onClick={() => handleDeactivate(cat)}
                         className="size-7 grid place-items-center rounded-md text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                        title="Deactivate"
+                        title="Desactivar"
                       >
                         <NoSymbolIcon className="size-3.5" />
                       </button>
@@ -308,7 +308,7 @@ export function SupplierCategoryManagerModal({
                         type="button"
                         onClick={() => handleActivate(cat)}
                         className="size-7 grid place-items-center rounded-md text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50"
-                        title="Activate"
+                        title="Activar"
                       >
                         <CheckCircleIcon className="size-3.5" />
                       </button>
@@ -322,7 +322,7 @@ export function SupplierCategoryManagerModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Cerrar
           </Button>
         </DialogFooter>
       </DialogContent>

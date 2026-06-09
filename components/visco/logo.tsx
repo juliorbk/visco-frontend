@@ -29,7 +29,7 @@ export function Logo({
     <div className={cn("flex flex-col items-start tracking-tight", className)}>
       <img
         src="/visco-logo.png"
-        alt="Visco Orinoco Logo"
+        alt="Logo Visco Orinoco"
         className={cn(
           "object-contain",
           sizeClass,

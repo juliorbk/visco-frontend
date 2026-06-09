@@ -289,7 +289,7 @@ export async function generateDispatchNotePDF(dispatch: DispatchResponse): Promi
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text("Nombre & Firma", x0 + footBoxW / 2, y + 34, { align: "center" })
+  doc.text("Nombre y Firma", x0 + footBoxW / 2, y + 34, { align: "center" })
 
   const obsX = x0 + footBoxW + 8
   doc.roundedRect(obsX, y, footBoxW, 40, 2, 2, "FD")

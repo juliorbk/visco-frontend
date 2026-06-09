@@ -146,7 +146,7 @@ export function StockActionModal({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-serif">Stock Action — {product.name}</DialogTitle>
+          <DialogTitle className="font-serif">Accion de Stock — {product.name}</DialogTitle>
           <DialogDescription>
             Stock actual: {product.totalStock} {product.uom}
           </DialogDescription>

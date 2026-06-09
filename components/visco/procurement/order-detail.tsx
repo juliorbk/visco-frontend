@@ -31,7 +31,7 @@ export function OrderDetail({
   if (!order) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/60 p-6 text-center text-sm text-muted-foreground h-full grid place-items-center">
-        Select an order to view its details.
+        Selecciona una orden para ver sus detalles.
       </div>
     )
   }
@@ -67,13 +67,13 @@ export function OrderDetail({
       {/* ── Stats ── */}
       <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-border">
         <Stat label="Total"       value={`$${total.toLocaleString()}`} />
-        <Stat label="Requester" value={order.createdBy} />
-        <Stat label="Type"        value={order.type} />
+        <Stat label="Solicitante" value={order.createdBy} />
+        <Stat label="Tipo"        value={order.type} />
         <Stat label="Items"   value={`${order.items.length}`} />
         {order.requisitionNumber && (
-          <Stat label="Requisition" value={order.requisitionNumber} />
+          <Stat label="Requisicion" value={order.requisitionNumber} />
         )}
-        <Stat label="Destination warehouse" value={
+        <Stat label="Almacen destino" value={
           order.destinationWarehouse
             ? `${order.destinationWarehouse.name} — ${order.destinationWarehouse.physicalAddress}${order.destinationWarehouse.sapCenterCode ? ` · SAP: ${order.destinationWarehouse.sapCenterCode}` : ""}${order.destinationWarehouse.responsibleUserName ? ` · Resp: ${order.destinationWarehouse.responsibleUserName}` : ""}${order.destinationWarehouse.description ? ` · ${order.destinationWarehouse.description}` : ""}`
             : order.destinationWarehouseName ?? "-"
@@ -83,7 +83,7 @@ export function OrderDetail({
       {/* ── Items ── */}
       <div className="px-5 py-4 flex-1 overflow-y-auto">
         <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-2">
-          Order lines
+          Lineas de orden
         </h4>
         <ul className="space-y-2">
           {order.items.map((it, i) => (
@@ -108,7 +108,7 @@ export function OrderDetail({
       {/* ── Export PDF ── */}
       <div className="px-5 py-3 border-t border-border">
         <ExportPDFButton
-          label="Export PDF"
+          label="Exportar PDF"
           onExport={async () => {
             const { generatePurchaseOrderPDF } = await import("@/lib/pdf/purchase-order-pdf")
             const doc = await generatePurchaseOrderPDF(order)
@@ -129,14 +129,13 @@ export function OrderDetail({
                 className="flex-1 bg-card"
                 onClick={() => onCancel?.(order)}
               >
-                Cancel
-              </Button>
+                Cancelar</Button>
             )}
             <Button
               className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
               onClick={() => onSubmit?.(order)}
             >
-              Submit for approval
+              Enviar para aprobacion
             </Button>
           </>
         )}
@@ -149,13 +148,13 @@ export function OrderDetail({
               className="flex-1 bg-card"
               onClick={() => onCancel?.(order)}
             >
-              Reject
+              Rechazar
             </Button>
             <Button
               className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
               onClick={() => onApprove?.(order)}
             >
-              Approve
+              Aprobar
             </Button>
           </>
         )}
@@ -166,7 +165,7 @@ export function OrderDetail({
             className="flex-1 bg-[#7b1a1a] hover:bg-[#5c1212] text-white"
             onClick={() => onReceive?.(order)}
           >
-            Receive goods
+              Recibir mercancia
           </Button>
         )}
 
@@ -177,14 +176,14 @@ export function OrderDetail({
             className="flex-1 bg-card"
             onClick={() => onCancel?.(order)}
           >
-            Cancel order
+            Cancelar orden
           </Button>
         )}
 
         {/* No actions available */}
         {!hasActions && (
           <Button variant="outline" className="flex-1 bg-card" disabled>
-            No actions available
+            Sin acciones disponibles
           </Button>
         )}
       </div>

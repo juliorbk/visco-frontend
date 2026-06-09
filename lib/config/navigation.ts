@@ -23,14 +23,14 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, minRole: "WAREHOUSEMAN" },
-  { href: "/inventory", label: "Inventory", icon: Package, minRole: "WAREHOUSEMAN" },
-  { href: "/warehouses", label: "Warehouses", icon: BuildingStorefrontIcon, minRole: "WAREHOUSEMAN" },
-  { href: "/inbounds", label: "Inbounds", icon: TruckIcon, minRole: "WAREHOUSEMAN" },
-  { href: "/dispatches", label: "Dispatches", icon: DispatchesIcon, minRole: "WAREHOUSEMAN" },
-  { href: "/requisitions", label: "Requisitions", icon: DocumentTextIcon, minRole: "PROCUREMENT" },
-  { href: "/procurement", label: "Procurement", icon: ShoppingCartIcon, minRole: "PROCUREMENT" },
-  { href: "/suppliers", label: "Suppliers", icon: BuildingOffice2Icon, minRole: "PROCUREMENT" },
-  { href: "/reports", label: "Reports", icon: ChartBarIcon, minRole: "MANAGER" },
+  { href: "/inventory", label: "Inventario", icon: Package, minRole: "WAREHOUSEMAN" },
+  { href: "/warehouses", label: "Almacenes", icon: BuildingStorefrontIcon, minRole: "WAREHOUSEMAN" },
+  { href: "/inbounds", label: "Recepciones", icon: TruckIcon, minRole: "WAREHOUSEMAN" },
+  { href: "/dispatches", label: "Despachos", icon: DispatchesIcon, minRole: "WAREHOUSEMAN" },
+  { href: "/requisitions", label: "Requisiciones", icon: DocumentTextIcon, minRole: "PROCUREMENT" },
+  { href: "/procurement", label: "Compras", icon: ShoppingCartIcon, minRole: "PROCUREMENT" },
+  { href: "/suppliers", label: "Proveedores", icon: BuildingOffice2Icon, minRole: "PROCUREMENT" },
+  { href: "/reports", label: "Reportes", icon: ChartBarIcon, minRole: "MANAGER" },
   { href: "/admin", label: "Admin", icon: ShieldCheckIcon, minRole: "ADMIN" },
 ]
 

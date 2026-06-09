@@ -32,7 +32,7 @@ export function ItemDetailPanel({
     <Sheet open={!!product} onOpenChange={(o) => !o && onClose()}>
       <SheetContent className="w-full sm:max-w-md p-0 overflow-y-auto">
         <SheetHeader className="border-b border-border px-5 py-4">
-          <SheetTitle className="font-serif text-lg">Item Details</SheetTitle>
+          <SheetTitle className="font-serif text-lg">Detalles del Item</SheetTitle>
         </SheetHeader>
 
         {product && (
@@ -68,13 +68,13 @@ export function ItemDetailPanel({
 
               <TabsContent value="info" className="mt-4 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
-                  <Stat label="Total Stock" value={`${product.totalStock} ${product.uom}`} />
-                  <Stat label="Pending Stock" value={`${product.totalPendingStock}`} />
-                  <Stat label="Reorder Point" value={`${product.reorderPoint}`} />
-                  <Stat label="Max Stock" value={product.maxStock != null ? `${product.maxStock}` : "—"} />
-                  <Stat label="Supplier" value={product.supplierName ?? "-"} />
-                  <Stat label="Category" value={product.categoryName ?? "-"} />
-                  <Stat label="SAP Code" value={product.sapCode} />
+                  <Stat label="Stock Total" value={`${product.totalStock} ${product.uom}`} />
+                  <Stat label="Stock Pendiente" value={`${product.totalPendingStock}`} />
+                  <Stat label="Punto de Reorden" value={`${product.reorderPoint}`} />
+                  <Stat label="Stock Maximo" value={product.maxStock != null ? `${product.maxStock}` : "—"} />
+                  <Stat label="Proveedor" value={product.supplierName ?? "-"} />
+                  <Stat label="Categoria" value={product.categoryName ?? "-"} />
+                  <Stat label="Codigo SAP" value={product.sapCode} />
                 </div>
 
                 <ProductStockBreakdownView productId={product.id} />
@@ -85,17 +85,17 @@ export function ItemDetailPanel({
                     className="bg-card"
                     onClick={() => onEdit(product)}
                   >
-                    <PencilIcon className="size-4" /> Edit Item
+                    <PencilIcon className="size-4" /> Editar Item
                   </Button>
                   <Button
                     variant="outline"
                     className="bg-card"
                     onClick={() => setStockActionOpen(true)}
                   >
-                    <ArrowPathIcon className="size-4" /> Stock Actions
+                    <ArrowPathIcon className="size-4" /> Acciones de Stock
                   </Button>
                   <Button className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-                    <ShoppingCartIcon className="size-4" /> Create PO
+                    <ShoppingCartIcon className="size-4" /> Crear OC
                   </Button>
                 </div>
               </TabsContent>

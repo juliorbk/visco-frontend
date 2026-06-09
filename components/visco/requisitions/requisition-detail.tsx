@@ -24,13 +24,13 @@ import {
 import { toast } from "sonner"
 
 const statusMap: Record<string, string> = {
-  DRAFT: "Draft",
-  PENDING: "Pending",
-  AWAITING_APPROVAL: "Awaiting Approval",
-  APPROVED: "Approved",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
-  CONVERTED: "Converted to PO",
+  DRAFT: "Borrador",
+  PENDING: "Pendiente",
+  AWAITING_APPROVAL: "Esperando Aprobacion",
+  APPROVED: "Aprobada",
+  REJECTED: "Rechazada",
+  CANCELLED: "Cancelada",
+  CONVERTED: "Convertida a OC",
 }
 
 export function RequisitionDetail({
@@ -48,7 +48,7 @@ export function RequisitionDetail({
     return (
       <div className="bg-white rounded-lg border border-border p-8 text-center">
         <p className="text-muted-foreground text-sm">
-          Select a requisition from the table to view its details
+          Selecciona una requisicion de la tabla para ver sus detalles
         </p>
       </div>
     )
@@ -98,27 +98,27 @@ export function RequisitionDetail({
       </div>
 
       <div className="px-5 py-4 space-y-3 text-sm">
-        <DetailRow label="Requester" value={requisition.requestedBy} />
-        <DetailRow label="Cost Center" value={requisition.areaName} />
-        <DetailRow label="Created" value={new Date(requisition.createdAt).toLocaleDateString()} />
+        <DetailRow label="Solicitante" value={requisition.requestedBy} />
+        <DetailRow label="Centro de Costo" value={requisition.areaName} />
+        <DetailRow label="Creado" value={new Date(requisition.createdAt).toLocaleDateString()} />
         {requisition.approvedBy && (
-          <DetailRow label="Approved by" value={requisition.approvedBy} />
+          <DetailRow label="Aprobado por" value={requisition.approvedBy} />
         )}
         {requisition.approvedAt && (
           <DetailRow
-            label="Approval date"
+            label="Fecha de aprobacion"
             value={new Date(requisition.approvedAt).toLocaleDateString()}
           />
         )}
         {requisition.rejectionReason && (
           <div className="rounded-md bg-red-50 border border-red-200 p-3 text-xs text-red-700">
-            <div className="font-semibold mb-1">Rejection reason</div>
+            <div className="font-semibold mb-1">Motivo de rechazo</div>
             {requisition.rejectionReason}
           </div>
         )}
         {requisition.approvalNotes && (
           <div className="rounded-md bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-700">
-            <div className="font-semibold mb-1">Approval notes</div>
+            <div className="font-semibold mb-1">Notas de aprobacion</div>
             {requisition.approvalNotes}
           </div>
         )}
@@ -127,7 +127,7 @@ export function RequisitionDetail({
       {requisition.description && (
         <div className="px-5 py-3 border-t border-border">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
-            Description
+            Descripcion
           </div>
           <p className="text-sm text-foreground break-words">{requisition.description}</p>
         </div>
@@ -167,7 +167,7 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => submitRequisitionForApproval(requisition.id),
-                "Requisition submitted for approval"
+                "Requisicion enviada para aprobacion"
               )
             }
           >
@@ -176,7 +176,7 @@ export function RequisitionDetail({
             ) : (
               <PaperAirplaneIcon className="size-4 mr-2" />
             )}
-            Submit for Approval
+            Enviar para Aprobacion
           </Button>
         )}
         {canApprove && (
@@ -186,12 +186,12 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => approveRequisition(requisition.id, user!.id),
-                "Requisition approved"
+                "Requisicion aprobada"
               )
             }
           >
             <CheckCircleIcon className="size-4 mr-2" />
-            Approve
+            Aprobar
           </Button>
         )}
         {canReject && (
@@ -200,16 +200,16 @@ export function RequisitionDetail({
             className="w-full border-red-300 text-red-600 hover:bg-red-50"
             disabled={loading}
             onClick={() => {
-              const reason = prompt("Rejection reason:")
+              const reason = prompt("Motivo de rechazo:")
               if (!reason) return
               handleAction(
                 () => rejectRequisition(requisition.id, user!.id, reason),
-                "Requisition rejected"
+                "Requisicion rechazada"
               )
             }}
           >
             <XCircleIcon className="size-4 mr-2" />
-            Reject
+            Rechazar
           </Button>
         )}
         {canConvertToPO && (
@@ -218,7 +218,7 @@ export function RequisitionDetail({
             onClick={() => onConvert(requisition)}
           >
             <ShoppingCartIcon className="size-4 mr-2" />
-            Convert to Purchase Order
+            Convertir a Orden de Compra
           </Button>
         )}
         {canCancel && (
@@ -229,12 +229,12 @@ export function RequisitionDetail({
             onClick={() =>
               handleAction(
                 () => cancelRequisition(requisition.id),
-                "Requisition cancelled"
+                "Requisicion cancelada"
               )
             }
           >
             <NoSymbolIcon className="size-4 mr-2" />
-            Cancel Requisition
+            Cancelar Requisicion
           </Button>
         )}
       </div>

@@ -38,7 +38,7 @@ export default function ReportsPage() {
   return (
     <div>
       <PageHeader
-        title="Reports & Analytics"
+        title="Reportes y Analiticas"
         subtitle="Genera, descarga y programa reportes del sistema."
       />
 

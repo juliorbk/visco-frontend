@@ -24,7 +24,7 @@ function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const inviteToken = searchParams.get("invite")
-  const [email, setEmail] = useState("example@visco.com")
+  const [email, setEmail] = useState("ejemplo@visco.com")
   const [password, setPassword] = useState("demo1234")
   const [showPwd, setShowPwd] = useState(false)
   const [remember, setRemember] = useState(true)
@@ -82,11 +82,11 @@ function LoginPageInner() {
 
         <div className="my-auto max-w-md">
           <h2 className="font-serif italic text-4xl lg:text-5xl leading-tight text-balance">
-            OriFlow | Visco Orinoco - Smart & Efficent Warehouse Management System
+            OriFlow | Visco Orinoco - Sistema Inteligente de Gestion de Almacenes
           </h2>
           <p className="mt-6 text-white/80 leading-relaxed text-pretty">
-            Centralize purchasing, tracking, and inventory management for your warehouse.
-            Designed for enterprise teams that need visibility, control, and speed.
+            Centraliza compras, seguimiento y gestion de inventario para tu almacen.
+            Disenado para equipos empresariales que necesitan visibilidad, control y velocidad.
           </p>
         </div>
 

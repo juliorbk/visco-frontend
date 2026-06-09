@@ -37,7 +37,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             href="/dashboard"
             onClick={onClose}
             className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
-            aria-label="Go to dashboard"
+            aria-label="Ir al dashboard"
           >
             <Logo size="md" variant="white" />
           </Link>
@@ -82,7 +82,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               className="flex items-center justify-center gap-1.5 w-full rounded-md bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-foreground text-xs font-medium px-3 py-2.5 transition-colors"
             >
               <PlusIcon className="size-3.5" />
-              New Purchase Order
+              Nueva Orden de Compra
             </Link>
           </div>
         )}

@@ -117,11 +117,11 @@ export default function SuppliersPage() {
       setSaving(true)
       if (id) {
         await updateSupplier(id, data)
-        toast.success("Supplier updated")
+        toast.success("Proveedor actualizado")
         refetch()
       } else {
         const created = await createSupplier(data)
-        toast.success("Supplier created")
+        toast.success("Proveedor creado")
         setSelectedId(created.id)
         setPage(0)
         refetch()
@@ -130,7 +130,7 @@ export default function SuppliersPage() {
       setEditing(null)
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Error saving supplier",
+        err instanceof Error ? err.message : "Error al guardar proveedor",
       )
     } finally {
       setSaving(false)
@@ -140,12 +140,12 @@ export default function SuppliersPage() {
   const handleDeactivate = useCallback(async (s: SupplierDTO) => {
     try {
       await deactivateSupplier(s.id)
-      toast.success(`${s.name} deactivated`)
+      toast.success(`${s.name} desactivado`)
       if (selectedId === s.id) setSelectedId(null)
       refetch()
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Error deactivating supplier",
+        err instanceof Error ? err.message : "Error al desactivar proveedor",
       )
     }
   }, [refetch, selectedId])
@@ -153,8 +153,8 @@ export default function SuppliersPage() {
   return (
     <div>
       <PageHeader
-        title="Supplier management"
-        subtitle="Complete catalog, historical performance and compliance tracking."
+        title="Gestion de proveedores"
+        subtitle="Catalogo completo, desempeno historico y seguimiento de cumplimiento."
         actions={
           <div className="flex items-center gap-2">
             {canManageSupplierCategories(user) && (
@@ -164,7 +164,7 @@ export default function SuppliersPage() {
                 className="bg-card"
                 onClick={() => setCategoriesManagerOpen(true)}
               >
-                <TagIcon className="size-4 mr-2" /> Manage categories
+                <TagIcon className="size-4 mr-2" /> Gestionar categorias
               </Button>
             )}
             {canCreateSupplier(user) && (
@@ -176,7 +176,7 @@ export default function SuppliersPage() {
                   setModalOpen(true)
                 }}
               >
-                <PlusIcon className="size-4 mr-2" /> New supplier
+                <PlusIcon className="size-4 mr-2" /> Nuevo proveedor
               </Button>
             )}
           </div>
@@ -191,7 +191,7 @@ export default function SuppliersPage() {
         <div className="relative max-w-xs w-full">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name…"
+            placeholder="Buscar por nombre…"
             className="pl-9 h-10"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -199,10 +199,10 @@ export default function SuppliersPage() {
         </div>
         <Select value={categoryFilter} onValueChange={handleCategoryFilterChange}>
           <SelectTrigger className="h-10 w-full sm:w-[220px]">
-            <SelectValue placeholder="All categories" />
+            <SelectValue placeholder="Todas las categorias" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+            <SelectItem value={ALL_CATEGORIES}>Todas las categorias</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
                 {c.name}
@@ -218,15 +218,15 @@ export default function SuppliersPage() {
             {loading ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
                 <ArrowPathIcon className="size-5 animate-spin" />
-                Loading suppliers…
+                 Cargando proveedores…
               </div>
             ) : suppliers.length === 0 ? (
               <div className="md:col-span-2 rounded-xl border border-dashed border-border bg-card/60 p-8 text-center text-sm text-muted-foreground">
-                {debouncedSearch
-                  ? "No suppliers match the search."
-                  : categoryFilter !== ALL_CATEGORIES
-                    ? "No suppliers in this category."
-                    : "No suppliers available."}
+                  {debouncedSearch
+                    ? "Ningun proveedor coincide con la busqueda."
+                    : categoryFilter !== ALL_CATEGORIES
+                      ? "No hay proveedores en esta categoria."
+                      : "No hay proveedores disponibles."}
               </div>
             ) : (
               suppliers.map((s) => (
@@ -250,11 +250,11 @@ export default function SuppliersPage() {
                 className={page === 0 ? "opacity-50 cursor-not-allowed" : ""}
               >
                 <ChevronLeftIcon className="size-4 mr-1" />
-                Previous
+                 Anterior
               </Button>
 
               <span className="text-sm text-muted-foreground">
-                Page {page + 1} of {totalPages} · {totalElements} suppliers
+                Pagina {page + 1} de {totalPages} · {totalElements} proveedores
               </span>
 
               <Button
@@ -264,8 +264,8 @@ export default function SuppliersPage() {
                 onClick={() => setPage((p) => p + 1)}
                 className={page >= totalPages - 1 ? "opacity-50 cursor-not-allowed" : ""}
               >
-                Next
-                <ChevronRightIcon className="size-4 ml-1" />
+                Siguiente
+                 <ChevronRightIcon className="size-4 ml-1" />
               </Button>
             </div>
           )}

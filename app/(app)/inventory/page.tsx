@@ -155,7 +155,7 @@ export default function InventoryPage() {
   return (
     <div>
       <PageHeader
-        title="Inventory Management"
+        title="Gestion de Inventario"
         subtitle="Gestiona productos, niveles de stock y puntos de reorden en todos los almacenes."
         actions={
           <>
@@ -170,7 +170,7 @@ export default function InventoryPage() {
                   )}
                 >
                   <FunnelIcon className="size-4 mr-2" />
-                  {category === "all" ? "Filters" : "Category Active"}
+                  {category === "all" ? "Filtros" : "Categoria Activa"}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -218,7 +218,7 @@ export default function InventoryPage() {
               )}
             >
               <ArrowsUpDownIcon className="size-4 mr-2" />
-              Sort by Stock{" "}
+              Ordenar por Stock{" "}
               {stockSort === "desc"
                 ? "(Desc)"
                 : stockSort === "asc"
@@ -239,11 +239,11 @@ export default function InventoryPage() {
               )}
             >
               <CubeIcon className="size-4 mr-2" />
-              {hasStockOnly ? "Con stock" : "Solo stock"}
+              {hasStockOnly ? "Con stock" : "Sin stock"}
             </Button>
 
             <Button variant="outline" size="sm" className="bg-card">
-              <ArrowDownTrayIcon className="size-4 mr-2" /> Export
+              <ArrowDownTrayIcon className="size-4 mr-2" /> Exportar
             </Button>
             <Button
               variant="outline"
@@ -251,7 +251,7 @@ export default function InventoryPage() {
               className="bg-card"
               onClick={() => setCategoryManagerOpen(true)}
             >
-              <TagIcon className="size-4 mr-2" /> Categories
+              <TagIcon className="size-4 mr-2" /> Categorias
             </Button>
             <Button
               size="sm"
@@ -261,7 +261,7 @@ export default function InventoryPage() {
                 setAddOpen(true)
               }}
             >
-              <PlusIcon className="size-4 mr-2" /> Add Item
+              <PlusIcon className="size-4 mr-2" /> Agregar Item
             </Button>
           </>
         }
@@ -284,12 +284,12 @@ export default function InventoryPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
-                <th className="text-left font-medium px-5 py-3">Código</th>
-                <th className="text-left font-medium px-5 py-3">Item Name</th>
-                <th className="text-left font-medium px-5 py-3">Category</th>
+                <th className="text-left font-medium px-5 py-3">Codigo</th>
+                <th className="text-left font-medium px-5 py-3">Nombre</th>
+                <th className="text-left font-medium px-5 py-3">Categoria</th>
                 <th className="text-left font-medium px-5 py-3">SKU</th>
                 <th className="text-left font-medium px-5 py-3">Stock</th>
-                <th className="text-left font-medium px-5 py-3">Status</th>
+                <th className="text-left font-medium px-5 py-3">Estado</th>
               </tr>
             </thead>
             <tbody>

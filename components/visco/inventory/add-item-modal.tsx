@@ -170,7 +170,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif">
-            {editing ? "Edit Item" : "Add New Item"}
+            {editing ? "Editar Item" : "Agregar Nuevo Item"}
           </DialogTitle>
           <DialogDescription>
             {editing
@@ -213,7 +213,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="sap">SAP Code</Label>
+            <Label htmlFor="sap">Codigo SAP</Label>
             <Input
               id="sap"
               value={form.sapCode}
@@ -239,7 +239,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="reorder">Reorder Point</Label>
+            <Label htmlFor="reorder">Punto de Reorden</Label>
             <Input
               id="reorder"
               type="number"

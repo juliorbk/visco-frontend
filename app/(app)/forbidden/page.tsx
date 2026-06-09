@@ -11,13 +11,13 @@ export function ForbiddenPage() {
         <ShieldExclamationIcon className="size-8 text-red-600" />
       </div>
       <h2 className="text-xl font-serif font-semibold text-foreground mb-2">
-        Access denied
+        Acceso denegado
       </h2>
       <p className="text-sm text-muted-foreground max-w-sm mb-6">
-        You do not have permission to access this page. Contact an administrator if you believe this is a mistake.
+        No tienes permiso para acceder a esta pagina. Contacta a un administrador si crees que es un error.
       </p>
       <Button asChild className="bg-[#7b1a1a] hover:bg-[#5c1212] text-white">
-        <Link href="/dashboard">Go to dashboard</Link>
+        <Link href="/dashboard">Ir al dashboard</Link>
       </Button>
     </div>
   )
