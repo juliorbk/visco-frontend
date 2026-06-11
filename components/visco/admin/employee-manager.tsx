@@ -37,6 +37,7 @@ import type {
 } from "@/lib/types"
 import { ArrowPathIcon, PlusIcon, ShieldCheckIcon, ShieldExclamationIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { getCostCenterDisplay } from "@/lib/utils"
 
 export function EmployeeManager() {
   const [employees, setEmployees] = useState<EmployeeDTO[]>([])
@@ -169,6 +170,8 @@ export function EmployeeManager() {
     }
   }
 
+  const ccMap = new Map(costCenters.map((cc) => [cc.id, cc]))
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -214,7 +217,20 @@ export function EmployeeManager() {
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">{emp.documentNumber}</td>
                     <td className="px-5 py-3 text-muted-foreground">{emp.phone ?? "-"}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{emp.costCenterDescription ?? "-"}</td>
+                    <td className="px-5 py-3 text-muted-foreground">
+                      {(() => {
+                        const cc = emp.costCenterId ? ccMap.get(emp.costCenterId) : null
+                        const display = getCostCenterDisplay(cc)
+                        return (
+                          <div>
+                            <div>{display.primary}</div>
+                            {display.secondary && (
+                              <div className="text-xs text-muted-foreground/70">{display.secondary}</div>
+                            )}
+                          </div>
+                        )
+                      })()}
+                    </td>
                     <td className="px-5 py-3">
                       {emp.isActive ? (
                         <span className="inline-flex items-center gap-1 text-xs text-green-700">
@@ -354,7 +370,7 @@ export function EmployeeManager() {
                     .filter((cc) => cc.isActive)
                     .map((cc) => (
                       <SelectItem key={cc.id} value={String(cc.id)}>
-                        {cc.fullDescription}
+                        {cc.code} — {cc.fullDescription}{cc.managementDescription ? ` (${cc.managementDescription})` : ""}
                       </SelectItem>
                     ))}
                 </SelectContent>

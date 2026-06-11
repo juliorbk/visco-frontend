@@ -89,7 +89,10 @@ function addTable(
   return cy
 }
 
-export async function generateDispatchNotePDF(dispatch: DispatchResponse): Promise<jsPDF> {
+export async function generateDispatchNotePDF(
+  dispatch: DispatchResponse,
+  costCenterManagement?: string | null,
+): Promise<jsPDF> {
   const doc = new jsPDF({
     orientation: "p",
     unit: "mm",
@@ -174,8 +177,13 @@ export async function generateDispatchNotePDF(dispatch: DispatchResponse): Promi
     ? `${dispatch.costCenterCode ?? ""}${dispatch.costCenterCode ? " — " : ""}${dispatch.costCenterDescription}`
     : "—"
   doc.text(costCenterText, x0, y + 5)
+  if (costCenterManagement) {
+    doc.setFontSize(7.5)
+    doc.setTextColor(...COLORS.textMuted)
+    doc.text(`Gerencia: ${costCenterManagement}`, x0, y + 10)
+  }
 
-  y += 14
+  y += costCenterManagement ? 18 : 14
 
   // Created by
   doc.setFont("helvetica", "bold")

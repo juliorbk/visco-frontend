@@ -157,7 +157,11 @@ export function AdjustModal({
                       <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                  >
                     <Command>
                       <CommandInput placeholder="Buscar por nombre o SKU..." />
                       <CommandList>
@@ -180,7 +184,7 @@ export function AdjustModal({
                               />
                               <div className="flex flex-col">
                                 <span>{p.name}</span>
-                                <span className="text-xs text-[#6b7280]">SKU: {p.sku} &middot; Stock: {p.totalStock}</span>
+                                <span className="text-xs text-[#6b7280]">SKU: {p.sku} · SAP: {p.sapCode} &middot; Stock: {p.totalStock}</span>
                               </div>
                             </CommandItem>
                           ))}

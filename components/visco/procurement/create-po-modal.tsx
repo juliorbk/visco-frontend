@@ -572,7 +572,7 @@ export function CreatePOModal({
                       >
                         <div className="font-medium text-foreground">{p.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {p.sku} · {p.internalCode}
+                          {p.sku} · {p.internalCode} · {p.sapCode} · {p.uom}
                         </div>
                       </button>
                     ))}

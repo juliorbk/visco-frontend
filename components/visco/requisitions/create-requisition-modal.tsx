@@ -61,6 +61,7 @@ export function CreateRequisitionModal({
 }) {
   const [step, setStep] = useState(0)
   const nextLineIdRef = useRef(1)
+  const [requisitionNumber, setRequisitionNumber] = useState("")
   const [description, setDescription] = useState("")
   const [costCenterId, setCostCenterId] = useState<number | null>(null)
   const [lines, setLines] = useState<LineItem[]>([])
@@ -136,6 +137,7 @@ export function CreateRequisitionModal({
     setStep(0)
     setLines([])
     setDescription("")
+    setRequisitionNumber("")
     setCostCenterId(null)
     setPickProduct(null)
     setFinderQuery("")
@@ -175,7 +177,7 @@ export function CreateRequisitionModal({
   }
 
   const submit = async () => {
-    if (!costCenterId || lines.length === 0) {
+    if (!costCenterId || lines.length === 0 || !requisitionNumber.trim()) {
       toast.error("Completa todos los campos requeridos")
       return
     }
@@ -187,6 +189,7 @@ export function CreateRequisitionModal({
     setSaving(true)
     try {
       const created = await createRequisition({
+        requisitionNumber,
         description,
         requestedById: user.id,
         costCenterId,
@@ -246,10 +249,14 @@ export function CreateRequisitionModal({
         {step === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Número de Requisición</Label>
-              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
-                Se asignará automáticamente
-              </div>
+              <Label htmlFor="req-number">Número de Requisición</Label>
+              <Input
+                id="req-number"
+                value={requisitionNumber}
+                onChange={(e) => setRequisitionNumber(e.target.value)}
+                placeholder="Ej: REQ-2026-001"
+                className="h-9"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Centro de Costo</Label>
@@ -265,14 +272,18 @@ export function CreateRequisitionModal({
                       ? (() => {
                           const cc = costCenters.find((c) => c.id === costCenterId)
                           return cc
-                            ? `${cc.code} — ${cc.fullDescription}`
+                            ? `${cc.code} — ${cc.fullDescription}${cc.managementDescription ? ` (${cc.managementDescription})` : ""}`
                             : "Seleccionar…"
                         })()
                       : "Seleccionar…"}
                     <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0"
+                  align="start"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                >
                   <Command>
                     <CommandInput placeholder="Buscar centro de costo…" />
                     <CommandList>
@@ -398,7 +409,7 @@ export function CreateRequisitionModal({
                       >
                         <div className="font-medium text-foreground">{p.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {p.sku} · {p.internalCode}
+                          {p.sku} · {p.internalCode} · {p.sapCode} · {p.uom}
                         </div>
                       </button>
                     ))}

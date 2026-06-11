@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { XMarkIcon, PlusIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
-import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
+import { receiveGoods, fetchWarehouses, fetchReceiptSummary, fetchReceipts } from "@/lib/services/warehouse"
 import { LocationPicker } from "@/components/visco/warehouses/location-picker"
 import { toast } from "sonner"
 
@@ -29,6 +29,7 @@ export function NuevaRecepcionModal({
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
   const [locationId, setLocationId] = useState<number | null>(null)
+  const [previousLocationCode, setPreviousLocationCode] = useState<string | null>(null)
 
   const reset = () => {
     setStep(1)
@@ -38,6 +39,7 @@ export function NuevaRecepcionModal({
     setNotes("")
     setDestinationWarehouseId(null)
     setLocationId(null)
+    setPreviousLocationCode(null)
   }
 
   useEffect(() => {
@@ -46,6 +48,30 @@ export function NuevaRecepcionModal({
       fetchWarehouses().then(setWarehouses).catch(() => {})
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (!selectedPO || !destinationWarehouseId) return
+    const productIds = new Set(selectedPO.items.map((it) => it.productId))
+    fetchReceipts(0, 50)
+      .then((page) => {
+        const receipts = page.content ?? []
+        if (receipts.length === 0) return
+        const sorted = [...receipts].sort(
+          (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+        )
+        const lastReceipt = sorted.find((r) =>
+          r.items.some((it) => productIds.has(it.productId) && it.locationId != null)
+        )
+        if (lastReceipt) {
+          const itemWithLocation = lastReceipt.items.find((it) => it.locationId != null)
+          if (itemWithLocation) {
+            setPreviousLocationCode(itemWithLocation.locationCode ?? null)
+            setLocationId(itemWithLocation.locationId!)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [selectedPO, destinationWarehouseId])
 
   if (!isOpen) return null
 
@@ -235,6 +261,11 @@ export function NuevaRecepcionModal({
                       {summaryItem && summaryItem.receivedQuantity > 0 && (
                         <div className="mb-2 text-xs text-blue-700 font-medium">
                           Ya recibido anteriormente: {summaryItem.receivedQuantity} uds.
+                        </div>
+                      )}
+                      {previousLocationCode && (
+                        <div className="mb-2 text-xs text-muted-foreground font-medium">
+                          Ubicacion anterior: {previousLocationCode}
                         </div>
                       )}
 

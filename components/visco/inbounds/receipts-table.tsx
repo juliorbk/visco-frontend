@@ -83,10 +83,11 @@ export function ReceiptsTable({
             <table className="w-full">
               <thead className="bg-[#f5f5f7] border-b border-[#f3f4f6]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]"># RECEPCIÓN</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]"># RECEPCION</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">ORDEN DE COMPRA</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">FECHA</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">ÍTEMS</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">RECIBIDO POR</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">ITEMS</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-[#6b7280]">ESTADO</th>
                 </tr>
               </thead>
@@ -116,6 +117,9 @@ export function ReceiptsTable({
                           month: "short",
                           day: "numeric",
                         })}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#111827]">
+                        {receipt.receivedBy ?? "-"}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#111827]">
                         {receipt.items.length} ítem{receipt.items.length !== 1 ? "s" : ""}

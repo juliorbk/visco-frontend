@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { receiveGoods, fetchWarehouses, fetchReceiptSummary } from "@/lib/services/warehouse"
+import { receiveGoods, fetchWarehouses, fetchReceiptSummary, fetchReceipts } from "@/lib/services/warehouse"
 import type { PurchaseOrderResponse, WarehouseResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { LocationPicker } from "@/components/visco/warehouses/location-picker"
 import { ArrowPathIcon } from "@heroicons/react/24/outline"
@@ -44,6 +44,7 @@ export function ReceiveGoodsModal({
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
   const [locationId, setLocationId] = useState<number | null>(null)
   const [receiptSummary, setReceiptSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
+  const [previousLocationCode, setPreviousLocationCode] = useState<string | null>(null)
 
   useEffect(() => {
     if (order) {
@@ -53,10 +54,35 @@ export function ReceiveGoodsModal({
       setNotes("")
       setDestinationWarehouseId(null)
       setLocationId(null)
+      setPreviousLocationCode(null)
       setReceiptSummary(null)
       fetchReceiptSummary(order.id).then(setReceiptSummary).catch(() => {})
     }
   }, [order])
+
+  useEffect(() => {
+    if (!order || !destinationWarehouseId) return
+    const productIds = new Set(order.items.map((it) => it.productId))
+    fetchReceipts(0, 50)
+      .then((page) => {
+        const receipts = page.content ?? []
+        if (receipts.length === 0) return
+        const sorted = [...receipts].sort(
+          (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+        )
+        const lastReceipt = sorted.find((r) =>
+          r.items.some((it) => productIds.has(it.productId) && it.locationId != null)
+        )
+        if (lastReceipt) {
+          const itemWithLocation = lastReceipt.items.find((it) => it.locationId != null)
+          if (itemWithLocation) {
+            setPreviousLocationCode(itemWithLocation.locationCode ?? null)
+            setLocationId(itemWithLocation.locationId!)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [order, destinationWarehouseId])
 
   useEffect(() => {
     if (open) {
@@ -161,6 +187,11 @@ export function ReceiveGoodsModal({
                 {summaryItem && summaryItem.receivedQuantity > 0 && (
                   <div className="mb-2 text-xs text-blue-700 font-medium">
                     Ya recibido anteriormente: {summaryItem.receivedQuantity} uds.
+                  </div>
+                )}
+                {previousLocationCode && (
+                  <div className="mb-2 text-xs text-muted-foreground font-medium">
+                    Ubicacion anterior: {previousLocationCode}
                   </div>
                 )}
                 <div className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">

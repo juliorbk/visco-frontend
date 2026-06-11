@@ -21,13 +21,14 @@ import {
 } from "@/components/ui/dialog"
 import { useQuery } from "@/hooks/use-query"
 import { fetchUsers, updateUser, deactivateUser, activateUser, deleteUser } from "@/lib/services/admin"
+import { fetchCostCenters } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
 import { AreaManagerModal } from "@/components/visco/admin/area-manager-modal"
 import { EmployeeManager } from "@/components/visco/admin/employee-manager"
 import { InviteManager } from "@/components/visco/admin/invite-manager"
-import type { UserDTO, UserRole, Page } from "@/lib/types"
+import type { UserDTO, UserRole, Page, CostCenter } from "@/lib/types"
 import { ArrowPathIcon, ShieldCheckIcon, ShieldExclamationIcon, BuildingOffice2Icon, UsersIcon, TrashIcon } from "@heroicons/react/24/outline"
-import { cn } from "@/lib/utils"
+import { cn, getCostCenterDisplay } from "@/lib/utils"
 import { ROLE_LABELS, ROLE_BADGE } from "@/lib/config/roles"
 import { canDelete } from "@/lib/permissions"
 import { toast } from "sonner"
@@ -51,6 +52,7 @@ export default function AdminPage() {
   const [areaManagerOpen, setAreaManagerOpen] = useState(false)
 
   const [users, setUsers] = useState<UserDTO[]>([])
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
 
   const currentUser = getCachedUser()
 
@@ -69,6 +71,10 @@ export default function AdminPage() {
       setUsers(usersPage.content)
     }
   }, [usersPage])
+
+  useEffect(() => {
+    fetchCostCenters().then(setCostCenters).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (error) {
@@ -133,6 +139,8 @@ export default function AdminPage() {
     { key: "employees", label: "Empleados" },
   ]
 
+  const ccMap = new Map(costCenters.map((cc) => [cc.id, cc]))
+
   return (
     <div>
       <PageHeader
@@ -182,7 +190,7 @@ export default function AdminPage() {
                     <th className="text-left font-medium px-5 py-3">Email</th>
                     <th className="text-left font-medium px-5 py-3">Rol</th>
                     <th className="text-left font-medium px-5 py-3">Estado</th>
-                    <th className="text-left font-medium px-5 py-3">Área</th>
+                    <th className="text-left font-medium px-5 py-3">Centro de Costo</th>
                     <th className="text-left font-medium px-5 py-3">Acciones</th>
                   </tr>
                 </thead>
@@ -227,7 +235,20 @@ export default function AdminPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-5 py-3 text-muted-foreground">{u.costCenterName ?? u.costCenterId ? String(u.costCenterId) : "-"}</td>
+                          <td className="px-5 py-3 text-muted-foreground">
+                            {(() => {
+                              const cc = u.costCenterId ? ccMap.get(u.costCenterId) : null
+                              const display = getCostCenterDisplay(cc)
+                              return (
+                                <div>
+                                  <div>{display.primary}</div>
+                                  {display.secondary && (
+                                    <div className="text-xs text-muted-foreground/70">{display.secondary}</div>
+                                  )}
+                                </div>
+                              )
+                            })()}
+                          </td>
                           <td className="px-5 py-3">
                             <div className="flex items-center gap-1">
                               <Button

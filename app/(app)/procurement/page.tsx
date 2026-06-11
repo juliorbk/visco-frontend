@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
@@ -21,6 +22,8 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function ProcurementPage() {
+  const searchParams = useSearchParams()
+  const orderIdFromUrl = searchParams.get("orderId")
   const [pageData, setPageData] = useState<Page<PurchaseOrderResponse> | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -70,6 +73,14 @@ export default function ProcurementPage() {
     load()
     return () => abortRef.current?.abort()
   }, [load])
+
+  useEffect(() => {
+    if (orderIdFromUrl && orders.length > 0) {
+      const id = Number(orderIdFromUrl)
+      const exists = orders.some((o) => o.id === id)
+      if (exists) setSelectedId(id)
+    }
+  }, [orderIdFromUrl, orders])
 
   const handleSelect = useCallback((id: number) => {
     setSelectedId(id)

@@ -494,7 +494,7 @@ export interface RequisitionItemResponse {
 }
 
 export interface CreateRequisitionRequest {
-  requisitionNumber?: string
+  requisitionNumber: string
   description: string
   requestedById: string
   costCenterId: number

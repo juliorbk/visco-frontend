@@ -346,6 +346,12 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
   doc.text("RECIBIDO POR", x0 + 4, y + 5)
+  if (receipt.receivedBy) {
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(9)
+    doc.setTextColor(...COLORS.text)
+    doc.text(receipt.receivedBy, x0 + 4, y + 13)
+  }
   doc.setDrawColor(...COLORS.border)
   doc.line(x0 + 4, y + 28, x0 + footBoxW - 4, y + 28)
   doc.setFont("helvetica", "normal")

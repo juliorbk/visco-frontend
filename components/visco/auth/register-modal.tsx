@@ -397,7 +397,7 @@ export function RegisterModal({
                   <SelectContent>
                     {filteredCostCenters.map((cc) => (
                       <SelectItem key={cc.id} value={String(cc.id)}>
-                        {cc.fullDescription}
+                        {cc.code} — {cc.fullDescription}{cc.managementDescription ? ` (${cc.managementDescription})` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -100,9 +100,10 @@ export function WarehouseInventoryTable({
           <table className="w-full text-sm">
             <thead>
               <tr className="text-[11px] uppercase tracking-wider text-muted-foreground bg-[#fafafa]">
-                <th className="text-left font-medium px-5 py-3">Código</th>
+                <th className="text-left font-medium px-5 py-3">Codigo</th>
+                <th className="text-left font-medium px-5 py-3">Codigo SAP</th>
                 <th className="text-left font-medium px-5 py-3">Producto</th>
-                <th className="text-left font-medium px-5 py-3">Categoría</th>
+                <th className="text-left font-medium px-5 py-3">Categoria</th>
                 <th className="text-left font-medium px-5 py-3">SKU</th>
                 <th className="text-left font-medium px-5 py-3">UOM</th>
                 <th className="text-left font-medium px-5 py-3">Stock</th>
@@ -112,13 +113,13 @@ export function WarehouseInventoryTable({
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     <ArrowPathIcon className="size-6 animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No hay productos en este almacén.
                   </td>
                 </tr>
@@ -130,6 +131,7 @@ export function WarehouseInventoryTable({
                     className="border-t border-border hover:bg-[#fafafa] transition-colors cursor-pointer"
                   >
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.internalCode}</td>
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sapCode}</td>
                     <td className="px-5 py-3 font-medium text-foreground">{p.name}</td>
                     <td className="px-5 py-3 text-muted-foreground">{p.categoryName ?? "-"}</td>
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>

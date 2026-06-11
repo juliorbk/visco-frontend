@@ -17,9 +17,10 @@ import { RequisitionDetail } from "@/components/visco/requisitions/requisition-d
 import { RequisitionStepper } from "@/components/visco/requisitions/requisition-stepper"
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
 import { fetchRequisitions } from "@/lib/services/requisitions"
-import type { RequisitionResponse, Page } from "@/lib/types"
+import { fetchCostCenters } from "@/lib/services/requisitions"
+import type { RequisitionResponse, Page, CostCenter } from "@/lib/types"
 import { PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
-import { cn } from "@/lib/utils"
+import { cn, getCostCenterDisplay } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useQuery } from "@/hooks/use-query"
 import { toast } from "sonner"
@@ -43,6 +44,11 @@ export default function RequisitionsPage() {
   const debouncedSearch = useDebounce(search, 300)
   const [convertRequisition, setConvertRequisition] = useState<RequisitionResponse | null>(null)
   const [poModalOpen, setPoModalOpen] = useState(false)
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+
+  useEffect(() => {
+    fetchCostCenters().then(setCostCenters).catch(() => {})
+  }, [])
 
   const { data: pageData, isLoading, error, refetch } = useQuery<Page<RequisitionResponse>>(
     (signal) =>
@@ -76,6 +82,8 @@ export default function RequisitionsPage() {
   }, [statusFilter, debouncedSearch])
 
   const selected = requisitions.find((r) => r.id === selectedId) ?? null
+
+  const ccByArea = new Map(costCenters.map((cc) => [cc.fullDescription, cc]))
 
   const handleConvert = (req: RequisitionResponse) => {
     setConvertRequisition(req)
@@ -181,7 +189,20 @@ export default function RequisitionsPage() {
                           <span className="font-medium text-[#7b1a1a]">{r.requisitionNumber}</span>
                         </td>
                         <td className="px-5 py-3 text-foreground">{r.requestedBy}</td>
-                        <td className="px-5 py-3 text-muted-foreground">{r.areaName}</td>
+                        <td className="px-5 py-3 text-muted-foreground">
+                          {(() => {
+                            const cc = ccByArea.get(r.areaName) ?? null
+                            const display = getCostCenterDisplay(cc)
+                            return (
+                              <div>
+                                <div>{display.primary}</div>
+                                {display.secondary && (
+                                  <div className="text-xs text-muted-foreground/70">{display.secondary}</div>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </td>
                         <td className="px-5 py-3">
                           <OrderStatusBadge status={r.status} />
                         </td>
@@ -223,6 +244,7 @@ export default function RequisitionsPage() {
             requisition={selected}
             onUpdate={refetch}
             onConvert={handleConvert}
+            ccByArea={ccByArea}
           />
         </div>
       </div>

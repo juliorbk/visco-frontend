@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import type { RequisitionResponse } from "@/lib/types"
+import type { RequisitionResponse, CostCenter } from "@/lib/types"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { getCachedUser } from "@/lib/auth-client"
 import { canApproveRequisitions } from "@/lib/permissions"
@@ -22,6 +22,7 @@ import {
   NoSymbolIcon,
 } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
+import { getCostCenterDisplay } from "@/lib/utils"
 
 const statusMap: Record<string, string> = {
   DRAFT: "Borrador",
@@ -37,10 +38,12 @@ export function RequisitionDetail({
   requisition,
   onUpdate,
   onConvert,
+  ccByArea,
 }: {
   requisition: RequisitionResponse | null
   onUpdate: () => void
   onConvert: (req: RequisitionResponse) => void
+  ccByArea?: Map<string, CostCenter>
 }) {
   const [loading, setLoading] = useState(false)
 
@@ -99,7 +102,16 @@ export function RequisitionDetail({
 
       <div className="px-5 py-4 space-y-3 text-sm">
         <DetailRow label="Solicitante" value={requisition.requestedBy} />
-        <DetailRow label="Centro de Costo" value={requisition.areaName} />
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-muted-foreground">Centro de Costo</span>
+          <span className="text-foreground text-right">
+            {(() => {
+              const cc = ccByArea?.get(requisition.areaName) ?? null
+              const d = getCostCenterDisplay(cc)
+              return d.secondary ? `${d.primary} (${d.secondary})` : d.primary
+            })()}
+          </span>
+        </div>
         <DetailRow label="Creado" value={new Date(requisition.createdAt).toLocaleDateString()} />
         {requisition.approvedBy && (
           <DetailRow label="Aprobado por" value={requisition.approvedBy} />

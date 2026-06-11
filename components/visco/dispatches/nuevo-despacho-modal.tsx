@@ -266,7 +266,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-[#111827] text-sm truncate">{p.name}</div>
                           <div className="text-xs text-[#6b7280]">
-                            SKU: {p.sku} · Stock: {p.currentStock} {p.uom}
+                            SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.currentStock} {p.uom}
                           </div>
                         </div>
                         <div className="w-20 shrink-0">

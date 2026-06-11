@@ -3,8 +3,10 @@
 import { DocumentDuplicateIcon, XMarkIcon } from "@heroicons/react/24/outline"
 import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { useEffect, useState } from "react"
-import type { DispatchResponse } from "@/lib/types"
+import type { DispatchResponse, CostCenter } from "@/lib/types"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
+import { fetchCostCenters } from "@/lib/services/requisitions"
+import { getCostCenterDisplay } from "@/lib/utils"
 
 export function DispatchDetailPanel({
   dispatch,
@@ -14,6 +16,12 @@ export function DispatchDetailPanel({
   onClose: () => void
 }) {
   const [copied, setCopied] = useState(false)
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+
+  useEffect(() => {
+    if (!dispatch) return
+    fetchCostCenters().then(setCostCenters).catch(() => {})
+  }, [dispatch])
 
   useEffect(() => {
     if (!copied) return
@@ -22,6 +30,8 @@ export function DispatchDetailPanel({
   }, [copied])
 
   if (!dispatch) return null
+
+  const ccByCode = new Map(costCenters.map((cc) => [cc.code, cc]))
 
   const handleCopy = () => {
     navigator.clipboard.writeText(dispatch.dispatchNumber)
@@ -37,7 +47,8 @@ export function DispatchDetailPanel({
             variant="icon"
             onExport={async () => {
               const { generateDispatchNotePDF } = await import("@/lib/pdf/dispatch-note-pdf")
-              const doc = await generateDispatchNotePDF(dispatch)
+              const cc = dispatch.costCenterCode ? ccByCode.get(dispatch.costCenterCode) : null
+              const doc = await generateDispatchNotePDF(dispatch, cc?.managementDescription)
               downloadPDF(doc, `despacho-${dispatch.dispatchNumber}.pdf`)
             }}
           />
@@ -79,10 +90,20 @@ export function DispatchDetailPanel({
           <div>
             <p className="text-[#6b7280] font-medium">Centro de Costo</p>
             <p className="text-[#111827] font-semibold mt-1">
-              {dispatch.costCenterDescription
-                ? `${dispatch.costCenterCode ?? ""} ${dispatch.costCenterCode ? "—" : ""}${dispatch.costCenterDescription}`
-                : "—"}
+              {(() => {
+                const cc = dispatch.costCenterCode ? ccByCode.get(dispatch.costCenterCode) : null
+                const d = getCostCenterDisplay(cc)
+                return d.primary
+              })()}
             </p>
+            {(() => {
+              const cc = dispatch.costCenterCode ? ccByCode.get(dispatch.costCenterCode) : null
+              const d = getCostCenterDisplay(cc)
+              if (!d.secondary) return null
+              return (
+                <p className="text-xs text-muted-foreground mt-0.5">{d.secondary}</p>
+              )
+            })()}
           </div>
           <div className="col-span-2">
             <p className="text-[#6b7280] font-medium">Fecha de creación</p>

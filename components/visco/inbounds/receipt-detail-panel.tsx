@@ -1,6 +1,7 @@
 "use client"
 
 import { DocumentDuplicateIcon, ArrowTopRightOnSquareIcon, XMarkIcon, ExclamationTriangleIcon, CheckCircleIcon } from "@heroicons/react/24/outline"
+import { useRouter } from "next/navigation"
 import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import type { GoodReceiptResponse, PurchaseOrderReceiptSummary } from "@/lib/types"
 import { useEffect, useState } from "react"
@@ -18,6 +19,7 @@ export function ReceiptDetailPanel({
   const [copied, setCopied] = useState(false)
   const [summary, setSummary] = useState<PurchaseOrderReceiptSummary | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (!copied) return
@@ -99,6 +101,10 @@ export function ReceiptDetailPanel({
                 day: "numeric",
               })}
             </p>
+          </div>
+          <div className="col-span-2 min-w-0">
+            <p className="text-[#6b7280] font-medium">Recibido por</p>
+            <p className="text-[#111827] mt-1">{receipt.receivedBy ?? "-"}</p>
           </div>
         </div>
       </div>
@@ -209,7 +215,10 @@ export function ReceiptDetailPanel({
       )}
 
       <div className="space-y-3">
-        <button className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2">
+        <button
+          className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm font-medium text-[#111827] hover:bg-[#f5f5f7] transition-colors flex items-center justify-center gap-2"
+          onClick={() => router.push(`/procurement?orderId=${receipt.purchaseOrderId}`)}
+        >
           <ArrowTopRightOnSquareIcon className="w-4 h-4" />
           Ver Orden de Compra
         </button>
