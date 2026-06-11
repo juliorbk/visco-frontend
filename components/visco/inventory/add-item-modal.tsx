@@ -87,9 +87,7 @@ export function AddItemModal({
 
   useEffect(() => {
     if (open) {
-      if (suppliers.length === 0) {
-        fetchSuppliers(0, 200).then((res) => setSuppliers(res.content ?? [])).catch(() => {})
-      }
+      fetchSuppliers(0, 200).then((res) => setSuppliers(res.content ?? [])).catch(() => {})
       fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
     }
   }, [open])
@@ -279,7 +277,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-0" align="start">
+              <PopoverContent
+                className="w-[250px] p-0"
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <Command>
                   <CommandInput placeholder="Buscar proveedor..." />
                   <CommandList>
@@ -329,7 +331,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0" align="start">
+              <PopoverContent
+                className="w-[300px] p-0"
+                align="start"
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
                 <Command>
                   <CommandInput placeholder="Buscar categoría..." />
                   <CommandList>
