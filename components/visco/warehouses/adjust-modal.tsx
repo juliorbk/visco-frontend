@@ -58,7 +58,7 @@ export function AdjustModal({
       setLoadingData(true)
       Promise.all([
         fetchWarehouses(),
-        fetchProducts(0, 200, undefined, undefined, undefined, undefined, true).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
+        fetchProducts(0, 9999, undefined, undefined, undefined, undefined, true).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
       ])
         .then(([wh, prod]) => {
           setWarehouses(wh)
@@ -170,7 +170,7 @@ export function AdjustModal({
                           {products.map((p) => (
                             <CommandItem
                               key={p.id}
-                              value={`${p.name} ${p.sku}`}
+                              value={`${p.name} ${p.sku} ${p.sapCode}`}
                               onSelect={() => {
                                 setProductId(p.id === productId ? 0 : p.id)
                                 setOpenProduct(false)

@@ -106,10 +106,11 @@ export async function fetchProductsOnStock(
   search?: string,
   page = 0,
   size = 200,
+  signal?: AbortSignal,
 ): Promise<Page<ProductOnStock>> {
   let url = `/api/warehouse/stock/on-stock?warehouseId=${warehouseId}&page=${page}&size=${size}`
   if (search) url += `&search=${encodeURIComponent(search)}`
-  return api.get<Page<ProductOnStock>>(url)
+  return api.get<Page<ProductOnStock>>(url, signal)
 }
 
 export async function exportMovements(

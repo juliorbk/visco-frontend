@@ -49,6 +49,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setEmployeeData(null)
     setNotes("")
     setSearchQuery("")
+    setDebouncedSearch("")
     setSearchResults([])
     setPendingQtys({})
     setPendingPrices({})
@@ -68,17 +69,17 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }, [searchQuery])
 
   useEffect(() => {
-    if (!debouncedSearch || !selectedWarehouseId) {
+    if (!selectedWarehouseId) {
       setSearchResults([])
       return
     }
-    let cancelled = false
+    const controller = new AbortController()
     setLoadingSearch(true)
-    fetchProductsOnStock(selectedWarehouseId, debouncedSearch, 0, 9999)
-      .then((res) => { if (!cancelled) setSearchResults(res.content ?? []) })
+    fetchProductsOnStock(selectedWarehouseId, debouncedSearch || undefined, 0, 9999, controller.signal)
+      .then((res) => { if (!controller.signal.aborted) setSearchResults(res.content ?? []) })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setLoadingSearch(false) })
-    return () => { cancelled = true }
+      .finally(() => { if (!controller.signal.aborted) setLoadingSearch(false) })
+    return () => controller.abort()
   }, [debouncedSearch, selectedWarehouseId])
 
   if (!isOpen) return null

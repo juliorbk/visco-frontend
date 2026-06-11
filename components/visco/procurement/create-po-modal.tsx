@@ -153,7 +153,10 @@ export function CreatePOModal({
   }, [open])
 
   useEffect(() => {
-    if (!finderOpen) setFinderQuery("")
+    if (!finderOpen) {
+      setFinderQuery("")
+      setDebouncedFinderQuery("")
+    }
   }, [finderOpen])
 
   useEffect(() => {
@@ -193,7 +196,7 @@ export function CreatePOModal({
     }
     fetchData()
     return () => controller.abort()
-  }, [debouncedFinderQuery, finderOpen])
+  }, [debouncedFinderQuery])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
 
@@ -581,6 +584,11 @@ export function CreatePOModal({
                 {finderOpen && !loadingProducts && finderQuery && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No se encontraron productos
+                  </div>
+                )}
+                {finderOpen && !loadingProducts && !finderQuery && products.length === 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
+                    No hay productos registrados
                   </div>
                 )}
               </div>

@@ -92,7 +92,10 @@ export function CreateRequisitionModal({
   }, [open])
 
   useEffect(() => {
-    if (!finderOpen) setFinderQuery("")
+    if (!finderOpen) {
+      setFinderQuery("")
+      setDebouncedFinderQuery("")
+    }
   }, [finderOpen])
 
   useEffect(() => {
@@ -131,7 +134,7 @@ export function CreateRequisitionModal({
     }
     fetchData()
     return () => controller.abort()
-  }, [debouncedFinderQuery, finderOpen])
+  }, [debouncedFinderQuery])
 
   const reset = () => {
     setStep(0)
@@ -415,9 +418,9 @@ export function CreateRequisitionModal({
                     ))}
                   </div>
                 )}
-                {finderOpen && !loadingProducts && finderQuery && products.length === 0 && (
+                {finderOpen && !loadingProducts && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
-                    No se encontraron productos
+                    {finderQuery ? "No se encontraron productos" : "No hay productos registrados"}
                   </div>
                 )}
               </div>

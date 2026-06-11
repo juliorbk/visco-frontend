@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { XMarkIcon, ArrowPathIcon, ArrowsRightLeftIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline"
 import {
   Command,
@@ -54,18 +54,25 @@ export function TransferModal({
   const [loadingData, setLoadingData] = useState(false)
 
   const selectedProduct = products.find((p) => p.id === productId)
+  const abortRef = useRef<AbortController | null>(null)
 
   const loadProducts = (warehouseId: number) => {
     if (!warehouseId) return
-    fetchProductsOnStock(warehouseId)
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    fetchProductsOnStock(warehouseId, undefined, 0, 9999, controller.signal)
       .then((page) => {
+        if (controller.signal.aborted) return
         const prods = page.content ?? []
         setProducts(prods)
-        if (prods.length > 0 && !prods.find((p) => p.id === productId)) {
+        if (prods.length > 0 && productId === 0) {
           setProductId(prods[0].id)
         }
       })
-      .catch(() => toast.error("Error al cargar productos"))
+      .catch(() => {
+        if (!controller.signal.aborted) toast.error("Error al cargar productos")
+      })
   }
 
   useEffect(() => {
@@ -180,7 +187,7 @@ export function TransferModal({
                           {products.map((p) => (
                             <CommandItem
                               key={p.id}
-                              value={`${p.name} ${p.sku}`}
+                              value={`${p.name} ${p.sku} ${p.sapCode}`}
                               onSelect={() => {
                                 setProductId(p.id === productId ? 0 : p.id)
                                 setOpenProduct(false)
