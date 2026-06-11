@@ -27,9 +27,11 @@ import { toast } from "sonner"
 export function CategoryManagerModal({
   open,
   onOpenChange,
+  onCategoriesChanged,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
+  onCategoriesChanged?: () => void
 }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,6 +84,7 @@ export function CategoryManagerModal({
       setNewName("")
       setNewParentId(null)
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear categoría")
     } finally {
@@ -97,6 +100,7 @@ export function CategoryManagerModal({
       toast.success("Categoría actualizada")
       setEditingId(null)
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar")
     } finally {
@@ -115,6 +119,7 @@ export function CategoryManagerModal({
       await deleteCategory(id)
       toast.success(`Categoría "${name}" eliminada`)
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al eliminar")
     }

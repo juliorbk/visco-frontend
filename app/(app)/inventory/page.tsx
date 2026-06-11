@@ -162,7 +162,7 @@ export default function InventoryPage() {
         subtitle="Gestiona productos, niveles de stock y puntos de reorden en todos los almacenes."
         actions={
           <>
-            <DropdownMenu>
+            <DropdownMenu onOpenChange={(open) => { if (open) loadCategories() }}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
@@ -451,6 +451,7 @@ export default function InventoryPage() {
           setCategoryManagerOpen(o)
           if (!o) loadCategories()
         }}
+        onCategoriesChanged={loadCategories}
       />
     </div>
   )

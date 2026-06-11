@@ -35,9 +35,11 @@ import { toast } from "sonner"
 export function SupplierCategoryManagerModal({
   open,
   onOpenChange,
+  onCategoriesChanged,
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
+  onCategoriesChanged?: () => void
 }) {
   const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,6 +97,7 @@ export function SupplierCategoryManagerModal({
       toast.success(`Categoria "${trimmed}" creada`)
       resetCreate()
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error al crear categoria",
@@ -116,6 +119,7 @@ export function SupplierCategoryManagerModal({
       toast.success("Categoria actualizada")
       cancelEdit()
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error al actualizar categoria",
@@ -131,6 +135,7 @@ export function SupplierCategoryManagerModal({
       await deactivateSupplierCategory(cat.id)
       toast.success(`Categoria "${cat.name}" desactivada`)
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(
         err instanceof Error
@@ -145,6 +150,7 @@ export function SupplierCategoryManagerModal({
       await activateSupplierCategory(cat.id)
       toast.success(`Categoria "${cat.name}" activada`)
       load()
+      onCategoriesChanged?.()
     } catch (err) {
       toast.error(
         err instanceof Error
