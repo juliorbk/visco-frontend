@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select"
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from "@/lib/services/categories"
 import type { Category } from "@/lib/types"
-import { ArrowPathIcon, PlusIcon, PencilIcon, TrashIcon, FolderOpenIcon, ChevronRightIcon } from "@heroicons/react/24/outline"
+import { ArrowPathIcon, PlusIcon, PencilIcon, TrashIcon, FolderOpenIcon, ChevronRightIcon, ChevronDownIcon } from "@heroicons/react/24/outline"
 import { toast } from "sonner"
 
 export function CategoryManagerModal({
@@ -39,6 +39,7 @@ export function CategoryManagerModal({
   const [editName, setEditName] = useState("")
   const [editParentId, setEditParentId] = useState<number | null>(null)
   const [saving, setSaving] = useState(false)
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set())
 
   const load = useCallback(async () => {
     try {
@@ -174,6 +175,7 @@ export function CategoryManagerModal({
           ) : (
             mainCategories.map((main) => {
               const subs = subCategoriesByParent.get(main.id) ?? []
+              const isExpanded = expandedParents.has(main.id)
               return (
                 <div key={main.id} className="space-y-1">
                   {/* Main category */}
@@ -194,14 +196,33 @@ export function CategoryManagerModal({
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2">
-                          <FolderOpenIcon className="size-4 text-[#7b1a1a]" />
-                          <span className="text-sm font-semibold">{main.name}</span>
+                        <div
+                          className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"
+                          onClick={() =>
+                            subs.length > 0 &&
+                            setExpandedParents((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(main.id)) next.delete(main.id)
+                              else next.add(main.id)
+                              return next
+                            })
+                          }
+                        >
+                          {subs.length > 0 ? (
+                            isExpanded ? (
+                              <ChevronDownIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                            ) : (
+                              <ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                            )
+                          ) : (
+                            <FolderOpenIcon className="size-4 text-[#7b1a1a] shrink-0" />
+                          )}
+                          <span className="text-sm font-semibold truncate">{main.name}</span>
                           {subs.length > 0 && (
-                            <span className="text-[10px] text-muted-foreground">({subs.length})</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">({subs.length})</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => { setEditingId(main.id); setEditName(main.name); setEditParentId(null) }}
                             className="size-7 grid place-items-center rounded-md text-muted-foreground hover:bg-secondary"
@@ -220,7 +241,7 @@ export function CategoryManagerModal({
                   </div>
 
                   {/* Subcategories */}
-                  {subs.map((sub) => (
+                  {isExpanded && subs.map((sub) => (
                     <div
                       key={sub.id}
                       className="flex items-center justify-between rounded-md border border-border px-3 py-2 ml-6"

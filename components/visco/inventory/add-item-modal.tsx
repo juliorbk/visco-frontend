@@ -90,11 +90,9 @@ export function AddItemModal({
       if (suppliers.length === 0) {
         fetchSuppliers(0, 200).then((res) => setSuppliers(res.content ?? [])).catch(() => {})
       }
-      if (categories.length === 0) {
-        fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
-      }
+      fetchCategories(0, 200).then((res) => setCategories(res.content ?? [])).catch(() => {})
     }
-  }, [open, suppliers.length, categories.length])
+  }, [open])
 
   useEffect(() => {
     if (editing) {

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
@@ -21,6 +22,7 @@ import {
   ArrowPathIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronDownIcon,
   ArrowsUpDownIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline"
@@ -63,6 +65,7 @@ export default function InventoryPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
   const [refreshTick, setRefreshTick] = useState(0)
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set())
 
   const loadCategories = useCallback(() => {
     fetchCategories(0, 200)
@@ -175,7 +178,7 @@ export default function InventoryPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-56 max-h-[300px] overflow-y-auto"
+                className="w-56 max-h-[350px] overflow-y-auto"
               >
                 <DropdownMenuRadioGroup
                   value={category}
@@ -187,24 +190,59 @@ export default function InventoryPage() {
                   <DropdownMenuRadioItem value="all">
                     Todas las categorías
                   </DropdownMenuRadioItem>
-                  {mainCategories.flatMap((main) => {
-                    const subs = subCategoriesByParent.get(main.id) ?? []
-                    return [
-                      <DropdownMenuRadioItem key={`main-${main.id}`} value={String(main.id)}>
-                        {main.name}
-                      </DropdownMenuRadioItem>,
-                      ...subs.map((sub) => (
-                        <DropdownMenuRadioItem
-                          key={`sub-${sub.id}`}
-                          value={String(sub.id)}
-                          className="pl-6 text-muted-foreground"
-                        >
-                          └ {sub.name}
-                        </DropdownMenuRadioItem>
-                      )),
-                    ]
-                  })}
                 </DropdownMenuRadioGroup>
+                {mainCategories.map((main) => {
+                  const subs = subCategoriesByParent.get(main.id) ?? []
+                  const isExpanded = expandedParents.has(main.id)
+                  return (
+                    <div key={main.id}>
+                      <DropdownMenuItem
+                        onSelect={(e) => {
+                          e.preventDefault()
+                          setExpandedParents((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(main.id)) next.delete(main.id)
+                            else next.add(main.id)
+                            return next
+                          })
+                        }}
+                        className="font-medium flex items-center gap-1.5"
+                      >
+                        {isExpanded ? (
+                          <ChevronDownIcon className="size-3.5 shrink-0" />
+                        ) : (
+                          <ChevronRightIcon className="size-3.5 shrink-0" />
+                        )}
+                        {main.name}
+                      </DropdownMenuItem>
+                      {isExpanded && (
+                        <DropdownMenuRadioGroup
+                          value={category}
+                          onValueChange={(v) => {
+                            setCategory(v)
+                            setPage(0)
+                          }}
+                        >
+                          <DropdownMenuRadioItem
+                            value={String(main.id)}
+                            className="pl-9"
+                          >
+                            {main.name}
+                          </DropdownMenuRadioItem>
+                          {subs.map((sub) => (
+                            <DropdownMenuRadioItem
+                              key={sub.id}
+                              value={String(sub.id)}
+                              className="pl-12 text-muted-foreground"
+                            >
+                              {sub.name}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      )}
+                    </div>
+                  )
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
 
