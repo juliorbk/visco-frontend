@@ -117,7 +117,7 @@ export function CreateRequisitionModal({
     const fetchData = async () => {
       setLoadingProducts(true)
       try {
-        const res = await fetchProducts(0, 50, debouncedFinderQuery || undefined, undefined, undefined, undefined, undefined, controller.signal)
+        const res = await fetchProducts(0, 500, debouncedFinderQuery || undefined, undefined, undefined, undefined, undefined, controller.signal)
         if (!controller.signal.aborted) {
           setProducts(res.content ?? [])
         }
