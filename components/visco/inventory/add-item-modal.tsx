@@ -46,9 +46,9 @@ interface FormState {
   sku: string
   sapCode: string
   description: string
-  // Extraemos el tipo exacto de tu DTO
   uom: ProductDTO["uom"] 
   reorderPoint: string
+  maxStock: string
   supplierId: number | null
   categoryId: number | null
 }
@@ -58,9 +58,9 @@ const empty: FormState = {
   sku: "",
   sapCode: "",
   description: "",
-  // Casteamos el valor inicial
   uom: "UN" as ProductDTO["uom"], 
   reorderPoint: "0",
+  maxStock: "",
   supplierId: null,
   categoryId: null,
 }
@@ -103,6 +103,7 @@ export function AddItemModal({
         description: editing.description ?? "",
         uom: editing.uom,
         reorderPoint: String(editing.reorderPoint),
+        maxStock: editing.maxStock != null ? String(editing.maxStock) : "",
         supplierId: editing.supplierId,
         categoryId: editing.categoryId,
       })
@@ -141,6 +142,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         description: form.description,
         uom: form.uom as ProductDTO["uom"], 
         reorderPoint: Number(form.reorderPoint) || 0,
+        maxStock: form.maxStock ? Number(form.maxStock) : null,
         supplierId: form.supplierId ?? undefined,
         categoryId: form.categoryId ?? undefined,
       }
@@ -243,6 +245,18 @@ const handleSubmit = async (e: React.FormEvent) => {
               type="number"
               value={form.reorderPoint}
               onChange={(e) => update("reorderPoint", e.target.value)}
+              disabled={saving}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="maxstock">Stock Máximo</Label>
+            <Input
+              id="maxstock"
+              type="number"
+              value={form.maxStock}
+              onChange={(e) => update("maxStock", e.target.value)}
+              placeholder="0"
               disabled={saving}
             />
           </div>

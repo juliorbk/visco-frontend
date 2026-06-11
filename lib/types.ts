@@ -159,6 +159,7 @@ export interface CreateProductRequest {
   sapCode: string
   uom: Uom
   reorderPoint: number
+  maxStock?: number | null
   supplierId?: number | null
   categoryId?: number | null
 }
