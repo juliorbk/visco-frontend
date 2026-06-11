@@ -74,7 +74,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     }
     let cancelled = false
     setLoadingSearch(true)
-    fetchProductsOnStock(selectedWarehouseId, debouncedSearch)
+    fetchProductsOnStock(selectedWarehouseId, debouncedSearch, 0, 9999)
       .then((res) => { if (!cancelled) setSearchResults(res.content ?? []) })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoadingSearch(false) })
