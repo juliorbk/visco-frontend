@@ -300,7 +300,7 @@ export default function SuppliersPage() {
           setCategoriesManagerOpen(o)
           if (!o) loadCategories()
         }}
-        onCategoriesChanged={loadCategories}
+        onCategoriesChanged={setCategories}
       />
     </div>
   )

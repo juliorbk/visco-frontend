@@ -190,59 +190,53 @@ export default function InventoryPage() {
                   <DropdownMenuRadioItem value="all">
                     Todas las categorías
                   </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-                {mainCategories.map((main) => {
-                  const subs = subCategoriesByParent.get(main.id) ?? []
-                  const isExpanded = expandedParents.has(main.id)
-                  return (
-                    <div key={main.id}>
-                      <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault()
-                          setExpandedParents((prev) => {
-                            const next = new Set(prev)
-                            if (next.has(main.id)) next.delete(main.id)
-                            else next.add(main.id)
-                            return next
-                          })
-                        }}
-                        className="font-medium flex items-center gap-1.5"
-                      >
-                        {isExpanded ? (
-                          <ChevronDownIcon className="size-3.5 shrink-0" />
-                        ) : (
-                          <ChevronRightIcon className="size-3.5 shrink-0" />
-                        )}
-                        {main.name}
-                      </DropdownMenuItem>
-                      {isExpanded && (
-                        <DropdownMenuRadioGroup
-                          value={category}
-                          onValueChange={(v) => {
-                            setCategory(v)
-                            setPage(0)
+                  {mainCategories.map((main) => {
+                    const subs = subCategoriesByParent.get(main.id) ?? []
+                    const isExpanded = expandedParents.has(main.id)
+                    return (
+                      <div key={main.id}>
+                        <DropdownMenuItem
+                          onSelect={(e) => {
+                            e.preventDefault()
+                            setExpandedParents((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(main.id)) next.delete(main.id)
+                              else next.add(main.id)
+                              return next
+                            })
                           }}
+                          className="font-medium flex items-center gap-1.5"
                         >
-                          <DropdownMenuRadioItem
-                            value={String(main.id)}
-                            className="pl-9"
-                          >
-                            {main.name}
-                          </DropdownMenuRadioItem>
-                          {subs.map((sub) => (
+                          {isExpanded ? (
+                            <ChevronDownIcon className="size-3.5 shrink-0" />
+                          ) : (
+                            <ChevronRightIcon className="size-3.5 shrink-0" />
+                          )}
+                          {main.name}
+                        </DropdownMenuItem>
+                        {isExpanded && (
+                          <>
                             <DropdownMenuRadioItem
-                              key={sub.id}
-                              value={String(sub.id)}
-                              className="pl-12 text-muted-foreground"
+                              value={String(main.id)}
+                              className="pl-9"
                             >
-                              {sub.name}
+                              {main.name}
                             </DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                      )}
-                    </div>
-                  )
-                })}
+                            {subs.map((sub) => (
+                              <DropdownMenuRadioItem
+                                key={sub.id}
+                                value={String(sub.id)}
+                                className="pl-12 text-muted-foreground"
+                              >
+                                {sub.name}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -451,7 +445,7 @@ export default function InventoryPage() {
           setCategoryManagerOpen(o)
           if (!o) loadCategories()
         }}
-        onCategoriesChanged={loadCategories}
+        onCategoriesChanged={setCategories}
       />
     </div>
   )

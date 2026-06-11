@@ -39,7 +39,7 @@ export function SupplierCategoryManagerModal({
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
-  onCategoriesChanged?: () => void
+  onCategoriesChanged?: (cats: SupplierCategoryDTO[]) => void
 }) {
   const [categories, setCategories] = useState<SupplierCategoryDTO[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,14 +90,17 @@ export function SupplierCategoryManagerModal({
     if (!trimmed) return
     setSaving(true)
     try {
-      await createSupplierCategory({
+      const created = await createSupplierCategory({
         name: trimmed,
         description: description.trim() || undefined,
       })
       toast.success(`Categoria "${trimmed}" creada`)
       resetCreate()
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = [...prev, created]
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error al crear categoria",
@@ -112,14 +115,17 @@ export function SupplierCategoryManagerModal({
     if (!trimmed) return
     setSaving(true)
     try {
-      await updateSupplierCategory(id, {
+      const updated = await updateSupplierCategory(id, {
         name: trimmed,
         description: editDescription.trim() || undefined,
       })
       toast.success("Categoria actualizada")
       cancelEdit()
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = prev.map((c) => (c.id === id ? updated : c))
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Error al actualizar categoria",
@@ -134,8 +140,11 @@ export function SupplierCategoryManagerModal({
     try {
       await deactivateSupplierCategory(cat.id)
       toast.success(`Categoria "${cat.name}" desactivada`)
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = prev.map((c) => (c.id === cat.id ? { ...c, active: false } : c))
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(
         err instanceof Error
@@ -149,8 +158,11 @@ export function SupplierCategoryManagerModal({
     try {
       await activateSupplierCategory(cat.id)
       toast.success(`Categoria "${cat.name}" activada`)
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = prev.map((c) => (c.id === cat.id ? { ...c, active: true } : c))
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(
         err instanceof Error

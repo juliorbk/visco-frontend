@@ -31,7 +31,7 @@ export function CategoryManagerModal({
 }: {
   open: boolean
   onOpenChange: (o: boolean) => void
-  onCategoriesChanged?: () => void
+  onCategoriesChanged?: (cats: Category[]) => void
 }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,12 +79,15 @@ export function CategoryManagerModal({
     if (!newName.trim()) return
     setSaving(true)
     try {
-      await createCategory({ name: newName.trim(), parentId: newParentId })
+      const created = await createCategory({ name: newName.trim(), parentId: newParentId })
       toast.success(`Categoría "${newName}" creada`)
       setNewName("")
       setNewParentId(null)
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = [...prev, created]
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al crear categoría")
     } finally {
@@ -96,11 +99,14 @@ export function CategoryManagerModal({
     if (!editName.trim()) return
     setSaving(true)
     try {
-      await updateCategory(id, { name: editName.trim(), parentId: editParentId })
+      const updated = await updateCategory(id, { name: editName.trim(), parentId: editParentId })
       toast.success("Categoría actualizada")
       setEditingId(null)
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = prev.map((c) => (c.id === id ? updated : c))
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al actualizar")
     } finally {
@@ -118,8 +124,11 @@ export function CategoryManagerModal({
     try {
       await deleteCategory(id)
       toast.success(`Categoría "${name}" eliminada`)
-      load()
-      onCategoriesChanged?.()
+      setCategories((prev) => {
+        const next = prev.filter((c) => c.id !== id)
+        onCategoriesChanged?.(next)
+        return next
+      })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al eliminar")
     }
