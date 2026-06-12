@@ -69,6 +69,7 @@ export function CreatePOModal({
 }) {
   const [step, setStep] = useState(0)
   const nextLineIdRef = useRef(1)
+  const [orderNumber, setOrderNumber] = useState("")
   const [description, setDescription] = useState("")
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
   const [type, setType] = useState(ORDER_TYPES[1])
@@ -206,6 +207,7 @@ export function CreatePOModal({
   const reset = () => {
     setStep(0)
     setLines([])
+    setOrderNumber("")
     setDescription("")
     setSupplierId(null)
     setPickProduct(null)
@@ -286,6 +288,10 @@ export function CreatePOModal({
   }
 
   const submit = async () => {
+    if (!orderNumber.trim()) {
+      toast.error("El número de pedido es requerido")
+      return
+    }
     if (!description.trim()) {
       toast.error("La descripción es requerida")
       return
@@ -310,6 +316,7 @@ export function CreatePOModal({
     setSaving(true)
     try {
       const body: CreatePurchaseOrderRequest = {
+        orderNumber: orderNumber.trim(),
         description,
         supplierId,
         destinationWarehouseId,
@@ -381,10 +388,15 @@ export function CreatePOModal({
         {step === 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Número de Pedido</Label>
-              <div className="flex h-9 items-center px-3 rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
-                Se asignará automáticamente
-              </div>
+              <Label htmlFor="po-number">Número de Pedido <span className="text-[#7b1a1a]">*</span></Label>
+              <Input
+                id="po-number"
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                placeholder="Ej: PO-2026-001"
+                className="h-9"
+                required
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Proveedor</Label>

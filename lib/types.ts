@@ -233,7 +233,7 @@ export interface PurchaseOrderItemResponse {
 }
 
 export interface CreatePurchaseOrderRequest {
-  orderNumber?: string
+  orderNumber: string
   description: string
   supplierId: number
   destinationWarehouseId: number
