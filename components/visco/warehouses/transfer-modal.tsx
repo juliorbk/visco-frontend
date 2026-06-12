@@ -1,20 +1,13 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { XMarkIcon, ArrowPathIcon, ArrowsRightLeftIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline"
+import { useEffect, useRef, useState } from "react"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  XMarkIcon,
+  ArrowPathIcon,
+  ArrowsRightLeftIcon,
+  ChevronUpDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline"
 import {
   Select,
   SelectContent,
@@ -22,15 +15,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
+const PRODUCT_SEARCH_PAGE_SIZE = 50
 
 export function TransferModal({
   open,
@@ -43,7 +45,6 @@ export function TransferModal({
 }) {
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [products, setProducts] = useState<ProductOnStock[]>([])
-  const [openProduct, setOpenProduct] = useState(false)
   const [productId, setProductId] = useState<number>(0)
   const [fromWarehouseId, setFromWarehouseId] = useState<number>(0)
   const [toWarehouseId, setToWarehouseId] = useState<number>(0)
@@ -51,33 +52,20 @@ export function TransferModal({
   const [unitCost, setUnitCost] = useState("")
   const [reason, setReason] = useState("")
   const [saving, setSaving] = useState(false)
-  const [loadingData, setLoadingData] = useState(false)
+  const [loadingWarehouses, setLoadingWarehouses] = useState(false)
+
+  const [searchField, setSearchField] = useState<SearchField>("name")
+  const [searchTerm, setSearchTerm] = useState("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   const selectedProduct = products.find((p) => p.id === productId)
-  const abortRef = useRef<AbortController | null>(null)
-
-  const loadProducts = (warehouseId: number) => {
-    if (!warehouseId) return
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
-    fetchProductsOnStock(warehouseId, undefined, 0, 9999, controller.signal)
-      .then((page) => {
-        if (controller.signal.aborted) return
-        const prods = page.content ?? []
-        setProducts(prods)
-        if (prods.length > 0 && productId === 0) {
-          setProductId(prods[0].id)
-        }
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) toast.error("Error al cargar productos")
-      })
-  }
 
   useEffect(() => {
     if (open) {
-      setLoadingData(true)
+      setLoadingWarehouses(true)
       fetchWarehouses()
         .then((wh) => {
           setWarehouses(wh)
@@ -85,13 +73,55 @@ export function TransferModal({
           const toId = wh.length >= 2 ? wh[1].id : 0
           setFromWarehouseId(fromId)
           setToWarehouseId(toId)
-          return fromId
         })
-        .then((fromId) => loadProducts(fromId))
-        .catch(() => toast.error("Error al cargar datos"))
-        .finally(() => setLoadingData(false))
+        .catch(() => toast.error("Error al cargar almacenes"))
+        .finally(() => setLoadingWarehouses(false))
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    if (!fromWarehouseId) {
+      setProducts([])
+      return
+    }
+    const controller = new AbortController()
+    const fetchData = async () => {
+      setLoadingSearch(true)
+      try {
+        const trimmed = debouncedSearchTerm.trim()
+        const search = trimmed || undefined
+        const page = await fetchProductsOnStock(
+          fromWarehouseId,
+          search,
+          0,
+          PRODUCT_SEARCH_PAGE_SIZE,
+          controller.signal,
+        )
+        if (!controller.signal.aborted) {
+          setProducts(page.content ?? [])
+        }
+      } catch {
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingSearch(false)
+        }
+      }
+    }
+    fetchData()
+    return () => controller.abort()
+  }, [debouncedSearchTerm, searchField, fromWarehouseId, open])
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [searchOpen])
 
   const close = () => {
     onOpenChange(false)
@@ -99,6 +129,8 @@ export function TransferModal({
     setUnitCost("")
     setReason("")
     setProductId(0)
+    setSearchTerm("")
+    setSearchOpen(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,7 +182,7 @@ export function TransferModal({
           </button>
         </div>
 
-        {loadingData ? (
+        {loadingWarehouses ? (
           <div className="flex items-center justify-center py-12">
             <ArrowPathIcon className="size-6 animate-spin text-[#6b7280]" />
           </div>
@@ -159,57 +191,97 @@ export function TransferModal({
             <div className="p-6 space-y-5">
               <div className="space-y-1.5">
                 <Label>Producto</Label>
-                <Popover open={openProduct} onOpenChange={setOpenProduct}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openProduct}
-                      className="w-full justify-between font-normal bg-background"
-                      disabled={saving}
+                {selectedProduct ? (
+                  <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-card text-sm">
+                    <span className="flex-1 truncate">
+                      {selectedProduct.name} ({selectedProduct.sku})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductId(0)
+                        setSearchTerm("")
+                        setSearchOpen(true)
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                      aria-label="Cambiar producto"
                     >
-                      {selectedProduct
-                        ? `${selectedProduct.name} (${selectedProduct.sku})`
-                        : "Buscar producto..."}
-                      <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-[var(--radix-popover-trigger-width)] p-0"
-                    align="start"
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <Command>
-                      <CommandInput placeholder="Buscar por nombre o SKU..." />
-                      <CommandList>
-                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                        <CommandGroup>
-                          {products.map((p) => (
-                            <CommandItem
+                      <ChevronUpDownIcon className="size-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative" ref={searchRef}>
+                    <div className="flex gap-2">
+                      <Select
+                        value={searchField}
+                        onValueChange={(v) => setSearchField(v as SearchField)}
+                        disabled={saving}
+                      >
+                        <SelectTrigger className="w-[150px] bg-card">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name">Nombre</SelectItem>
+                          <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                          <SelectItem value="sku">SKU</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="relative flex-1">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                          placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+                          className="pl-9 bg-card"
+                          value={searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                            setSearchOpen(true)
+                          }}
+                          onFocus={() => setSearchOpen(true)}
+                          disabled={saving}
+                        />
+                      </div>
+                    </div>
+
+                    {searchOpen && (
+                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
+                        {loadingSearch ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                            Buscando…
+                          </div>
+                        ) : !fromWarehouseId ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            Selecciona un almacén de origen
+                          </div>
+                        ) : products.length === 0 ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            {debouncedSearchTerm.trim()
+                              ? "No se encontraron productos"
+                              : "No hay productos con stock en este almacén"}
+                          </div>
+                        ) : (
+                          products.map((p) => (
+                            <button
                               key={p.id}
-                              value={`${p.name} ${p.sku} ${p.sapCode}`}
-                              onSelect={() => {
-                                setProductId(p.id === productId ? 0 : p.id)
-                                setOpenProduct(false)
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50"
+                              onClick={() => {
+                                setProductId(p.id)
+                                setSearchOpen(false)
+                                setSearchTerm("")
                               }}
                             >
-                              <CheckIcon
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  productId === p.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span>{p.name}</span>
-                                <span className="text-xs text-[#6b7280]">SKU: {p.sku} · SAP: {p.sapCode} &middot; Stock: {p.currentStock}</span>
+                              <div className="font-medium text-foreground">{p.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.currentStock} {p.uom}
                               </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -220,7 +292,8 @@ export function TransferModal({
                     onValueChange={(v) => {
                       const id = Number(v)
                       setFromWarehouseId(id)
-                      loadProducts(id)
+                      setProductId(0)
+                      setSearchTerm("")
                       if (id === toWarehouseId) {
                         const other = warehouses.find((w) => w.id !== id)
                         if (other) setToWarehouseId(other.id)
@@ -279,7 +352,7 @@ export function TransferModal({
               </button>
               <button
                 type="submit"
-                disabled={saving || loadingData}
+                disabled={saving || loadingWarehouses}
                 className="px-5 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {saving ? (

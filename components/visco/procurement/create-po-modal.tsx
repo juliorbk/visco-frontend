@@ -25,14 +25,25 @@ import { createOrder } from "@/lib/services/procurement"
 import { fetchWarehouses } from "@/lib/services/warehouse"
 import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse, SupplierDTO } from "@/lib/types"
 import { fetchSuppliers, createSupplier } from "@/lib/services/suppliers"
-import { fetchProducts } from "@/lib/services/inventory"
+import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
 import { fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplierFromPo } from "@/lib/permissions"
 import { CheckIcon, ArrowPathIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon, XMarkIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
 import { SupplierModal } from "@/components/visco/suppliers/supplier-modal"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
+const PRODUCT_SEARCH_PAGE_SIZE = 50
 
 interface LineItem {
   id: number
@@ -87,8 +98,9 @@ export function CreatePOModal({
 
   // Product finder state
   const [finderOpen, setFinderOpen] = useState(false)
+  const [searchField, setSearchField] = useState<SearchField>("name")
   const [finderQuery, setFinderQuery] = useState("")
-  const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
+  const debouncedFinderQuery = useDebounce(finderQuery, 500)
   const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
@@ -105,9 +117,6 @@ export function CreatePOModal({
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
       }),
-      fetchProducts(0, 9999, {}).then((prodRes) => {
-        setProducts(prodRes.content ?? [])
-      }),
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
         setDestinationWarehouseId((prev) => prev ?? wh[0]?.id ?? null)
@@ -116,7 +125,6 @@ export function CreatePOModal({
         setRequisitions(reqRes.content ?? [])
       }),
     ]).catch(() => {
-      // Errors are non-fatal; individual fetches already swallow them.
     })
   }, [open])
 
@@ -155,16 +163,9 @@ export function CreatePOModal({
   useEffect(() => {
     if (!finderOpen) {
       setFinderQuery("")
-      setDebouncedFinderQuery("")
     }
   }, [finderOpen])
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedFinderQuery(finderQuery), 300)
-    return () => clearTimeout(timer)
-  }, [finderQuery])
-
-  // Close finder on outside click
   useEffect(() => {
     if (!finderOpen) return
     const handler = (e: MouseEvent) => {
@@ -182,12 +183,14 @@ export function CreatePOModal({
     const fetchData = async () => {
       setLoadingProducts(true)
       try {
-        const res = await fetchProducts(0, 9999, { name: debouncedFinderQuery || undefined }, controller.signal)
+        const trimmed = debouncedFinderQuery.trim()
+        const filters: ProductFilters = {}
+        if (trimmed) filters[searchField] = trimmed
+        const res = await fetchProducts(0, PRODUCT_SEARCH_PAGE_SIZE, filters, controller.signal)
         if (!controller.signal.aborted) {
           setProducts(res.content ?? [])
         }
       } catch {
-        // ignore
       } finally {
         if (!controller.signal.aborted) {
           setLoadingProducts(false)
@@ -196,7 +199,7 @@ export function CreatePOModal({
     }
     fetchData()
     return () => controller.abort()
-  }, [debouncedFinderQuery])
+  }, [debouncedFinderQuery, searchField, finderOpen])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
 
@@ -502,11 +505,24 @@ export function CreatePOModal({
               <Label className="text-xs">Buscar producto</Label>
               <div className="relative" ref={finderRef}>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
+                  <Select
+                    value={searchField}
+                    onValueChange={(v) => setSearchField(v as SearchField)}
+                  >
+                    <SelectTrigger className="w-[150px] bg-card shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Nombre</SelectItem>
+                      <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                      <SelectItem value="sku">SKU</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative flex-1 min-w-0">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       className="pl-9"
-                      placeholder="Escribe nombre, SKU o código…"
+                      placeholder={pickProduct ? `${pickProduct.name} (${pickProduct.sku})` : SEARCH_FIELD_PLACEHOLDERS[searchField]}
                       value={pickProduct ? `${pickProduct.name} (${pickProduct.sku})` : finderQuery}
                       onChange={(e) => {
                         setFinderQuery(e.target.value)
@@ -581,12 +597,12 @@ export function CreatePOModal({
                     ))}
                   </div>
                 )}
-                {finderOpen && !loadingProducts && finderQuery && products.length === 0 && (
+                {finderOpen && !loadingProducts && debouncedFinderQuery.trim() && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No se encontraron productos
                   </div>
                 )}
-                {finderOpen && !loadingProducts && !finderQuery && products.length === 0 && (
+                {finderOpen && !loadingProducts && !debouncedFinderQuery.trim() && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
                     No hay productos registrados
                   </div>

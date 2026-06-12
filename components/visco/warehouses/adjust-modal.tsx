@@ -1,20 +1,14 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { XMarkIcon, ArrowPathIcon, EqualsIcon, ExclamationTriangleIcon, CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline"
+import { useEffect, useRef, useState } from "react"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+  XMarkIcon,
+  ArrowPathIcon,
+  EqualsIcon,
+  ExclamationTriangleIcon,
+  ChevronUpDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline"
 import {
   Select,
   SelectContent,
@@ -22,16 +16,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
-import { fetchProducts } from "@/lib/services/inventory"
+import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
+const PRODUCT_SEARCH_PAGE_SIZE = 50
 
 export function AdjustModal({
   open,
@@ -44,32 +47,68 @@ export function AdjustModal({
 }) {
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
-  const [openProduct, setOpenProduct] = useState(false)
   const [productId, setProductId] = useState<number>(0)
   const [warehouseId, setWarehouseId] = useState<number>(0)
   const [newStock, setNewStock] = useState("0")
   const [reason, setReason] = useState("")
   const [unitCost, setUnitCost] = useState("")
   const [saving, setSaving] = useState(false)
-  const [loadingData, setLoadingData] = useState(false)
+  const [loadingWarehouses, setLoadingWarehouses] = useState(false)
+
+  const [searchField, setSearchField] = useState<SearchField>("name")
+  const [searchTerm, setSearchTerm] = useState("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
+  const [loadingSearch, setLoadingSearch] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
-      setLoadingData(true)
-      Promise.all([
-        fetchWarehouses(),
-        fetchProducts(0, 9999, { hasStock: true }).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
-      ])
-        .then(([wh, prod]) => {
+      setLoadingWarehouses(true)
+      fetchWarehouses()
+        .then((wh) => {
           setWarehouses(wh)
-          setProducts(prod)
           if (wh.length > 0) setWarehouseId(wh[0].id)
-          if (prod.length > 0) setProductId(prod[0].id)
         })
-        .catch(() => toast.error("Error al cargar datos"))
-        .finally(() => setLoadingData(false))
+        .catch(() => toast.error("Error al cargar almacenes"))
+        .finally(() => setLoadingWarehouses(false))
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const controller = new AbortController()
+    const fetchData = async () => {
+      setLoadingSearch(true)
+      try {
+        const trimmed = debouncedSearchTerm.trim()
+        const filters: ProductFilters = { hasStock: true }
+        if (trimmed) filters[searchField] = trimmed
+        const res = await fetchProducts(0, PRODUCT_SEARCH_PAGE_SIZE, filters, controller.signal)
+        if (!controller.signal.aborted) {
+          setProducts((res.content ?? []).filter((p) => p.totalStock > 0))
+        }
+      } catch {
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingSearch(false)
+        }
+      }
+    }
+    fetchData()
+    return () => controller.abort()
+  }, [debouncedSearchTerm, searchField, open])
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [searchOpen])
 
   const close = () => {
     onOpenChange(false)
@@ -77,6 +116,8 @@ export function AdjustModal({
     setReason("")
     setUnitCost("")
     setProductId(0)
+    setSearchTerm("")
+    setSearchOpen(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,7 +174,7 @@ export function AdjustModal({
           </button>
         </div>
 
-        {loadingData ? (
+        {loadingWarehouses ? (
           <div className="flex items-center justify-center py-12">
             <ArrowPathIcon className="size-6 animate-spin text-[#6b7280]" />
           </div>
@@ -142,57 +183,93 @@ export function AdjustModal({
             <div className="p-6 space-y-5">
               <div className="space-y-1.5">
                 <Label>Producto</Label>
-                <Popover open={openProduct} onOpenChange={setOpenProduct}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={openProduct}
-                      className="w-full justify-between font-normal bg-background"
-                      disabled={saving}
+                {selectedProduct ? (
+                  <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-card text-sm">
+                    <span className="flex-1 truncate">
+                      {selectedProduct.name} ({selectedProduct.sku})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProductId(0)
+                        setSearchTerm("")
+                        setSearchOpen(true)
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                      aria-label="Cambiar producto"
                     >
-                      {selectedProduct
-                        ? `${selectedProduct.name} (${selectedProduct.sku})`
-                        : "Buscar producto..."}
-                      <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-[var(--radix-popover-trigger-width)] p-0"
-                    align="start"
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <Command>
-                      <CommandInput placeholder="Buscar por nombre o SKU..." />
-                      <CommandList>
-                        <CommandEmpty>No se encontraron productos.</CommandEmpty>
-                        <CommandGroup>
-                          {products.map((p) => (
-                            <CommandItem
+                      <ChevronUpDownIcon className="size-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative" ref={searchRef}>
+                    <div className="flex gap-2">
+                      <Select
+                        value={searchField}
+                        onValueChange={(v) => setSearchField(v as SearchField)}
+                        disabled={saving}
+                      >
+                        <SelectTrigger className="w-[150px] bg-card">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name">Nombre</SelectItem>
+                          <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                          <SelectItem value="sku">SKU</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="relative flex-1">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                          placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+                          className="pl-9 bg-card"
+                          value={searchTerm}
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value)
+                            setSearchOpen(true)
+                          }}
+                          onFocus={() => setSearchOpen(true)}
+                          disabled={saving}
+                        />
+                      </div>
+                    </div>
+
+                    {searchOpen && (
+                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
+                        {loadingSearch ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                            Buscando…
+                          </div>
+                        ) : products.length === 0 ? (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            {debouncedSearchTerm.trim()
+                              ? "No se encontraron productos"
+                              : "No hay productos con stock disponibles"}
+                          </div>
+                        ) : (
+                          products.map((p) => (
+                            <button
                               key={p.id}
-                              value={`${p.name} ${p.sku} ${p.sapCode}`}
-                              onSelect={() => {
-                                setProductId(p.id === productId ? 0 : p.id)
-                                setOpenProduct(false)
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50"
+                              onClick={() => {
+                                setProductId(p.id)
+                                setSearchOpen(false)
+                                setSearchTerm("")
                               }}
                             >
-                              <CheckIcon
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  productId === p.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span>{p.name}</span>
-                                <span className="text-xs text-[#6b7280]">SKU: {p.sku} · SAP: {p.sapCode} &middot; Stock: {p.totalStock}</span>
+                              <div className="font-medium text-foreground">{p.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.totalStock} {p.uom}
                               </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {selectedProduct && (
@@ -248,7 +325,7 @@ export function AdjustModal({
               </button>
               <button
                 type="submit"
-                disabled={saving || loadingData}
+                disabled={saving || loadingWarehouses}
                 className="px-5 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {saving ? (

@@ -13,9 +13,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { createRequisition } from "@/lib/services/requisitions"
 import { fetchAllCostCenters } from "@/lib/services/admin"
-import { fetchProducts } from "@/lib/services/inventory"
+import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { CostCenter, ProductDTO } from "@/lib/types"
 import {
@@ -37,7 +44,18 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
+const PRODUCT_SEARCH_PAGE_SIZE = 50
 
 interface LineItem {
   id: number
@@ -76,8 +94,9 @@ export function CreateRequisitionModal({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [finderOpen, setFinderOpen] = useState(false)
+  const [searchField, setSearchField] = useState<SearchField>("name")
   const [finderQuery, setFinderQuery] = useState("")
-  const [debouncedFinderQuery, setDebouncedFinderQuery] = useState("")
+  const debouncedFinderQuery = useDebounce(finderQuery, 500)
   const [loadingProducts, setLoadingProducts] = useState(false)
   const finderRef = useRef<HTMLDivElement>(null)
 
@@ -94,7 +113,6 @@ export function CreateRequisitionModal({
   useEffect(() => {
     if (!finderOpen) {
       setFinderQuery("")
-      setDebouncedFinderQuery("")
     }
   }, [finderOpen])
 
@@ -110,22 +128,19 @@ export function CreateRequisitionModal({
   }, [finderOpen])
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedFinderQuery(finderQuery), 300)
-    return () => clearTimeout(timer)
-  }, [finderQuery])
-
-  useEffect(() => {
     if (!finderOpen) return
     const controller = new AbortController()
     const fetchData = async () => {
       setLoadingProducts(true)
       try {
-        const res = await fetchProducts(0, 9999, { name: debouncedFinderQuery || undefined }, controller.signal)
+        const trimmed = debouncedFinderQuery.trim()
+        const filters: ProductFilters = {}
+        if (trimmed) filters[searchField] = trimmed
+        const res = await fetchProducts(0, PRODUCT_SEARCH_PAGE_SIZE, filters, controller.signal)
         if (!controller.signal.aborted) {
           setProducts(res.content ?? [])
         }
       } catch {
-        // ignore
       } finally {
         if (!controller.signal.aborted) {
           setLoadingProducts(false)
@@ -134,7 +149,7 @@ export function CreateRequisitionModal({
     }
     fetchData()
     return () => controller.abort()
-  }, [debouncedFinderQuery])
+  }, [debouncedFinderQuery, searchField, finderOpen])
 
   const reset = () => {
     setStep(0)
@@ -343,11 +358,24 @@ export function CreateRequisitionModal({
               <Label className="text-xs">Buscar producto</Label>
               <div className="relative" ref={finderRef}>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
+                  <Select
+                    value={searchField}
+                    onValueChange={(v) => setSearchField(v as SearchField)}
+                  >
+                    <SelectTrigger className="w-[150px] bg-card shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Nombre</SelectItem>
+                      <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                      <SelectItem value="sku">SKU</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="relative flex-1 min-w-0">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       className="pl-9"
-                      placeholder="Escribe nombre, SKU o código…"
+                      placeholder={pickProduct ? `${pickProduct.name} (${pickProduct.sku})` : SEARCH_FIELD_PLACEHOLDERS[searchField]}
                       value={pickProduct ? `${pickProduct.name} (${pickProduct.sku})` : finderQuery}
                       onChange={(e) => {
                         setFinderQuery(e.target.value)
@@ -394,7 +422,8 @@ export function CreateRequisitionModal({
 
                 {finderOpen && loadingProducts && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
-                    <ArrowPathIcon className="size-4 animate-spin mx-auto" />
+                    <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                    Buscando…
                   </div>
                 )}
                 {finderOpen && !loadingProducts && products.length > 0 && (
@@ -420,7 +449,7 @@ export function CreateRequisitionModal({
                 )}
                 {finderOpen && !loadingProducts && products.length === 0 && (
                   <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-3 text-sm text-muted-foreground text-center">
-                    {finderQuery ? "No se encontraron productos" : "No hay productos registrados"}
+                    {debouncedFinderQuery.trim() ? "No se encontraron productos" : "No hay productos registrados"}
                   </div>
                 )}
               </div>

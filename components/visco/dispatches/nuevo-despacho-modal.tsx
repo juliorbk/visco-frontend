@@ -2,10 +2,28 @@
 
 import { useEffect, useRef, useState } from "react"
 import { XMarkIcon, MagnifyingGlassIcon, PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { EmployeeDTO, ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { fetchEmployee } from "@/lib/services/employees"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
+const PRODUCT_SEARCH_PAGE_SIZE = 50
 
 interface LineItem {
   id: number
@@ -33,8 +51,9 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
 
+  const [searchField, setSearchField] = useState<SearchField>("name")
   const [searchQuery, setSearchQuery] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
   const [searchResults, setSearchResults] = useState<ProductOnStock[]>([])
   const [loadingSearch, setLoadingSearch] = useState(false)
   const [pendingQtys, setPendingQtys] = useState<Record<number, string>>({})
@@ -47,7 +66,6 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setEmployeeData(null)
     setNotes("")
     setSearchQuery("")
-    setDebouncedSearch("")
     setSearchResults([])
     setPendingQtys({})
     nextLineIdRef.current = 1
@@ -61,23 +79,36 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }, [isOpen])
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
-  useEffect(() => {
-    if (!selectedWarehouseId || !debouncedSearch.trim()) {
+    if (!selectedWarehouseId) {
       setSearchResults([])
       return
     }
     const controller = new AbortController()
-    setLoadingSearch(true)
-    fetchProductsOnStock(selectedWarehouseId, debouncedSearch, 0, 50, controller.signal)
-      .then((res) => { if (!controller.signal.aborted) setSearchResults(res.content ?? []) })
-      .catch(() => {})
-      .finally(() => { if (!controller.signal.aborted) setLoadingSearch(false) })
+    const fetchData = async () => {
+      setLoadingSearch(true)
+      try {
+        const trimmed = debouncedSearchQuery.trim()
+        const search = trimmed || undefined
+        const res = await fetchProductsOnStock(
+          selectedWarehouseId,
+          search,
+          0,
+          PRODUCT_SEARCH_PAGE_SIZE,
+          controller.signal,
+        )
+        if (!controller.signal.aborted) {
+          setSearchResults(res.content ?? [])
+        }
+      } catch {
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoadingSearch(false)
+        }
+      }
+    }
+    fetchData()
     return () => controller.abort()
-  }, [debouncedSearch, selectedWarehouseId])
+  }, [debouncedSearchQuery, searchField, selectedWarehouseId])
 
   if (!isOpen) return null
 
@@ -222,15 +253,27 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
             <div className="pb-6 space-y-4">
               <h3 className="text-base font-semibold text-[#111827]">Agregar Productos</h3>
 
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-                <input
-                  type="text"
-                  placeholder="Buscar producto por nombre o SKU..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="flex gap-2">
+                <Select value={searchField} onValueChange={(v) => setSearchField(v as SearchField)}>
+                  <SelectTrigger className="w-[150px] bg-card">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Nombre</SelectItem>
+                    <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                    <SelectItem value="sku">SKU</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="relative flex-1">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+                  <input
+                    type="text"
+                    placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+                    className="w-full pl-10 pr-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
 
               {loadingSearch && (
@@ -240,12 +283,10 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 </div>
               )}
 
-              {!loadingSearch && !debouncedSearch && (
-                <div className="py-4 text-sm text-[#6b7280] text-center">Busca un producto para ver resultados</div>
-              )}
-
-              {!loadingSearch && debouncedSearch && searchResults.length === 0 && (
-                <div className="py-4 text-sm text-[#6b7280] text-center">No se encontraron productos</div>
+              {!loadingSearch && searchResults.length === 0 && (
+                <div className="py-4 text-sm text-[#6b7280] text-center">
+                  {debouncedSearchQuery.trim() ? "No se encontraron productos" : "Sin productos disponibles"}
+                </div>
               )}
 
               {!loadingSearch && searchResults.length > 0 && (
