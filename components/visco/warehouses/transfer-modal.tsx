@@ -90,10 +90,11 @@ export function TransferModal({
       setLoadingSearch(true)
       try {
         const trimmed = debouncedSearchTerm.trim()
-        const search = trimmed || undefined
+        const filters: { name?: string; sapCode?: string; sku?: string } = {}
+        if (trimmed) filters[searchField] = trimmed
         const page = await fetchProductsOnStock(
           fromWarehouseId,
-          search,
+          filters,
           0,
           PRODUCT_SEARCH_PAGE_SIZE,
           controller.signal,

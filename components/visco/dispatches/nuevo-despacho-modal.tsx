@@ -88,10 +88,11 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
       setLoadingSearch(true)
       try {
         const trimmed = debouncedSearchQuery.trim()
-        const search = trimmed || undefined
+        const filters: { name?: string; sapCode?: string; sku?: string } = {}
+        if (trimmed) filters[searchField] = trimmed
         const res = await fetchProductsOnStock(
           selectedWarehouseId,
-          search,
+          filters,
           0,
           PRODUCT_SEARCH_PAGE_SIZE,
           controller.signal,

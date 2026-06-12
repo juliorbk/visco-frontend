@@ -92,25 +92,29 @@ export async function fetchReceiptSummary(orderId: number): Promise<PurchaseOrde
 
 export async function fetchWarehouseProducts(
   warehouseId: number,
-  search?: string,
+  filters?: { name?: string; sapCode?: string; sku?: string },
   page = 0,
   size = 20,
 ): Promise<Page<ProductOnStock>> {
-  let url = `/api/warehouse/${warehouseId}/products?page=${page}&size=${size}`
-  if (search) url += `&search=${encodeURIComponent(search)}`
-  return api.get<Page<ProductOnStock>>(url)
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (filters?.name) params.append("name", filters.name)
+  if (filters?.sapCode) params.append("sapCode", filters.sapCode)
+  if (filters?.sku) params.append("sku", filters.sku)
+  return api.get<Page<ProductOnStock>>(`/api/warehouse/${warehouseId}/products?${params.toString()}`)
 }
 
 export async function fetchProductsOnStock(
   warehouseId: number,
-  search?: string,
+  filters?: { name?: string; sapCode?: string; sku?: string },
   page = 0,
   size = 200,
   signal?: AbortSignal,
 ): Promise<Page<ProductOnStock>> {
-  let url = `/api/warehouse/stock/on-stock?warehouseId=${warehouseId}&page=${page}&size=${size}`
-  if (search) url += `&search=${encodeURIComponent(search)}`
-  return api.get<Page<ProductOnStock>>(url, signal)
+  const params = new URLSearchParams({ warehouseId: String(warehouseId), page: String(page), size: String(size) })
+  if (filters?.name) params.append("name", filters.name)
+  if (filters?.sapCode) params.append("sapCode", filters.sapCode)
+  if (filters?.sku) params.append("sku", filters.sku)
+  return api.get<Page<ProductOnStock>>(`/api/warehouse/stock/on-stock?${params.toString()}`, signal)
 }
 
 export async function exportMovements(

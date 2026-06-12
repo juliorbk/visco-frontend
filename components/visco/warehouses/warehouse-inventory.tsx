@@ -3,13 +3,29 @@
 import { useCallback, useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { fetchWarehouseProducts } from "@/lib/services/warehouse"
 import { fetchProduct } from "@/lib/services/inventory"
 import type { ProductOnStock, ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { ItemDetailPanel } from "@/components/visco/inventory/item-detail-panel"
 import { MagnifyingGlassIcon, ArrowPathIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon } from "@heroicons/react/24/outline"
+import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
+
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
 
 const PAGE_SIZE = 20
 
@@ -22,8 +38,9 @@ export function WarehouseInventoryTable({
 }) {
   const [products, setProducts] = useState<ProductOnStock[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchField, setSearchField] = useState<SearchField>("name")
   const [search, setSearch] = useState("")
-  const [debouncedSearch, setDebouncedSearch] = useState("")
+  const debouncedSearch = useDebounce(search, 500)
   const [page, setPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
@@ -32,18 +49,16 @@ export function WarehouseInventoryTable({
   const [loadingDetail, setLoadingDetail] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 500)
-    return () => clearTimeout(timer)
-  }, [search])
-
-  useEffect(() => {
     setPage(0)
-  }, [debouncedSearch])
+  }, [debouncedSearch, searchField])
 
   const loadProducts = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetchWarehouseProducts(warehouseId, debouncedSearch || undefined, page, PAGE_SIZE)
+      const trimmed = debouncedSearch.trim()
+      const filters: { name?: string; sapCode?: string; sku?: string } = {}
+      if (trimmed) filters[searchField] = trimmed
+      const res = await fetchWarehouseProducts(warehouseId, filters, page, PAGE_SIZE)
       setProducts(res.content ?? [])
       setTotalPages(res.page.totalPages)
       setTotalElements(res.page.totalElements)
@@ -52,7 +67,7 @@ export function WarehouseInventoryTable({
     } finally {
       setLoading(false)
     }
-  }, [warehouseId, debouncedSearch, page])
+  }, [warehouseId, debouncedSearch, searchField, page])
 
   useEffect(() => { loadProducts() }, [loadProducts])
 
@@ -78,10 +93,23 @@ export function WarehouseInventoryTable({
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
+        <Select
+          value={searchField}
+          onValueChange={(v) => setSearchField(v as SearchField)}
+        >
+          <SelectTrigger className="w-[150px] bg-card">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name">Nombre</SelectItem>
+            <SelectItem value="sapCode">Cód. SAP</SelectItem>
+            <SelectItem value="sku">SKU</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="relative flex-1 max-w-md">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar producto por nombre o SKU…"
+            placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
             className="pl-9 bg-card"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
