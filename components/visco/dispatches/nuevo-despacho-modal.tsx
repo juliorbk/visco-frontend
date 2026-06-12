@@ -13,7 +13,6 @@ interface LineItem {
   productName: string
   sku: string
   quantity: number
-  exitUnitPrice: number
 }
 
 interface NuevoDespachoModalProps {
@@ -39,7 +38,6 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   const [searchResults, setSearchResults] = useState<ProductOnStock[]>([])
   const [loadingSearch, setLoadingSearch] = useState(false)
   const [pendingQtys, setPendingQtys] = useState<Record<number, string>>({})
-  const [pendingPrices, setPendingPrices] = useState<Record<number, string>>({})
 
   const reset = () => {
     setStep(1)
@@ -52,7 +50,6 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setDebouncedSearch("")
     setSearchResults([])
     setPendingQtys({})
-    setPendingPrices({})
     nextLineIdRef.current = 1
   }
 
@@ -121,17 +118,12 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
 
   const addLine = (product: ProductOnStock) => {
     const qty = Number(pendingQtys[product.id] ?? "1")
-    const price = Number(pendingPrices[product.id])
     if (qty <= 0) {
       toast.error("Cantidad debe ser mayor a cero")
       return
     }
     if (qty > product.currentStock) {
       toast.error(`Stock insuficiente. Disponible: ${product.currentStock}`)
-      return
-    }
-    if (!price || price <= 0) {
-      toast.error(`Ingresa un precio de salida para ${product.name}`)
       return
     }
     if (lines.some((l) => l.productId === product.id)) {
@@ -146,11 +138,9 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         productName: product.name,
         sku: product.sku,
         quantity: qty,
-        exitUnitPrice: price,
       },
     ])
     setPendingQtys((prev) => { const n = { ...prev }; delete n[product.id]; return n })
-    setPendingPrices((prev) => { const n = { ...prev }; delete n[product.id]; return n })
   }
 
   const handleSubmit = async () => {
@@ -164,7 +154,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     try {
       await createDispatch({
         warehouseId: selectedWarehouseId,
-        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, exitUnitPrice: l.exitUnitPrice })),
+        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
         notes,
         employeeId: employeeData!.id,
       })
@@ -262,7 +252,6 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 <div className="space-y-2">
                   {searchResults.map((p) => {
                     const qty = pendingQtys[p.id] ?? "1"
-                    const price = pendingPrices[p.id] ?? ""
                     return (
                       <div
                         key={p.id}
@@ -283,18 +272,6 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                             className="w-full px-2 py-1.5 border border-[#f3f4f6] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
                             min="1"
                             max={p.currentStock}
-                          />
-                        </div>
-                        <div className="w-28 shrink-0">
-                          <label className="block text-[10px] font-medium text-[#6b7280] mb-0.5">Precio Salida ($)</label>
-                          <input
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPendingPrices((prev) => ({ ...prev, [p.id]: e.target.value }))}
-                            className="w-full px-2 py-1.5 border border-[#f3f4f6] rounded text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30"
-                            min="0"
-                            step="0.01"
-                            placeholder="0.00"
                           />
                         </div>
                         <button
@@ -354,7 +331,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-[#111827] truncate">{l.productName}</div>
                             <div className="text-xs text-[#6b7280]">
-                              {l.sku} · Cant: {l.quantity} · Precio Salida: ${l.exitUnitPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.exitUnitPrice).toFixed(2)}
+                              {l.sku} · Cant: {l.quantity}
                             </div>
                           </div>
                           <button
@@ -410,7 +387,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <div className="space-y-1 mt-1">
                     {lines.map((l) => (
                       <p key={l.id} className="text-sm text-[#111827]">
-                        {l.productName} · Cant: {l.quantity} · Precio Salida: ${l.exitUnitPrice.toFixed(2)} · Subtotal: ${(l.quantity * l.exitUnitPrice).toFixed(2)}
+                        {l.productName} · Cant: {l.quantity}
                       </p>
                     ))}
                   </div>

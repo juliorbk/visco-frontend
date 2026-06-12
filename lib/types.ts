@@ -507,7 +507,6 @@ export interface CreateRequisitionRequest {
 export interface DispatchItemRequest {
   productId: number
   quantity: number
-  exitUnitPrice: number
 }
 
 export interface DispatchRequest {
@@ -522,7 +521,6 @@ export interface DispatchItemResponse {
   productName: string
   productSku: string
   quantity: number
-  exitUnitPrice: number | null
 }
 
 export interface DispatchResponse {
@@ -562,7 +560,6 @@ export interface InventoryMovementResponse {
   toWarehouseName: string | null
   quantity: number
   entryUnitPrice: number | null
-  exitUnitPrice: number | null
   stockBefore: number | null
   stockAfter: number | null
   reason: string | null
