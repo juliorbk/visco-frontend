@@ -69,13 +69,13 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   }, [searchQuery])
 
   useEffect(() => {
-    if (!selectedWarehouseId) {
+    if (!selectedWarehouseId || !debouncedSearch.trim()) {
       setSearchResults([])
       return
     }
     const controller = new AbortController()
     setLoadingSearch(true)
-    fetchProductsOnStock(selectedWarehouseId, debouncedSearch || undefined, 0, 9999, controller.signal)
+    fetchProductsOnStock(selectedWarehouseId, debouncedSearch, 0, 50, controller.signal)
       .then((res) => { if (!controller.signal.aborted) setSearchResults(res.content ?? []) })
       .catch(() => {})
       .finally(() => { if (!controller.signal.aborted) setLoadingSearch(false) })
@@ -248,6 +248,10 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <ArrowPathIcon className="w-4 h-4 animate-spin mr-2" />
                   Buscando productos...
                 </div>
+              )}
+
+              {!loadingSearch && !debouncedSearch && (
+                <div className="py-4 text-sm text-[#6b7280] text-center">Busca un producto para ver resultados</div>
               )}
 
               {!loadingSearch && debouncedSearch && searchResults.length === 0 && (
