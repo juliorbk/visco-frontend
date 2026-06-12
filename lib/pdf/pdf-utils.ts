@@ -74,6 +74,19 @@ export function translateOrderStatus(status: string): string {
   return map[status] ?? status
 }
 
+export function translateRequisitionStatus(status: string): string {
+  const map: Record<string, string> = {
+    DRAFT: "Borrador",
+    PENDING: "Pendiente",
+    AWAITING_APPROVAL: "Por Aprobar",
+    APPROVED: "Aprobada",
+    REJECTED: "Rechazada",
+    CANCELLED: "Cancelada",
+    CONVERTED: "Convertida a OC",
+  }
+  return map[status] ?? translateOrderStatus(status) ?? status
+}
+
 export function statusColor(status: string): [number, number, number] {
   const map: Record<string, [number, number, number]> = {
     PENDING: [234, 179, 8],
@@ -87,6 +100,8 @@ export function statusColor(status: string): [number, number, number] {
     CANCELLED: [107, 114, 128],
     WAITING_PAYMENT: [202, 138, 4],
     HELD_AT_CUSTOMS: [220, 38, 38],
+    DRAFT: [107, 114, 128],
+    CONVERTED: [37, 99, 235],
   }
   return map[status] ?? COLORS.textLight
 }

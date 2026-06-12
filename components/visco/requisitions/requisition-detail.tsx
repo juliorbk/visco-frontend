@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import type { RequisitionResponse, CostCenter } from "@/lib/types"
 import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { getCachedUser } from "@/lib/auth-client"
@@ -13,6 +14,7 @@ import {
   cancelRequisition,
   markRequisitionAsConverted,
 } from "@/lib/services/requisitions"
+import { downloadPDF } from "@/lib/pdf/download-pdf"
 import {
   ArrowPathIcon,
   PaperAirplaneIcon,
@@ -87,6 +89,13 @@ export function RequisitionDetail({
 
   const totalItems = requisition.items.length
 
+  const ccForPdf = (() => {
+    const cc = ccByArea?.get(requisition.areaName) ?? null
+    if (!cc) return null
+    const d = getCostCenterDisplay(cc)
+    return d.secondary ? `${d.primary} (${d.secondary})` : d.primary
+  })()
+
   return (
     <div className="rounded-xl border border-border bg-card shadow-xs">
       <div className="px-5 py-4 border-b border-border">
@@ -97,6 +106,22 @@ export function RequisitionDetail({
             </h3>
             <OrderStatusBadge status={requisition.status} />
           </div>
+          <ExportPDFButton
+            variant="icon"
+            label="Exportar Requisición"
+            onExport={async () => {
+              const { generateRequisitionPDF } = await import(
+                "@/lib/pdf/requisition-pdf"
+              )
+              const doc = await generateRequisitionPDF(requisition, ccForPdf)
+              downloadPDF(
+                doc,
+                `REQUISITION_${requisition.requisitionNumber}_${new Date()
+                  .toISOString()
+                  .split("T")[0]}.pdf`,
+              )
+            }}
+          />
         </div>
       </div>
 
