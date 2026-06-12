@@ -228,10 +228,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
     : null
 
   const columns = hasUnitPrices
-    ? ["CANT.", "PRODUCTO", "SKU", "UBICACION", "P/U", "TOTAL"]
+    ? ["CANT.", "PRODUCTO", "SKU", "UM", "UBICACION", "P/U", "TOTAL"]
     : summary
-      ? ["RECIBIDO", "PRODUCTO", "SKU", "UBICACION", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
-      : ["CANT.", "PRODUCTO", "SKU", "UBICACION", "ESPERADO", "DIF."]
+      ? ["RECIBIDO", "PRODUCTO", "SKU", "UM", "UBICACION", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
+      : ["CANT.", "PRODUCTO", "SKU", "UM", "UBICACION", "ESPERADO", "DIF."]
 
   const bodyRows = receipt.items.map((item) => {
     const sm = summaryMap?.get(item.productId)
@@ -241,6 +241,7 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
         String(item.receivedQuantity),
         item.productName,
         item.productSku,
+        item.uom ?? "—",
         item.locationCode ?? "—",
         item.unitPrice != null ? formatCurrency(item.unitPrice) : "—",
         item.totalPrice != null
@@ -257,6 +258,7 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
         String(item.receivedQuantity),
         item.productName,
         item.productSku,
+        sm.uom ?? "—",
         item.locationCode ?? "—",
         String(sm.orderedQuantity),
         String(Math.max(0, recibidoAntes)),
@@ -268,6 +270,7 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
       String(item.receivedQuantity),
       item.productName,
       item.productSku,
+      item.uom ?? "—",
       item.locationCode ?? "—",
       String(item.expectedQuantity),
       String(item.expectedQuantity - item.receivedQuantity),
@@ -275,10 +278,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
   })
 
   const colWidths = hasUnitPrices
-    ? [18, contentW - 18 - 28 - 22 - 22 - 22, 28, 22, 22, 22]
+    ? [18, contentW - 18 - 28 - 14 - 22 - 22 - 22, 28, 14, 22, 22, 22]
     : summary
-      ? [18, contentW - 18 - 28 - 22 - 22 - 22 - 22, 22, 22, 22, 22, 22]
-      : [18, contentW - 18 - 28 - 22 - 22 - 22, 28, 22, 22, 22]
+      ? [18, contentW - 18 - 28 - 14 - 22 - 22 - 22 - 22, 28, 14, 22, 22, 22, 22]
+      : [18, contentW - 18 - 28 - 14 - 22 - 22 - 22, 28, 14, 22, 22, 22]
 
   y = addTable(doc, x0, y, contentW, columns, bodyRows, colWidths)
   y += 6

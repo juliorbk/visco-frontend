@@ -226,6 +226,7 @@ export interface PurchaseOrderItemResponse {
   productId: number
   productName: string
   productSku: string
+  uom: string
   quantity: number
   unitPrice: number
   subtotal: number
@@ -279,6 +280,7 @@ export interface GoodReceiptItemResponse {
   productId: number
   productName: string
   productSku: string
+  uom: string
   expectedQuantity: number
   receivedQuantity: number
   difference: number
@@ -490,6 +492,7 @@ export interface RequisitionItemResponse {
   productId: number
   productName: string
   productSku: string
+  uom: string
   quantity: number
   notes: string | null
 }
@@ -520,6 +523,7 @@ export interface DispatchItemResponse {
   productId: number
   productName: string
   productSku: string
+  uom: string
   quantity: number
 }
 
@@ -585,6 +589,7 @@ export interface ItemSummary {
   productId: number
   productName: string
   productSku: string
+  uom: string
   orderedQuantity: number
   receivedQuantity: number
   pendingQuantity: number

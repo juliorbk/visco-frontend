@@ -245,17 +245,18 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
-  const colWidths = [12, contentW - 12 - 18 - 28 - 28, 18, 28, 28]
-  const head = ["#", "DESCRIPCION", "CANT", "P/UNIT", "TOTAL"]
+  const colWidths = [12, contentW - 12 - 18 - 14 - 28 - 28, 18, 14, 28, 28]
+  const head = ["#", "DESCRIPCION", "CANT", "UM", "P/UNIT", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
     `${item.productName}  ${item.productSku}`,
     String(item.quantity),
+    item.uom ?? "—",
     formatCurrency(item.unitPrice),
     formatCurrency(item.subtotal),
   ])
   const emptyCount = Math.max(0, 5 - order.items.length)
-  for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", ""])
+  for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", "", ""])
 
   y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
   y += 6
