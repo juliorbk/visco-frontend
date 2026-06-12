@@ -6,6 +6,13 @@ import { PageHeader } from "@/components/visco/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -37,16 +44,28 @@ import { cn } from "@/lib/utils"
 import { useDebounce } from "@/hooks/use-debounce"
 import { toast } from "sonner"
 
+type SearchField = "name" | "sapCode" | "sku"
+
+const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
+  name: "Buscar por nombre…",
+  sapCode: "Buscar por código SAP…",
+  sku: "Buscar por SKU…",
+}
+
 export default function InventoryPage() {
   const searchParams = useSearchParams()
-  const initialSearch = searchParams.get("search") ?? ""
+  const initialField: SearchField =
+    (searchParams.get("field") as SearchField) || "name"
+  const initialQuery =
+    searchParams.get(initialField) ?? searchParams.get("search") ?? ""
 
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [loading, setLoading] = useState(true)
 
   // Búsqueda con debounce
-  const [search, setSearch] = useState(initialSearch)
-  const debouncedSearch = useDebounce(search, 500)
+  const [searchField, setSearchField] = useState<SearchField>(initialField)
+  const [searchTerm, setSearchTerm] = useState(initialQuery)
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
   // Filtros y ordenamiento
   const [category, setCategory] = useState<string>("all")
@@ -80,7 +99,7 @@ export default function InventoryPage() {
   // Reinicia página al cambiar búsqueda
   useEffect(() => {
     setPage(0)
-  }, [debouncedSearch])
+  }, [debouncedSearchTerm])
 
   // Fetch unificado con AbortController:
   // - Cancela el request anterior si el usuario cambia filtros
@@ -97,16 +116,18 @@ export default function InventoryPage() {
         const apiSortBy = stockSort === "none" ? "" : "stock"
         const apiSortDir = stockSort === "none" ? "" : stockSort
 
-        const res = await fetchProducts(
-          page,
-          20,
-          debouncedSearch,
-          apiCategory,
-          apiSortBy,
-          apiSortDir,
-          hasStockOnly,
-          controller.signal
-        )
+        const trimmed = debouncedSearchTerm.trim()
+        const filters: Parameters<typeof fetchProducts>[2] = {
+          category: apiCategory,
+          sortBy: apiSortBy,
+          sortDir: apiSortDir,
+          hasStock: hasStockOnly,
+        }
+        if (trimmed) {
+          filters[searchField] = trimmed
+        }
+
+        const res = await fetchProducts(page, 20, filters, controller.signal)
 
         if (!controller.signal.aborted) {
           setProducts(res.content ?? [])
@@ -128,7 +149,7 @@ export default function InventoryPage() {
 
     fetchData()
     return () => controller.abort()
-  }, [page, debouncedSearch, category, stockSort, hasStockOnly, refreshTick])
+  }, [page, debouncedSearchTerm, searchField, category, stockSort, hasStockOnly, refreshTick])
 
   const mainCategories = useMemo(
     () => categories.filter((c) => c.parentId === null),
@@ -300,14 +321,32 @@ export default function InventoryPage() {
       />
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre o SKU…"
-            className="pl-9 bg-card"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex gap-2 max-w-xl flex-1">
+          <Select
+            value={searchField}
+            onValueChange={(v) => {
+              setSearchField(v as SearchField)
+              setPage(0)
+            }}
+          >
+            <SelectTrigger className="w-[150px] bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Nombre</SelectItem>
+              <SelectItem value="sapCode">Cód. SAP</SelectItem>
+              <SelectItem value="sku">SKU</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input
+              placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+              className="pl-9 bg-card"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

@@ -105,7 +105,7 @@ export function CreatePOModal({
       fetchSuppliers(0, 200).then((supRes) => {
         setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
       }),
-      fetchProducts(0, 9999, "", undefined, undefined, undefined, undefined).then((prodRes) => {
+      fetchProducts(0, 9999, {}).then((prodRes) => {
         setProducts(prodRes.content ?? [])
       }),
       fetchWarehouses().then((wh) => {
@@ -182,7 +182,7 @@ export function CreatePOModal({
     const fetchData = async () => {
       setLoadingProducts(true)
       try {
-        const res = await fetchProducts(0, 9999, debouncedFinderQuery || undefined, undefined, undefined, undefined, undefined, controller.signal)
+        const res = await fetchProducts(0, 9999, { name: debouncedFinderQuery || undefined }, controller.signal)
         if (!controller.signal.aborted) {
           setProducts(res.content ?? [])
         }

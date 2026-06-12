@@ -50,7 +50,7 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     e.preventDefault()
     const q = search.trim()
     if (!q) return
-    router.push(`/inventory?search=${encodeURIComponent(q)}`)
+    router.push(`/inventory?field=name&name=${encodeURIComponent(q)}`)
     setSearch("")
   }
 

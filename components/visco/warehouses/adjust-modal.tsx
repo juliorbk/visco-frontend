@@ -58,7 +58,7 @@ export function AdjustModal({
       setLoadingData(true)
       Promise.all([
         fetchWarehouses(),
-        fetchProducts(0, 9999, undefined, undefined, undefined, undefined, true).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
+        fetchProducts(0, 9999, { hasStock: true }).then((r) => (r.content ?? []).filter((p) => p.totalStock > 0)),
       ])
         .then(([wh, prod]) => {
           setWarehouses(wh)

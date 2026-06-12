@@ -1,14 +1,20 @@
 import { api } from "@/lib/api"
 import type { ProductDTO, Page } from "@/lib/types"
 
+export interface ProductFilters {
+  name?: string
+  sapCode?: string
+  sku?: string
+  category?: string
+  sortBy?: string
+  sortDir?: string
+  hasStock?: boolean
+}
+
 export async function fetchProducts(
   page = 0,
   size = 20,
-  search?: string,
-  category?: string,
-  sortBy?: string,
-  sortDir?: string,
-  hasStock?: boolean,
+  filters: ProductFilters = {},
   signal?: AbortSignal
 ): Promise<Page<ProductDTO>> {
   const params = new URLSearchParams({
@@ -16,13 +22,16 @@ export async function fetchProducts(
     size: size.toString(),
   })
 
-  if (search) params.append("search", search)
-  if (category && category !== "all") params.append("category", category)
-  if (sortBy && sortBy !== "none") {
-    params.append("sortBy", sortBy)
-    if (sortDir) params.append("sortDir", sortDir)
+  if (filters.name) params.append("name", filters.name)
+  if (filters.sapCode) params.append("sapCode", filters.sapCode)
+  if (filters.sku) params.append("sku", filters.sku)
+  if (filters.category && filters.category !== "all")
+    params.append("category", filters.category)
+  if (filters.sortBy && filters.sortBy !== "none") {
+    params.append("sortBy", filters.sortBy)
+    if (filters.sortDir) params.append("sortDir", filters.sortDir)
   }
-  if (hasStock) params.append("hasStock", "true")
+  if (filters.hasStock) params.append("hasStock", "true")
 
   return api.get<Page<ProductDTO>>(
     `/api/inventory/products?${params.toString()}`,
