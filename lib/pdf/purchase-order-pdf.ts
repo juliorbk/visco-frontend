@@ -260,7 +260,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     } else if (ln.kind === "value") {
       doc.setFont("helvetica", "normal")
       doc.setFontSize(8)
-      doc.setTextColor(...COLORS.text)
+      doc.setTextColor(...COLORS.white)
       doc.text(ln.value ?? "", x1 + PAD, by)
       by += 4
     } else {
