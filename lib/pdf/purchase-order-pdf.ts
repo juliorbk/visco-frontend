@@ -243,7 +243,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.roundedRect(x1, y, boxW, shipH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(8)
-  doc.setTextColor(...COLORS.primary)
+  doc.setTextColor(...COLORS.white)
   doc.text("ENVIAR A", x1 + PAD, y + HEADER_H - 2)
   doc.setDrawColor(...COLORS.primary)
   doc.setLineWidth(0.4)
@@ -254,7 +254,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     if (ln.kind === "label") {
       doc.setFont("helvetica", "bold")
       doc.setFontSize(7)
-      doc.setTextColor(...COLORS.textMuted)
+      doc.setTextColor(...COLORS.white)
       doc.text(ln.text, x1 + PAD, by)
       by += 3.5
     } else if (ln.kind === "value") {
@@ -266,7 +266,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     } else {
       doc.setFont("helvetica", ln.kind === "name" ? "bold" : "normal")
       doc.setFontSize(ln.kind === "name" ? 9 : 8)
-      doc.setTextColor(...COLORS.text)
+      doc.setTextColor(...COLORS.white)
       by += addWrappedText(doc, ln.text, x1 + PAD, by, boxW - PAD * 2,
         ln.kind === "name" ? 5 : 4)
       by += 1
