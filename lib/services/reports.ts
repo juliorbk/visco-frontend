@@ -44,6 +44,57 @@ export function getReportDownloadUrl(id: number): string {
   return `${process.env.NEXT_PUBLIC_API_URL}/api/reports/${id}/download`
 }
 
+function inferReportExtension(format?: string, contentType?: string): string {
+  const fmt = (format ?? "").toUpperCase()
+  const ct = (contentType ?? "").toLowerCase()
+  if (fmt === "PDF" || ct.includes("pdf")) return "pdf"
+  if (
+    fmt === "EXCEL" ||
+    ct.includes("spreadsheet") ||
+    ct.includes("excel") ||
+    ct.includes("openxmlformats-officedocument")
+  ) {
+    return "xlsx"
+  }
+  if (fmt === "JSON" || ct.includes("json")) return "json"
+  if (ct.includes("csv")) return "csv"
+  return "bin"
+}
+
+export async function downloadReport(
+  id: number,
+  reportName?: string,
+  format?: string,
+): Promise<void> {
+  const url = getReportDownloadUrl(id)
+  const res = await fetch(url, { credentials: "include" })
+  if (!res.ok) {
+    let message = "Error al descargar reporte"
+    try {
+      const err = await res.json()
+      if (err?.error) message = String(err.error)
+      else if (err?.detail) message = String(err.detail)
+    } catch {}
+    throw new Error(message)
+  }
+
+  const blob = await res.blob()
+  const contentType = res.headers.get("Content-Type") ?? ""
+  const ext = inferReportExtension(format, contentType)
+  const safeName = (reportName ?? `reporte-${id}`).replace(/[^a-zA-Z0-9-_]+/g, "_")
+  const datePart = new Date().toISOString().split("T")[0]
+  const filename = `${safeName}-${datePart}.${ext}`
+
+  const downloadUrl = window.URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = downloadUrl
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(downloadUrl)
+}
+
 export async function fetchReportTemplates(): Promise<{ type: string; displayName: string }[]> {
   return api.get<{ type: string; displayName: string }[]>("/api/reports/templates")
 }

@@ -80,6 +80,7 @@ export function CreatePOModal({
   const [pickPrice, setPickPrice] = useState("0")
   const [destinationWarehouseId, setDestinationWarehouseId] = useState<number | null>(null)
   const [leadTime, setLeadTime] = useState("")
+  const [shipConditions, setShipConditions] = useState("")
   const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
   const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
@@ -214,6 +215,7 @@ export function CreatePOModal({
     setFinderQuery("")
     setFinderOpen(false)
     setSelectedRequisitionId(null)
+    setShipConditions("")
     nextLineIdRef.current = 1
   }
 
@@ -326,6 +328,7 @@ export function CreatePOModal({
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
       }
       if (leadTime) body.leadTime = Number(leadTime)
+      if (shipConditions.trim()) body.shipConditions = shipConditions.trim()
       if (prefillFromRequisition) {
         body.requisitionId = prefillFromRequisition.id
       } else if (selectedRequisitionId) {
@@ -476,6 +479,16 @@ export function CreatePOModal({
             <div className="space-y-1.5">
               <Label htmlFor="lt">Tiempo de Entrega (dias) *</Label>
               <Input id="lt" type="number" min="0" placeholder="Obligatorio" value={leadTime} onChange={(e) => setLeadTime(e.target.value)} />
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label htmlFor="ship-cond">Condiciones de Envío</Label>
+              <Textarea
+                id="ship-cond"
+                rows={2}
+                value={shipConditions}
+                onChange={(e) => setShipConditions(e.target.value)}
+                placeholder="Ej: FOB Puerto Cabello, entrega en horario laboral, empaque en cajas originales…"
+              />
             </div>
             <div className="sm:col-span-2 space-y-1.5">
               <Label>Requisición (opcional)</Label>
@@ -733,6 +746,7 @@ export function CreatePOModal({
             <ReviewRow label="Método de pago" value={paymentMethod} />
             <ReviewRow label="Tipo" value={type} />
             <ReviewRow label="Tiempo de Entrega" value={leadTime ? `${leadTime} dias` : "-"} />
+            <ReviewRow label="Condiciones de Envío" value={shipConditions.trim() || "-"} />
             <ReviewRow label="Artículos" value={`${lines.length}`} />
             <ReviewRow label="Total" value={`$${total.toLocaleString()}`} bold />
             <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">

@@ -164,7 +164,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 52
+  const boxH = 58
 
   // Supplier box
   doc.setDrawColor(...COLORS.border)
@@ -197,23 +197,44 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   by = y + 15
   by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 5, 2)
   by += 1
-  if (warehouseAddress !== "—") {
+  if (warehouseAddress && warehouseAddress !== "—") {
     by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
-    by += 1
+    by += 1.5
   }
+
   doc.setFontSize(7.5)
   doc.setTextColor(...COLORS.textMuted)
-  const sapText = warehouse?.sapCenterCode ? `SAP: ${warehouse.sapCenterCode}` : ""
-  const respText = warehouse?.responsibleUserName ? `Resp: ${warehouse.responsibleUserName}` : ""
-  const extraInfo = [sapText, respText].filter(Boolean).join("  |  ")
-  if (extraInfo) {
-    by += addWrappedText(doc, extraInfo, x1 + 4, by, boxW - 8, 4, 1)
+  doc.setFont("helvetica", "bold")
+  doc.text("CONTACTO", x1 + 4, by)
+  by += 4
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(...COLORS.text)
+  if (warehouse?.responsibleUserName) {
+    by += addWrappedText(doc, warehouse.responsibleUserName, x1 + 4, by, boxW - 8, 4, 1)
+    by += 0.5
+  }
+  if (warehouse?.responsibleUserEmail) {
+    by += addWrappedText(doc, warehouse.responsibleUserEmail, x1 + 4, by, boxW - 8, 4, 1)
     by += 1
   }
-  doc.setFontSize(8.5)
-  doc.setTextColor(...COLORS.text)
+  if (warehouse?.sapCenterCode) {
+    doc.setTextColor(...COLORS.textMuted)
+    doc.setFont("helvetica", "bold")
+    doc.text("SAP", x1 + 4, by)
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...COLORS.text)
+    doc.text(warehouse.sapCenterCode, x1 + 4 + 18, by)
+    by += 4
+  }
+
   if (warehouse?.description) {
-    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4.5, 2)
+    doc.setTextColor(...COLORS.textMuted)
+    doc.setFont("helvetica", "bold")
+    doc.text("NOTAS", x1 + 4, by)
+    by += 4
+    doc.setFont("helvetica", "normal")
+    doc.setTextColor(...COLORS.text)
+    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4, 3)
   }
 
   y += boxH + 6
@@ -223,7 +244,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     ["COMPRADOR", order.createdBy],
     ["TIEMPO ENTREGA", order.leadTime ? `${order.leadTime} dias` : "—"],
     ["F.O.B.", "—"],
-    ["COND. ENVIO", order.paymentTerms ?? "—"],
+    ["COND. ENVIO", order.shipConditions ?? "—"],
   ]
   const colW = contentW / 4
   terms.forEach(([title, value], i) => {

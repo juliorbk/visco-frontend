@@ -1,9 +1,10 @@
 "use client"
 
-import { CubeIcon, MapPinIcon, UserIcon, DocumentTextIcon } from "@heroicons/react/24/outline"
+import { CubeIcon, MapPinIcon, UserIcon, DocumentTextIcon, PencilSquareIcon } from "@heroicons/react/24/outline"
 import type { WarehouseDetailResponse } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { LocationManager } from "./location-manager"
 
 export function WarehouseDetailSkeleton() {
@@ -23,8 +24,10 @@ export function WarehouseDetailSkeleton() {
 
 export function WarehouseDetail({
   warehouse,
+  onEdit,
 }: {
   warehouse: WarehouseDetailResponse | null
+  onEdit?: () => void
 }) {
   if (!warehouse) {
     return (
@@ -37,9 +40,22 @@ export function WarehouseDetail({
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <CubeIcon className="size-4 text-[#7b1a1a]" />
-          <h3 className="font-serif font-semibold text-lg">{warehouse.name}</h3>
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <CubeIcon className="size-4 text-[#7b1a1a] shrink-0" />
+            <h3 className="font-serif font-semibold text-lg truncate">{warehouse.name}</h3>
+          </div>
+          {onEdit && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={onEdit}
+              className="h-7 px-2 text-muted-foreground hover:text-foreground"
+              aria-label="Editar almacén"
+            >
+              <PencilSquareIcon className="size-4" />
+            </Button>
+          )}
         </div>
         <Badge variant="secondary" className="text-xs font-mono">
           SAP: {warehouse.sapCenterCode}

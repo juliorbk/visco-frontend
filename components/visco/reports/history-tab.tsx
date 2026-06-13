@@ -41,7 +41,7 @@ import {
 import {
   fetchReports,
   deleteReport,
-  getReportDownloadUrl,
+  downloadReport,
 } from "@/lib/services/reports"
 import type { ReportDTO } from "@/lib/types"
 import { REPORT_TYPE_LABELS, REPORT_STATUS_COLORS } from "@/lib/types"
@@ -86,8 +86,18 @@ export default function ReportHistoryTab({ refreshTrigger }: { refreshTrigger: n
     }
   }
 
-  const handleDownload = (id: number) => {
-    window.open(getReportDownloadUrl(id), "_blank")
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
+
+  const handleDownload = async (id: number, name: string, format: string) => {
+    setDownloadingId(id)
+    try {
+      await downloadReport(id, name, format)
+      toast.success("Descarga iniciada")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error al descargar reporte")
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   return (
@@ -175,8 +185,16 @@ export default function ReportHistoryTab({ refreshTrigger }: { refreshTrigger: n
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {r.status === "COMPLETED" && (
-                            <DropdownMenuItem onClick={() => handleDownload(r.id)}>
-                              <ArrowDownTrayIcon className="size-4 mr-2" /> Descargar
+                            <DropdownMenuItem
+                              onClick={() => handleDownload(r.id, r.name, r.format)}
+                              disabled={downloadingId === r.id}
+                            >
+                              {downloadingId === r.id ? (
+                                <ArrowPathIcon className="size-4 mr-2 animate-spin" />
+                              ) : (
+                                <ArrowDownTrayIcon className="size-4 mr-2" />
+                              )}
+                              Descargar
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem

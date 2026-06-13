@@ -10,6 +10,7 @@ import { MovementsTable } from "@/components/visco/warehouses/movements-table"
 import { WarehouseInventoryTable } from "@/components/visco/warehouses/warehouse-inventory"
 import { TransferModal } from "@/components/visco/warehouses/transfer-modal"
 import { AdjustModal } from "@/components/visco/warehouses/adjust-modal"
+import { EditWarehouseModal } from "@/components/visco/warehouses/edit-warehouse-modal"
 import { CreateWarehouseModal } from "@/components/visco/inbounds/create-warehouse-modal"
 import { fetchStockSummary, fetchWarehouses, fetchWarehouseById, fetchMovements } from "@/lib/services/warehouse"
 import type { WarehouseResponse, WarehouseStockSummary, WarehouseDetailResponse, InventoryMovementResponse } from "@/lib/types"
@@ -28,6 +29,7 @@ export default function WarehousesPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [transferModalOpen, setTransferModalOpen] = useState(false)
   const [adjustModalOpen, setAdjustModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   const { data: summaryData, isLoading: loadingSummary, error: summaryError, refetch: refetchSummary } = useQuery(
     async (_signal) => {
@@ -69,7 +71,7 @@ export default function WarehousesPage() {
     return {
       ...detail,
       totalStock: detail.totalStock ?? summary?.totalStock ?? 0,
-      totalProducts: detail.totalProducts ?? 0,
+      totalProducts: detail.totalProducts ?? summary?.productCount ?? 0,
     } as WarehouseDetailResponse
   }, [detail, stockSummary, selectedWhId])
 
@@ -178,7 +180,10 @@ export default function WarehousesPage() {
 
             <div className="lg:col-span-1">
               {loadingDetail ? <WarehouseDetailSkeleton /> : (
-                <WarehouseDetail warehouse={warehouseDetail} />
+                <WarehouseDetail
+                  warehouse={warehouseDetail}
+                  onEdit={() => setEditModalOpen(true)}
+                />
               )}
             </div>
           </div>
@@ -228,6 +233,13 @@ export default function WarehousesPage() {
         open={adjustModalOpen}
         onOpenChange={setAdjustModalOpen}
         onDone={() => { refetchSummary(); refetchMovements() }}
+      />
+
+      <EditWarehouseModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        warehouse={warehouseDetail}
+        onUpdated={() => { refetchSummary(); refetchDetail() }}
       />
     </div>
   )

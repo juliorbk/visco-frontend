@@ -73,11 +73,38 @@ export function OrderDetail({
         {order.requisitionNumber && (
           <Stat label="Requisicion" value={order.requisitionNumber} />
         )}
-        <Stat label="Almacen destino" value={
-          order.destinationWarehouse
-            ? `${order.destinationWarehouse.name} — ${order.destinationWarehouse.physicalAddress}${order.destinationWarehouse.sapCenterCode ? ` · SAP: ${order.destinationWarehouse.sapCenterCode}` : ""}${order.destinationWarehouse.responsibleUserName ? ` · Resp: ${order.destinationWarehouse.responsibleUserName}` : ""}${order.destinationWarehouse.description ? ` · ${order.destinationWarehouse.description}` : ""}`
-            : order.destinationWarehouseName ?? "-"
-        } className="sm:col-span-2" />
+        <div className="sm:col-span-2 rounded-md border border-border bg-[#fafafa] px-3 py-2.5">
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+            Almacén destino (Enviar a)
+          </div>
+          {order.destinationWarehouse ? (
+            <div className="mt-1.5 space-y-1 text-sm">
+              <div className="font-medium text-foreground">{order.destinationWarehouse.name}</div>
+              {order.destinationWarehouse.physicalAddress && (
+                <div className="text-muted-foreground">{order.destinationWarehouse.physicalAddress}</div>
+              )}
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                {order.destinationWarehouse.sapCenterCode && (
+                  <span>SAP: <span className="text-foreground font-medium">{order.destinationWarehouse.sapCenterCode}</span></span>
+                )}
+                {order.destinationWarehouse.responsibleUserName && (
+                  <span>Resp: <span className="text-foreground font-medium">{order.destinationWarehouse.responsibleUserName}</span></span>
+                )}
+              </div>
+              {order.destinationWarehouse.responsibleUserEmail && (
+                <div className="text-xs text-muted-foreground">{order.destinationWarehouse.responsibleUserEmail}</div>
+              )}
+              {order.destinationWarehouse.description && (
+                <div className="text-xs text-muted-foreground italic">{order.destinationWarehouse.description}</div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-1 text-sm text-muted-foreground">{order.destinationWarehouseName ?? "—"}</div>
+          )}
+        </div>
+        {order.shipConditions && (
+          <Stat label="Condiciones de Envío" value={order.shipConditions} className="sm:col-span-2" />
+        )}
       </div>
 
       {/* ── Items ── */}

@@ -201,7 +201,7 @@ export interface PurchaseOrderResponse {
   destinationWarehouseName: string | null
   leadTime: number | null
   subtotal?: number | null
-  paymentTerms?: string | null
+  shipConditions?: string | null
   specialConditions?: string | null
   taxAmount?: number | null
   shippingCost?: number | null
@@ -218,6 +218,7 @@ export interface PurchaseOrderResponse {
     description: string
     sapCenterCode?: string
     responsibleUserName?: string
+    responsibleUserEmail?: string
   } | null
   items: PurchaseOrderItemResponse[]
 }
@@ -242,6 +243,7 @@ export interface CreatePurchaseOrderRequest {
   createdById: string
   requisitionId?: number
   leadTime?: number | null
+  shipConditions?: string | null
   items: { productId: number; quantity: number; unitPrice: number }[]
 }
 
@@ -271,6 +273,7 @@ export interface GoodReceiptResponse {
       description: string
       sapCenterCode?: string
       responsibleUserName?: string
+      responsibleUserEmail?: string
     }
     createdAt: string
   } | null
@@ -545,6 +548,7 @@ export interface DispatchResponse {
     description?: string
     sapCenterCode?: string
     responsibleUserName?: string
+    responsibleUserEmail?: string
   } | null
 }
 

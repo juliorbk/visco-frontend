@@ -168,19 +168,29 @@ export async function generateRequisitionPDF(
 
   const x1 = x0 + boxW + 6
   doc.roundedRect(x1, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x1, y, boxW, "DESCRIPCIÓN")
+  addSectionTitle(doc, x1, y, boxW, "SOLICITANTE")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
   by = y + 15
-  if (req.description) {
-    by += addWrappedText(doc, req.description, x1 + 4, by, boxW - 8, 4.5, 3)
-  } else {
-    doc.setTextColor(...COLORS.textMuted)
-    doc.text("Sin descripción", x1 + 4, by)
-  }
+  by += addWrappedText(doc, req.requestedBy || "—", x1 + 4, by, boxW - 8, 4.5, 3)
 
   y += boxH + 8
+
+  if (req.description) {
+    const descLines = doc.splitTextToSize(req.description, contentW - 8)
+    const lineH = 4.5
+    const descH = Math.max(18, 10 + descLines.length * lineH + 4)
+    doc.setDrawColor(...COLORS.border)
+    doc.setFillColor(...COLORS.bgLight)
+    doc.roundedRect(x0, y, contentW, descH, 2, 2, "FD")
+    addSectionTitle(doc, x0, y, contentW, "DESCRIPCIÓN")
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.setTextColor(...COLORS.text)
+    doc.text(descLines, x0 + 4, y + 15)
+    y += descH + 8
+  }
 
   if (req.rejectionReason || req.approvalNotes || req.approvedBy) {
     const sectionLabel = req.rejectionReason
