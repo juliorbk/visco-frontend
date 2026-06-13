@@ -219,7 +219,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   }
   if (warehouse?.sapCenterCode) {
     shipLines.push({ kind: "label", text: "SAP" })
-    shipLines.push({ kind: "value", text: "", value: warehouse.sapCenterCode })
+    // FIX: Parse a String para que jsPDF pueda dibujarlo si viene como un número
+    shipLines.push({ kind: "value", text: "", value: String(warehouse.sapCenterCode) })
   }
   if (warehouse?.description) {
     shipLines.push({ kind: "label", text: "NOTAS" })
@@ -243,7 +244,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.roundedRect(x1, y, boxW, shipH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(8)
-  doc.setTextColor(...COLORS.white)
+  // FIX: Ajuste de colores para la caja "ENVIAR A"
+  doc.setTextColor(...COLORS.primary)
   doc.text("ENVIAR A", x1 + PAD, y + HEADER_H - 2)
   doc.setDrawColor(...COLORS.primary)
   doc.setLineWidth(0.4)
@@ -254,19 +256,19 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     if (ln.kind === "label") {
       doc.setFont("helvetica", "bold")
       doc.setFontSize(7)
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.textMuted) // Color atenuado para labels
       doc.text(ln.text, x1 + PAD, by)
       by += 3.5
     } else if (ln.kind === "value") {
       doc.setFont("helvetica", "normal")
       doc.setFontSize(8)
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.text) // Color de texto normal
       doc.text(ln.value ?? "", x1 + PAD, by)
       by += 4
     } else {
       doc.setFont("helvetica", ln.kind === "name" ? "bold" : "normal")
       doc.setFontSize(ln.kind === "name" ? 9 : 8)
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.text) // Color de texto normal
       by += addWrappedText(doc, ln.text, x1 + PAD, by, boxW - PAD * 2,
         ln.kind === "name" ? 5 : 4)
       by += 1
