@@ -164,80 +164,116 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
-  const boxH = 58
+  const HEADER_H = 8
+  const PAD = 4
 
   // Supplier box
+  const supplierLines: string[] = []
+  supplierLines.push(supplier?.name ?? order.supplierName)
+  if (supplier?.address) supplierLines.push(supplier.address)
+  if (supplier?.email) supplierLines.push(supplier.email)
+  if (supplier?.phoneNumbers?.length) supplierLines.push("Tel: " + supplier.phoneNumbers.join(", "))
+
+  let supplierH = HEADER_H + 4
+  for (const line of supplierLines) {
+    const wrapped = doc.splitTextToSize(line, boxW - PAD * 2)
+    supplierH += wrapped.length * 4.5 + 1.5
+  }
+  supplierH = Math.max(supplierH, 40)
+
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
-  doc.roundedRect(x0, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x0, y, boxW, "PROVEEDOR")
+  doc.roundedRect(x0, y, boxW, supplierH, 2, 2, "FD")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.primary)
+  doc.text("PROVEEDOR", x0 + PAD, y + HEADER_H - 2)
+  doc.setDrawColor(...COLORS.primary)
+  doc.setLineWidth(0.4)
+  doc.line(x0 + PAD, y + HEADER_H + 0.5, x0 + boxW - PAD, y + HEADER_H + 0.5)
+
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  let by = y + 15
-  by += addWrappedText(doc, supplier?.name ?? order.supplierName, x0 + 4, by, boxW - 8, 4.5, 2)
-  by += 1.5
-  by += addWrappedText(doc, supplier?.address ?? "—", x0 + 4, by, boxW - 8, 4.5, 2)
-  by += 1.5
-  if (supplier?.email) {
-    by += addWrappedText(doc, supplier.email, x0 + 4, by, boxW - 8, 4.5, 1)
+  let by = y + HEADER_H + 5
+  for (const line of supplierLines) {
+    by += addWrappedText(doc, line, x0 + PAD, by, boxW - PAD * 2, 4.5)
     by += 1.5
-  }
-  if (supplier?.phoneNumbers?.length) {
-    addWrappedText(doc, "Tel: " + supplier.phoneNumbers.join(", "), x0 + 4, by, boxW - 8, 4.5, 1)
   }
 
   // Ship To box
   const x1 = x0 + boxW + 6
-  doc.roundedRect(x1, y, boxW, boxH, 2, 2, "FD")
-  addSectionTitle(doc, x1, y, boxW, "ENVIAR A")
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
-  by = y + 15
-  by += addWrappedText(doc, warehouseName, x1 + 4, by, boxW - 8, 5, 2)
-  by += 1
+  const shipLines: { kind: "name" | "text" | "label" | "value"; text: string; value?: string }[] = []
+  shipLines.push({ kind: "name", text: warehouseName })
   if (warehouseAddress && warehouseAddress !== "—") {
-    by += addWrappedText(doc, warehouseAddress, x1 + 4, by, boxW - 8, 4.5, 2)
-    by += 1.5
+    shipLines.push({ kind: "text", text: warehouseAddress })
   }
-
-  doc.setFontSize(7.5)
-  doc.setTextColor(...COLORS.textMuted)
-  doc.setFont("helvetica", "bold")
-  doc.text("CONTACTO", x1 + 4, by)
-  by += 4
-  doc.setFont("helvetica", "normal")
-  doc.setTextColor(...COLORS.text)
-  if (warehouse?.responsibleUserName) {
-    by += addWrappedText(doc, warehouse.responsibleUserName, x1 + 4, by, boxW - 8, 4, 1)
-    by += 0.5
-  }
-  if (warehouse?.responsibleUserEmail) {
-    by += addWrappedText(doc, warehouse.responsibleUserEmail, x1 + 4, by, boxW - 8, 4, 1)
-    by += 1
+  if (warehouse?.responsibleUserName || warehouse?.responsibleUserEmail) {
+    shipLines.push({ kind: "label", text: "CONTACTO" })
+    if (warehouse?.responsibleUserName) {
+      shipLines.push({ kind: "text", text: warehouse.responsibleUserName })
+    }
+    if (warehouse?.responsibleUserEmail) {
+      shipLines.push({ kind: "text", text: warehouse.responsibleUserEmail })
+    }
   }
   if (warehouse?.sapCenterCode) {
-    doc.setTextColor(...COLORS.textMuted)
-    doc.setFont("helvetica", "bold")
-    doc.text("SAP", x1 + 4, by)
-    doc.setFont("helvetica", "normal")
-    doc.setTextColor(...COLORS.text)
-    doc.text(warehouse.sapCenterCode, x1 + 4 + 18, by)
-    by += 4
+    shipLines.push({ kind: "label", text: "SAP" })
+    shipLines.push({ kind: "value", text: "", value: warehouse.sapCenterCode })
   }
-
   if (warehouse?.description) {
-    doc.setTextColor(...COLORS.textMuted)
-    doc.setFont("helvetica", "bold")
-    doc.text("NOTAS", x1 + 4, by)
-    by += 4
-    doc.setFont("helvetica", "normal")
-    doc.setTextColor(...COLORS.text)
-    addWrappedText(doc, warehouse.description, x1 + 4, by, boxW - 8, 4, 3)
+    shipLines.push({ kind: "label", text: "NOTAS" })
+    shipLines.push({ kind: "text", text: warehouse.description })
   }
 
-  y += boxH + 6
+  let shipH = HEADER_H + 4
+  for (const ln of shipLines) {
+    if (ln.kind === "label") {
+      shipH += 4
+    } else if (ln.kind === "value") {
+      shipH += 4
+    } else {
+      const wrapped = doc.splitTextToSize(ln.text, boxW - PAD * 2)
+      const lineH = ln.kind === "name" ? 5 : 4
+      shipH += wrapped.length * lineH + 1
+    }
+  }
+  shipH = Math.max(shipH, 40)
+
+  doc.roundedRect(x1, y, boxW, shipH, 2, 2, "FD")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(8)
+  doc.setTextColor(...COLORS.primary)
+  doc.text("ENVIAR A", x1 + PAD, y + HEADER_H - 2)
+  doc.setDrawColor(...COLORS.primary)
+  doc.setLineWidth(0.4)
+  doc.line(x1 + PAD, y + HEADER_H + 0.5, x1 + boxW - PAD, y + HEADER_H + 0.5)
+
+  by = y + HEADER_H + 5
+  for (const ln of shipLines) {
+    if (ln.kind === "label") {
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(7)
+      doc.setTextColor(...COLORS.textMuted)
+      doc.text(ln.text, x1 + PAD, by)
+      by += 3.5
+    } else if (ln.kind === "value") {
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(8)
+      doc.setTextColor(...COLORS.text)
+      doc.text(ln.value ?? "", x1 + PAD, by)
+      by += 4
+    } else {
+      doc.setFont("helvetica", ln.kind === "name" ? "bold" : "normal")
+      doc.setFontSize(ln.kind === "name" ? 9 : 8)
+      doc.setTextColor(...COLORS.text)
+      by += addWrappedText(doc, ln.text, x1 + PAD, by, boxW - PAD * 2,
+        ln.kind === "name" ? 5 : 4)
+      by += 1
+    }
+  }
+
+  y += Math.max(supplierH, shipH) + 6
 
   // ─ Terms Row ──
   const terms = [
