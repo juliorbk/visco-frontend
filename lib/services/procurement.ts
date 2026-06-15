@@ -1,8 +1,25 @@
 import { api } from "@/lib/api"
-import type { PurchaseOrderResponse, CreatePurchaseOrderRequest, Page } from "@/lib/types"
+import type {
+  PurchaseOrderResponse,
+  CreatePurchaseOrderRequest,
+  ProductPurchaseOrderSummary,
+  Page,
+} from "@/lib/types"
 
 export async function fetchOrders(page = 0, size = 50, signal?: AbortSignal): Promise<Page<PurchaseOrderResponse>> {
   return api.get<Page<PurchaseOrderResponse>>(`/api/procurement/orders?page=${page}&size=${size}`, signal)
+}
+
+export async function fetchOrdersByProduct(
+  productId: number,
+  page = 0,
+  size = 10,
+  signal?: AbortSignal
+): Promise<Page<ProductPurchaseOrderSummary>> {
+  return api.get<Page<ProductPurchaseOrderSummary>>(
+    `/api/procurement/orders/by-product/${productId}?page=${page}&size=${size}`,
+    signal
+  )
 }
 
 export async function fetchOrder(id: number, signal?: AbortSignal): Promise<PurchaseOrderResponse> {

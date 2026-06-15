@@ -8,8 +8,9 @@ import type { ProductDTO } from "@/lib/types"
 import { InventoryStatusBadge } from "@/components/visco/status-badge"
 import { StockActionModal } from "@/components/visco/inventory/stock-action-modal"
 import { ProductMovementsHistory } from "@/components/visco/inventory/product-movements-history"
+import { ProductPurchaseOrders } from "@/components/visco/inventory/product-purchase-orders"
 import { ProductStockBreakdownView } from "@/components/visco/warehouses/product-stock-breakdown"
-import { PhotoIcon, PencilIcon, ShoppingCartIcon, ArrowsRightLeftIcon, EqualsIcon, ArrowPathIcon, ClockIcon } from "@heroicons/react/24/outline"
+import { PhotoIcon, PencilIcon, ShoppingCartIcon, ArrowsRightLeftIcon, EqualsIcon, ArrowPathIcon, ClockIcon, DocumentTextIcon } from "@heroicons/react/24/outline"
 
 export function ItemDetailPanel({
   product,
@@ -61,6 +62,9 @@ export function ItemDetailPanel({
             <Tabs defaultValue="info">
               <TabsList className="w-full">
                 <TabsTrigger value="info" className="flex-1">Info</TabsTrigger>
+                <TabsTrigger value="orders" className="flex-1">
+                  <DocumentTextIcon className="size-3.5 mr-1" /> Órdenes
+                </TabsTrigger>
                 <TabsTrigger value="history" className="flex-1">
                   <ClockIcon className="size-3.5 mr-1" /> Historial
                 </TabsTrigger>
@@ -98,6 +102,10 @@ export function ItemDetailPanel({
                     <ShoppingCartIcon className="size-4" /> Crear OC
                   </Button>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="orders" className="mt-4">
+                <ProductPurchaseOrders productId={product.id} />
               </TabsContent>
 
               <TabsContent value="history" className="mt-4">

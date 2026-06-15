@@ -235,6 +235,17 @@ export interface PurchaseOrderItemResponse {
   subtotal: number
 }
 
+// Lightweight summary of a purchase order from the perspective of a single
+// product. Returned by the "orders containing this product" endpoint.
+export interface ProductPurchaseOrderSummary {
+  orderId: number
+  orderNumber: string
+  supplierName: string
+  createdAt: string
+  quantityOrdered: number
+  unitPrice: number
+}
+
 export interface CreatePurchaseOrderRequest {
   orderNumber: string
   description: string
