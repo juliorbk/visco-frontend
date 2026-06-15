@@ -23,7 +23,7 @@ export default function DispatchesPage() {
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
 
-  const { data: costCenters = [] } = useQuery<CostCenter[]>(
+  const { data: costCenters } = useQuery<CostCenter[]>(
     () => fetchCostCenters(),
     []
   )
@@ -93,7 +93,7 @@ export default function DispatchesPage() {
               <DispatchDetailPanel
                 dispatch={selectedDispatch}
                 onClose={() => setSelectedDispatch(null)}
-                costCenters={costCenters}
+                costCenters={costCenters ?? []}
               />
             ) : (
               <div className="bg-white rounded-lg border border-[#f3f4f6] p-8 text-center">
