@@ -9,8 +9,9 @@ import { DispatchDetailPanel } from "@/components/visco/dispatches/dispatch-deta
 import { NuevoDespachoModal } from "@/components/visco/dispatches/nuevo-despacho-modal"
 import { useQuery } from "@/hooks/use-query"
 import { api } from "@/lib/api"
+import { fetchCostCenters } from "@/lib/services/requisitions"
 import { useDebounce } from "@/hooks/use-debounce"
-import type { DispatchResponse, Page } from "@/lib/types"
+import type { CostCenter, DispatchResponse, Page } from "@/lib/types"
 import { toast } from "sonner"
 
 const PAGE_SIZE = 6
@@ -21,6 +22,11 @@ export default function DispatchesPage() {
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState("")
   const debouncedSearch = useDebounce(search, 300)
+
+  const { data: costCenters = [] } = useQuery<CostCenter[]>(
+    () => fetchCostCenters(),
+    []
+  )
 
   const {
     data: dispatchesData,
@@ -87,6 +93,7 @@ export default function DispatchesPage() {
               <DispatchDetailPanel
                 dispatch={selectedDispatch}
                 onClose={() => setSelectedDispatch(null)}
+                costCenters={costCenters}
               />
             ) : (
               <div className="bg-white rounded-lg border border-[#f3f4f6] p-8 text-center">

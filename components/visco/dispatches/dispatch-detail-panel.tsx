@@ -5,23 +5,18 @@ import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { useEffect, useState } from "react"
 import type { DispatchResponse, CostCenter } from "@/lib/types"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
-import { fetchCostCenters } from "@/lib/services/requisitions"
 import { getCostCenterDisplay } from "@/lib/utils"
 
 export function DispatchDetailPanel({
   dispatch,
   onClose,
+  costCenters,
 }: {
   dispatch: DispatchResponse | null
   onClose: () => void
+  costCenters: CostCenter[]
 }) {
   const [copied, setCopied] = useState(false)
-  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
-
-  useEffect(() => {
-    if (!dispatch) return
-    fetchCostCenters().then(setCostCenters).catch(() => {})
-  }, [dispatch])
 
   useEffect(() => {
     if (!copied) return
