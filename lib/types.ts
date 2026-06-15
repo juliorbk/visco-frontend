@@ -227,6 +227,8 @@ export interface PurchaseOrderItemResponse {
   productId: number
   productName: string
   productSku: string
+  productInternalCode?: string
+  productSapCode?: string
   uom: string
   quantity: number
   unitPrice: number
@@ -283,6 +285,8 @@ export interface GoodReceiptItemResponse {
   productId: number
   productName: string
   productSku: string
+  productInternalCode?: string
+  productSapCode?: string
   uom: string
   expectedQuantity: number
   receivedQuantity: number
@@ -495,6 +499,8 @@ export interface RequisitionItemResponse {
   productId: number
   productName: string
   productSku: string
+  productInternalCode?: string
+  productSapCode?: string
   uom: string
   quantity: number
   notes: string | null
@@ -527,6 +533,8 @@ export interface DispatchItemResponse {
   productId: number
   productName: string
   productSku: string
+  productInternalCode?: string
+  productSapCode?: string
   uom: string
   quantity: number
 }

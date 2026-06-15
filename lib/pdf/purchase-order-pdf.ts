@@ -304,18 +304,20 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
   const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
-  const colWidths = [12, contentW - 12 - 18 - 14 - 28 - 28, 18, 14, 28, 28]
-  const head = ["#", "DESCRIPCION", "CANT", "UM", "P/UNIT", "TOTAL"]
+  const colWidths = [8, contentW - 8 - 22 - 22 - 16 - 12 - 21 - 22, 22, 22, 16, 12, 21, 22]
+  const head = ["#", "DESCRIPCION", "C.INT", "C.SAP", "CANT", "UM", "P/UNIT", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
     `${item.productName}  ${item.productSku}`,
+    item.productInternalCode ?? "—",
+    item.productSapCode ?? "—",
     String(item.quantity),
     item.uom ?? "—",
     formatCurrency(item.unitPrice),
     formatCurrency(item.subtotal),
   ])
   const emptyCount = Math.max(0, 5 - order.items.length)
-  for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", "", ""])
+  for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", "", "", "", ""])
 
   y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
   y += 6
@@ -355,14 +357,14 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     addSectionTitle(doc, x0, y, contentW, sectionLabel)
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
-    doc.setTextColor(...COLORS.text)
+    doc.setTextColor(...COLORS.white)
     let ay = y + 16
     if (order.approvedBy) {
       doc.setFont("helvetica", "bold")
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Aprobado por:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.text)
+      doc.setTextColor(...COLORS.white)
       doc.text(order.approvedBy, x0 + 35, ay)
       ay += 5
     }
@@ -371,7 +373,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Fecha:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.text)
+      doc.setTextColor(...COLORS.white)
       doc.text(formatDateShort(order.approvedAt), x0 + 35, ay)
       ay += 5
     }
@@ -381,7 +383,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Notas:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.text)
+      doc.setTextColor(...COLORS.white)
       const wrapped = doc.splitTextToSize(noteText, contentW - 40)
       doc.text(wrapped, x0 + 35, ay)
       ay += 5 * wrapped.length
@@ -394,7 +396,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   addSectionTitle(doc, x0, y, contentW, "Comentarios o Instrucciones Especiales")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
+  doc.setTextColor(...COLORS.white)
   const lines = doc.splitTextToSize(commentsText, contentW - 8)
   doc.text(lines, x0 + 4, y + 16)
 

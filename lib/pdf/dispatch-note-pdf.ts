@@ -212,10 +212,12 @@ export async function generateDispatchNotePDF(
   // ── Items Table ──
   const totalItems = dispatch.items.reduce((s, i) => s + i.quantity, 0)
 
-  const colWidths = [contentW - 18 - 14 - 22, 18, 14, 22]
-  const head = ["PRODUCTO", "SKU", "UM", "CANTIDAD"]
+  const colWidths = [contentW - 24 - 24 - 18 - 14 - 22, 24, 24, 18, 14, 22]
+  const head = ["PRODUCTO", "C.INT", "C.SAP", "SKU", "UM", "CANTIDAD"]
   const bodyRows = dispatch.items.map((item) => [
     item.productName,
+    item.productInternalCode ?? "—",
+    item.productSapCode ?? "—",
     item.productSku,
     item.uom ?? "—",
     String(item.quantity),
