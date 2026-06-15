@@ -4,11 +4,13 @@ import { OrderStatusBadge } from "@/components/visco/status-badge"
 import { Button } from "@/components/ui/button"
 import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
+import { getCachedUser } from "@/lib/auth-client"
+import { canApprovePurchaseOrders } from "@/lib/permissions"
 import type { PurchaseOrderResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 // PENDING      → can only be submitted for approval
-// AWAITING_APPROVAL → can be approved or rejected
+// AWAITING_APPROVAL → can be approved or rejected (managers only)
 // IN_TRANSIT / APPROVED → can receive goods
 const SUBMITTABLE  = ["PENDING"]
 const APPROVABLE   = ["AWAITING_APPROVAL"]
@@ -36,10 +38,13 @@ export function OrderDetail({
     )
   }
 
+  const user = getCachedUser()
+  const isApprover = canApprovePurchaseOrders(user)
+
   const total = order.items.reduce((s, i) => s + i.subtotal, 0)
 
   const isSubmittable = SUBMITTABLE.includes(order.status)
-  const isApprovable  = APPROVABLE.includes(order.status)
+  const isApprovable  = APPROVABLE.includes(order.status) && isApprover
   const isCancellable = CANCELLABLE.includes(order.status)
   const isReceivable  = RECEIVABLE.includes(order.status)
   const hasActions    = isSubmittable || isApprovable || isReceivable || isCancellable

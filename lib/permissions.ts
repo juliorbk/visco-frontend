@@ -39,6 +39,10 @@ export function canApproveRequisitions(user: UserRef): boolean {
   return isAtLeast(user, "MANAGER")
 }
 
+export function canApprovePurchaseOrders(user: UserRef): boolean {
+  return isAtLeast(user, "MANAGER")
+}
+
 export function canManageSupplierCategories(user: UserRef): boolean {
   return isAtLeast(user, "MANAGER")
 }
