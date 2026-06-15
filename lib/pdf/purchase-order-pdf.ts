@@ -345,7 +345,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.line(totalX, totalY, totalX + totalW, totalY)
   doc.setFontSize(10)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(...COLORS.white)
+  doc.setTextColor(...COLORS.primary)
   doc.text("TOTAL", totalX, totalY + 6)
   doc.text(formatCurrency(total), totalX + totalW - 2, totalY + 6, { align: "right" })
 
@@ -358,14 +358,14 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     addSectionTitle(doc, x0, y, contentW, sectionLabel)
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
-    doc.setTextColor(...COLORS.white)
+    doc.setTextColor(...COLORS.text)
     let ay = y + 16
     if (order.approvedBy) {
       doc.setFont("helvetica", "bold")
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Aprobado por:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.text)
       doc.text(order.approvedBy, x0 + 35, ay)
       ay += 5
     }
@@ -374,7 +374,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Fecha:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.text)
       doc.text(formatDateShort(order.approvedAt), x0 + 35, ay)
       ay += 5
     }
@@ -384,7 +384,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
       doc.setTextColor(...COLORS.textMuted)
       doc.text("Notas:", x0 + 4, ay)
       doc.setFont("helvetica", "normal")
-      doc.setTextColor(...COLORS.white)
+      doc.setTextColor(...COLORS.text)
       const wrapped = doc.splitTextToSize(noteText, contentW - 40)
       doc.text(wrapped, x0 + 35, ay)
       ay += 5 * wrapped.length
@@ -397,7 +397,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   addSectionTitle(doc, x0, y, contentW, "Comentarios o Instrucciones Especiales")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
-  doc.setTextColor(...COLORS.white)
+  doc.setTextColor(...COLORS.text)
   const lines = doc.splitTextToSize(commentsText, contentW - 8)
   doc.text(lines, x0 + 4, y + 16)
 
