@@ -520,6 +520,7 @@ export interface DispatchRequest {
   notes: string
   warehouseId: number
   employeeId: number
+  costCenterId: number
 }
 
 export interface DispatchItemResponse {

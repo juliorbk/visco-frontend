@@ -1,7 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { XMarkIcon, MagnifyingGlassIcon, PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
+import {
+  XMarkIcon,
+  MagnifyingGlassIcon,
+  PlusIcon,
+  TrashIcon,
+  ArrowPathIcon,
+  CheckIcon,
+  ChevronUpDownIcon,
+} from "@heroicons/react/24/outline"
 import {
   Select,
   SelectContent,
@@ -9,10 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { EmployeeDTO, ProductOnStock, WarehouseResponse } from "@/lib/types"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import type { CostCenter, EmployeeDTO, ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { createDispatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { fetchEmployee } from "@/lib/services/employees"
+import { fetchCostCenters } from "@/lib/services/requisitions"
 import { useDebounce } from "@/hooks/use-debounce"
+import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 type SearchField = "name" | "sapCode" | "sku"
@@ -48,6 +67,9 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
   const [employeeFicha, setEmployeeFicha] = useState("")
   const [employeeData, setEmployeeData] = useState<EmployeeDTO | null>(null)
   const [loadingEmployee, setLoadingEmployee] = useState(false)
+  const [costCenters, setCostCenters] = useState<CostCenter[]>([])
+  const [costCenterId, setCostCenterId] = useState<number | null>(null)
+  const [openCc, setOpenCc] = useState(false)
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -64,6 +86,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     setLines([])
     setEmployeeFicha("")
     setEmployeeData(null)
+    setCostCenterId(null)
     setNotes("")
     setSearchQuery("")
     setSearchResults([])
@@ -75,6 +98,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
     if (isOpen) {
       reset()
       fetchWarehouses().then(setWarehouses).catch(() => {})
+      fetchCostCenters().then(setCostCenters).catch(() => {})
     }
   }, [isOpen])
 
@@ -139,6 +163,10 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         toast.error("Busca y confirma el empleado que retira")
         return
       }
+      if (!costCenterId) {
+        toast.error("Selecciona el centro de costos")
+        return
+      }
       setStep(3)
     }
   }
@@ -181,6 +209,10 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
       toast.error("Agrega al menos un producto")
       return
     }
+    if (!costCenterId) {
+      toast.error("Selecciona el centro de costos")
+      return
+    }
 
     setSaving(true)
     try {
@@ -189,6 +221,7 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
         items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
         notes,
         employeeId: employeeData!.id,
+        costCenterId,
       })
       toast.success("Despacho registrado correctamente")
       await onSubmit?.()
@@ -357,6 +390,71 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-[#111827] mb-2">
+                  Centro de Costos <span className="text-red-600">*</span>
+                </label>
+                <Popover open={openCc} onOpenChange={setOpenCc}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      role="combobox"
+                      aria-expanded={openCc}
+                      className="w-full px-4 py-2.5 border border-[#f3f4f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#7b1a1a]/30 flex items-center justify-between bg-white"
+                    >
+                      {costCenterId
+                        ? (() => {
+                            const cc = costCenters.find((c) => c.id === costCenterId)
+                            return cc
+                              ? `${cc.code} — ${cc.fullDescription}${cc.managementDescription ? ` (${cc.managementDescription})` : ""}`
+                              : "Seleccionar…"
+                          })()
+                        : "Seleccionar centro de costo…"}
+                      <ChevronUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-[var(--radix-popover-trigger-width)] p-0"
+                    align="start"
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                  >
+                    <Command>
+                      <CommandInput placeholder="Buscar centro de costo…" />
+                      <CommandList>
+                        <CommandEmpty>No se encontraron centros de costo.</CommandEmpty>
+                        <CommandGroup>
+                          {costCenters.map((cc) => (
+                            <CommandItem
+                              key={cc.id}
+                              value={`${cc.code} ${cc.fullDescription}`}
+                              onSelect={() => {
+                                setCostCenterId(cc.id)
+                                setOpenCc(false)
+                              }}
+                            >
+                              <CheckIcon
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  costCenterId === cc.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{cc.code} — {cc.fullDescription}</span>
+                                {cc.managementDescription && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Gerencia: {cc.managementDescription}
+                                  </span>
+                                )}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               <div className="border border-[#f3f4f6] rounded-lg">
                 {lines.length === 0 ? (
                   <div className="p-6 text-center text-sm text-[#6b7280]">
@@ -422,6 +520,15 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                   <p className="text-xs text-[#6b7280]">Empleado que retira</p>
                   <p className="text-sm font-semibold text-[#111827]">
                     {employeeData?.fullName} - Ficha: {employeeFicha}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#6b7280]">Centro de Costos</p>
+                  <p className="text-sm font-semibold text-[#111827]">
+                    {(() => {
+                      const cc = costCenters.find((c) => c.id === costCenterId)
+                      return cc ? `${cc.code} — ${cc.fullDescription}` : "—"
+                    })()}
                   </p>
                 </div>
                 <div>
