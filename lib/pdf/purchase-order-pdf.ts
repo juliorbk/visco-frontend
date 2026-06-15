@@ -241,13 +241,14 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   }
   shipH = Math.max(shipH, 40)
 
+  doc.setFillColor(...COLORS.primary)
+  doc.setDrawColor(...COLORS.primary)
   doc.roundedRect(x1, y, boxW, shipH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(8)
-  // FIX: Ajuste de colores para la caja "ENVIAR A"
-  doc.setTextColor(...COLORS.primary)
+  doc.setTextColor(...COLORS.white)
   doc.text("ENVIAR A", x1 + PAD, y + HEADER_H - 2)
-  doc.setDrawColor(...COLORS.primary)
+  doc.setDrawColor(...COLORS.white)
   doc.setLineWidth(0.4)
   doc.line(x1 + PAD, y + HEADER_H + 0.5, x1 + boxW - PAD, y + HEADER_H + 0.5)
 
@@ -256,19 +257,19 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     if (ln.kind === "label") {
       doc.setFont("helvetica", "bold")
       doc.setFontSize(7)
-      doc.setTextColor(...COLORS.textMuted) // Color atenuado para labels
+      doc.setTextColor(...COLORS.white)
       doc.text(ln.text, x1 + PAD, by)
       by += 3.5
     } else if (ln.kind === "value") {
       doc.setFont("helvetica", "normal")
       doc.setFontSize(8)
-      doc.setTextColor(...COLORS.text) // Color de texto normal
+      doc.setTextColor(...COLORS.white)
       doc.text(ln.value ?? "", x1 + PAD, by)
       by += 4
     } else {
       doc.setFont("helvetica", ln.kind === "name" ? "bold" : "normal")
       doc.setFontSize(ln.kind === "name" ? 9 : 8)
-      doc.setTextColor(...COLORS.text) // Color de texto normal
+      doc.setTextColor(...COLORS.white)
       by += addWrappedText(doc, ln.text, x1 + PAD, by, boxW - PAD * 2,
         ln.kind === "name" ? 5 : 4)
       by += 1
@@ -344,7 +345,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.line(totalX, totalY, totalX + totalW, totalY)
   doc.setFontSize(10)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(...COLORS.primary)
+  doc.setTextColor(...COLORS.white)
   doc.text("TOTAL", totalX, totalY + 6)
   doc.text(formatCurrency(total), totalX + totalW - 2, totalY + 6, { align: "right" })
 
