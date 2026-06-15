@@ -228,10 +228,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
     : null
 
   const columns = hasUnitPrices
-    ? ["CANT.", "PRODUCTO", "C.INT", "C.SAP", "SKU", "UM", "UBICACION", "P/U", "TOTAL"]
+    ? ["C.INT", "C.SAP", "PRODUCTO", "SKU", "UM", "CANT.", "UBICACION", "P/U", "TOTAL"]
     : summary
-      ? ["RECIBIDO", "PRODUCTO", "C.INT", "C.SAP", "SKU", "UM", "UBICACION", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
-      : ["CANT.", "PRODUCTO", "C.INT", "C.SAP", "SKU", "UM", "UBICACION", "ESPERADO", "DIF."]
+      ? ["C.INT", "C.SAP", "RECIBIDO", "PRODUCTO", "SKU", "UM", "UBICACION", "ORDEN TOTAL", "REC. ANTERIOR", "PENDIENTE"]
+      : ["C.INT", "C.SAP", "PRODUCTO", "SKU", "UM", "CANT.", "UBICACION", "ESPERADO", "DIF."]
 
   const bodyRows = receipt.items.map((item) => {
     const sm = summaryMap?.get(item.productId)
@@ -240,12 +240,12 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
 
     if (hasUnitPrices) {
       return [
-        String(item.receivedQuantity),
-        item.productName,
         codeInt,
         codeSap,
+        item.productName,
         item.productSku,
         item.uom ?? "—",
+        String(item.receivedQuantity),
         item.locationCode ?? "—",
         item.unitPrice != null ? formatCurrency(item.unitPrice) : "—",
         item.totalPrice != null
@@ -259,10 +259,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
     if (sm) {
       const recibidoAntes = sm.receivedQuantity - item.receivedQuantity
       return [
-        String(item.receivedQuantity),
-        item.productName,
         codeInt,
         codeSap,
+        String(item.receivedQuantity),
+        item.productName,
         item.productSku,
         sm.uom ?? "—",
         item.locationCode ?? "—",
@@ -273,12 +273,12 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
     }
 
     return [
-      String(item.receivedQuantity),
-      item.productName,
       codeInt,
       codeSap,
+      item.productName,
       item.productSku,
       item.uom ?? "—",
+      String(item.receivedQuantity),
       item.locationCode ?? "—",
       String(item.expectedQuantity),
       String(item.expectedQuantity - item.receivedQuantity),
@@ -286,10 +286,10 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
   })
 
   const colWidths = hasUnitPrices
-    ? [14, contentW - 14 - 20 - 22 - 18 - 12 - 18 - 18 - 18, 20, 22, 18, 12, 18, 18, 18]
+    ? [20, 22, contentW - 20 - 22 - 18 - 12 - 14 - 18 - 18 - 18, 18, 12, 14, 18, 18, 18]
     : summary
-      ? [12, contentW - 12 - 18 - 20 - 18 - 10 - 16 - 18 - 18 - 18, 18, 20, 18, 10, 16, 18, 18, 18]
-      : [14, contentW - 14 - 20 - 22 - 18 - 12 - 18 - 18 - 18, 20, 22, 18, 12, 18, 18, 18]
+      ? [18, 20, 12, contentW - 18 - 20 - 12 - 18 - 10 - 16 - 18 - 18 - 18, 18, 10, 16, 18, 18, 18]
+      : [20, 22, contentW - 20 - 22 - 18 - 12 - 14 - 18 - 18 - 18, 18, 12, 14, 18, 18, 18]
 
   y = addTable(doc, x0, y, contentW, columns, bodyRows, colWidths)
   y += 6

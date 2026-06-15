@@ -236,13 +236,13 @@ export async function generateRequisitionPDF(
   addSectionTitle(doc, x0, y, contentW, `Items Solicitados (${req.items.length})`)
   y += 12
 
-  const colWidths = [8, contentW - 8 - 22 - 22 - 18 - 12 - 18 - 24, 22, 22, 18, 12, 18, 24]
-  const head = ["#", "DESCRIPCION", "C.INT", "C.SAP", "SKU", "UM", "CANT.", "NOTAS"]
+  const colWidths = [8, 22, 22, contentW - 8 - 22 - 22 - 18 - 12 - 18 - 24, 18, 12, 18, 24]
+  const head = ["#", "C.INT", "C.SAP", "DESCRIPCION", "SKU", "UM", "CANT.", "NOTAS"]
   const bodyRows = req.items.map((item, i) => [
     String(i + 1),
-    item.productName,
     item.productInternalCode ?? "—",
     item.productSapCode ?? "—",
+    item.productName,
     item.productSku,
     item.uom ?? "—",
     String(item.quantity),
