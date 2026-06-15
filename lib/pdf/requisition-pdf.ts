@@ -171,7 +171,7 @@ export async function generateRequisitionPDF(
   addSectionTitle(doc, x1, y, boxW, "SOLICITANTE")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
-  doc.setTextColor(...COLORS.text)
+  doc.setTextColor(...COLORS.white)
   by = y + 15
   by += addWrappedText(doc, req.requestedBy || "—", x1 + 4, by, boxW - 8, 4.5, 3)
 
