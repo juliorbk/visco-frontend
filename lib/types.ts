@@ -626,7 +626,7 @@ export interface ItemSummary {
 
 // ── Reports ──
 
-export type ReportType = "STOCK_INVENTORY" | "STOCK_MOVEMENTS" | "CRITICAL_ALERTS" | "WAREHOUSE_ANALYSIS"
+export type ReportType = "STOCK_INVENTORY" | "STOCK_MOVEMENTS" | "CRITICAL_ALERTS" | "WAREHOUSE_ANALYSIS" | "DAILY_RECEIPTS"
 export type ReportStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
 export type ReportFormat = "PDF" | "EXCEL" | "JSON"
 export type ReportFrequency = "DAILY" | "WEEKLY" | "MONTHLY"
@@ -698,6 +698,7 @@ export const REPORT_TYPE_LABELS: Record<ReportType, string> = {
   STOCK_MOVEMENTS: "Movimientos",
   CRITICAL_ALERTS: "Alertas",
   WAREHOUSE_ANALYSIS: "Análisis x Almacén",
+  DAILY_RECEIPTS: "Recepciones Diarias",
 }
 
 export const REPORT_STATUS_COLORS: Record<ReportStatus, string> = {

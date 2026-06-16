@@ -59,6 +59,14 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
       toast.error("Las fechas de inicio y fin son requeridas")
       return
     }
+    if (type === "DAILY_RECEIPTS" && warehouseId === "all") {
+      toast.error("El almacén es obligatorio para Recepciones Diarias")
+      return
+    }
+    if (type === "DAILY_RECEIPTS" && startDate !== endDate) {
+      toast.error("Las Recepciones Diarias requieren un solo día (fecha inicio = fecha fin)")
+      return
+    }
 
     setGenerating(true)
     try {
@@ -101,7 +109,13 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Tipo de Reporte</Label>
-              <Select value={type} onValueChange={(v) => setType(v as ReportType)}>
+              <Select value={type} onValueChange={(v) => {
+              setType(v as ReportType)
+              if (v === "DAILY_RECEIPTS") {
+                if (warehouseId === "all" && warehouses.length > 0) setWarehouseId(String(warehouses[0].id))
+                if (startDate) setEndDate(startDate)
+              }
+            }}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -130,7 +144,10 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Fecha Inicio</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Input type="date" value={startDate} onChange={(e) => {
+                setStartDate(e.target.value)
+                if (type === "DAILY_RECEIPTS") setEndDate(e.target.value)
+              }} />
             </div>
             <div>
               <Label>Fecha Fin</Label>
@@ -140,13 +157,13 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Almacén (opcional)</Label>
+              <Label>Almacén{type === "DAILY_RECEIPTS" ? " (obligatorio)" : " (opcional)"}</Label>
               <Select value={warehouseId} onValueChange={setWarehouseId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
+                  {type !== "DAILY_RECEIPTS" && <SelectItem value="all">Todos</SelectItem>}
                   {warehouses.map((w) => (
                     <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>
                   ))}
@@ -209,6 +226,9 @@ export default function GenerateReportTab({ onGenerated }: { onGenerated: () => 
           </div>
           <div>
             <strong className="text-white">Análisis x Almacén:</strong> Capacidad, utilización y distribución por almacén.
+          </div>
+          <div>
+            <strong className="text-white">Recepciones Diarias:</strong> Reporte de recepciones de un día específico para un almacén obligatorio.
           </div>
         </div>
       </Card>
