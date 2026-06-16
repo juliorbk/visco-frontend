@@ -116,7 +116,7 @@ export async function generateDispatchNotePDF(
   doc.setFontSize(11)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text(`N° ${dispatch.dispatchNumber}`, pageW / 2, y + 20, { align: "center" })
+  doc.text(`N° ${dispatch.dispatchNumber}`, pageW / 2, y + 19, { align: "center" })
 
   y += 30
   addSeparator(doc, x0, y, contentW)

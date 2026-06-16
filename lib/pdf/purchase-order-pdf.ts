@@ -116,12 +116,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
 
   // ── Logo + Title + Info ──
-  await addLogoPlaceholder(doc, x0, y, 40, 20)
+  await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(20)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text("ORDEN DE COMPRA", pageW / 2, y + 8, { align: "center" })
+  doc.text("ORDEN DE COMPRA", pageW / 2, y + 10, { align: "center" })
 
   // Status badge under title
   const statusLabel = translateOrderStatus(order.status).toUpperCase()
@@ -130,7 +130,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFont("helvetica", "bold")
   const statusW = doc.getTextWidth(statusLabel) + 6
   const statusX = pageW / 2 - statusW / 2
-  const statusY = y + 12
+  const statusY = y + 18
   doc.setFillColor(...statusRgb)
   doc.roundedRect(statusX, statusY, statusW, 5.5, 1.5, 1.5, "F")
   doc.setTextColor(...COLORS.white)
@@ -152,14 +152,14 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFont("helvetica", "bold")
   infoLines.forEach(([label, value], i) => {
     doc.setTextColor(...COLORS.textMuted)
-    doc.text(label, infoX, y + 14 + i * 5)
+    doc.text(label, infoX, y + 28 + i * 5)
     doc.setTextColor(...COLORS.text)
     doc.setFont("helvetica", "normal")
-    doc.text(value, infoX + 25, y + 14 + i * 5)
+    doc.text(value, infoX + 25, y + 28 + i * 5)
     doc.setFont("helvetica", "bold")
   })
 
-  y += 36 + (infoLines.length > 4 ? 5 : 0)
+  y += 42 + (infoLines.length > 4 ? 5 : 0)
   addSeparator(doc, x0, y, contentW)
   y += 8
 

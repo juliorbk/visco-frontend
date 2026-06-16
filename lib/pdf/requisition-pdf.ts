@@ -122,7 +122,7 @@ export async function generateRequisitionPDF(
   doc.setFont("helvetica", "bold")
   const statusW = doc.getTextWidth(statusLabel) + 6
   const statusX = pageW / 2 - statusW / 2
-  const statusY = y + 14
+  const statusY = y + 18
   doc.setFillColor(...statusRgb)
   doc.roundedRect(statusX, statusY, statusW, 5.5, 1.5, 1.5, "F")
   doc.setTextColor(...COLORS.white)
@@ -138,14 +138,14 @@ export async function generateRequisitionPDF(
   doc.setFont("helvetica", "bold")
   infoLines.forEach(([label, value], i) => {
     doc.setTextColor(...COLORS.textMuted)
-    doc.text(label, infoX, y + 22 + i * 5)
+    doc.text(label, infoX, y + 28 + i * 5)
     doc.setTextColor(...COLORS.text)
     doc.setFont("helvetica", "normal")
-    doc.text(value, infoX + 25, y + 22 + i * 5)
+    doc.text(value, infoX + 25, y + 28 + i * 5)
     doc.setFont("helvetica", "bold")
   })
 
-  y += 42
+  y += 46
   addSeparator(doc, x0, y, contentW)
   y += 8
 
