@@ -43,6 +43,7 @@ export function SupplierModal({
 }) {
   const [name, setName] = useState("")
   const [contactEmail, setContactEmail] = useState("")
+  const [taxId, setTaxId] = useState("")
   const [address, setAddress] = useState("")
   const [description, setDescription] = useState("")
   const [currency, setCurrency] = useState("USD")
@@ -58,6 +59,7 @@ export function SupplierModal({
     if (editing) {
       setName(editing.name)
       setContactEmail(editing.contactEmail)
+      setTaxId(editing.taxId ?? "")
       setAddress(editing.address)
       setDescription(editing.description)
       setCurrency(editing.currency)
@@ -69,6 +71,7 @@ export function SupplierModal({
     } else {
       setName("")
       setContactEmail("")
+      setTaxId("")
       setAddress("")
       setDescription("")
       setCurrency("USD")
@@ -94,6 +97,7 @@ export function SupplierModal({
       {
         name,
         contactEmail,
+        taxId: taxId.trim() || null,
         address,
         description,
         currency,
@@ -134,6 +138,18 @@ export function SupplierModal({
               required
               value={contactEmail}
               onChange={(e) => setContactEmail(e.target.value)}
+              disabled={saving}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="s rif">RIF / Identificador fiscal</Label>
+            <Input
+              id="srif"
+              maxLength={20}
+              placeholder="Ej: J-12345678-9"
+              value={taxId}
+              onChange={(e) => setTaxId(e.target.value)}
               disabled={saving}
             />
           </div>

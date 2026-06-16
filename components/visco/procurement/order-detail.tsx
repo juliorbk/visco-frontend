@@ -67,6 +67,9 @@ export function OrderDetail({
         <h3 className="mt-3 font-serif text-xl font-semibold text-foreground break-words">
           {order.supplierName}
         </h3>
+        {order.supplierRif && (
+          <p className="mt-0.5 text-xs text-muted-foreground">RIF: {order.supplierRif}</p>
+        )}
         {order.description && (
           <p className="mt-1 text-xs text-muted-foreground break-words">{order.description}</p>
         )}

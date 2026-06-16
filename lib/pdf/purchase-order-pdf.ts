@@ -171,6 +171,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   // Supplier box
   const supplierLines: string[] = []
   supplierLines.push(supplier?.name ?? order.supplierName)
+  if (order.supplierRif) supplierLines.push(`RIF: ${order.supplierRif}`)
   if (supplier?.address) supplierLines.push(supplier.address)
   if (supplier?.email) supplierLines.push(supplier.email)
   if (supplier?.phoneNumbers?.length) supplierLines.push("Tel: " + supplier.phoneNumbers.join(", "))

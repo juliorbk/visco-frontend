@@ -103,6 +103,7 @@ export interface SupplierDTO {
   address: string
   currency: string
   contactEmail: string
+  taxId?: string | null
   phoneNumbers: string[]
   active: boolean
   representatives: RepresentativeInfo[]
@@ -187,6 +188,7 @@ export interface PurchaseOrderResponse {
   description: string
   status: PurchaseOrderStatus
   supplierName: string
+  supplierRif?: string | null
   paymentMethod: PaymentMethod
   type: PurchaseOrderType
   createdBy: string
@@ -211,6 +213,7 @@ export interface PurchaseOrderResponse {
     name: string
     address: string
     email: string
+    taxId?: string | null
     phoneNumbers: string[]
   } | null
   destinationWarehouse?: {

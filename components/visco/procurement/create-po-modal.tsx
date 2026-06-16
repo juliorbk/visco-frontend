@@ -74,6 +74,7 @@ export function CreatePOModal({
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1])
   const [type, setType] = useState(ORDER_TYPES[1])
   const [supplierId, setSupplierId] = useState<number | null>(null)
+  const [supplierRif, setSupplierRif] = useState("")
   const [lines, setLines] = useState<LineItem[]>([])
   const [pickProduct, setPickProduct] = useState<ProductDTO | null>(null)
   const [pickQty, setPickQty] = useState("1")
@@ -82,7 +83,7 @@ export function CreatePOModal({
   const [leadTime, setLeadTime] = useState("")
   const [shipConditions, setShipConditions] = useState("")
   const [warehouses, setWarehouses] = useState<{ id: number; name: string }[]>([])
-  const [suppliers, setSuppliers] = useState<{ id: number; name: string }[]>([])
+  const [suppliers, setSuppliers] = useState<{ id: number; name: string; taxId?: string | null }[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [saving, setSaving] = useState(false)
   const [requisitions, setRequisitions] = useState<RequisitionResponse[]>([])
@@ -117,7 +118,13 @@ export function CreatePOModal({
 
     Promise.all([
       fetchSuppliers(0, 200).then((supRes) => {
-        setSuppliers((supRes.content ?? []).map((s) => ({ id: s.id, name: s.name })))
+        setSuppliers(
+          (supRes.content ?? []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            taxId: s.taxId ?? null,
+          })),
+        )
       }),
       fetchWarehouses().then((wh) => {
         setWarehouses(wh)
@@ -169,6 +176,15 @@ export function CreatePOModal({
   }, [finderOpen])
 
   useEffect(() => {
+    if (supplierId == null) {
+      setSupplierRif("")
+      return
+    }
+    const sup = suppliers.find((s) => s.id === supplierId)
+    setSupplierRif(sup?.taxId ?? "")
+  }, [supplierId, suppliers])
+
+  useEffect(() => {
     if (!finderOpen) return
     const handler = (e: MouseEvent) => {
       if (finderRef.current && !finderRef.current.contains(e.target as Node)) {
@@ -213,6 +229,7 @@ export function CreatePOModal({
     setOrderNumber("")
     setDescription("")
     setSupplierId(null)
+    setSupplierRif("")
     setPickProduct(null)
     setFinderQuery("")
     setFinderOpen(false)
@@ -255,7 +272,10 @@ export function CreatePOModal({
     try {
       setCreatingSupplier(true)
       const created = await createSupplier(data)
-      setSuppliers((prev) => [...prev, { id: created.id, name: created.name }])
+      setSuppliers((prev) => [
+        ...prev,
+        { id: created.id, name: created.name, taxId: created.taxId ?? null },
+      ])
       setSupplierId(created.id)
       setSupplierModalOpen(false)
       toast.success("Proveedor creado")
@@ -432,6 +452,16 @@ export function CreatePOModal({
                   </Button>
                 )}
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="supplier-rif">RIF del proveedor</Label>
+              <Input
+                id="supplier-rif"
+                maxLength={20}
+                value={supplierRif}
+                onChange={(e) => setSupplierRif(e.target.value)}
+                placeholder="Ej: J-12345678-9"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Almacén destino</Label>
@@ -746,6 +776,9 @@ export function CreatePOModal({
         {step === 2 && (
           <div className="space-y-3 text-sm">
             <ReviewRow label="Proveedor" value={suppliers.find((s) => s.id === supplierId)?.name ?? "-"} />
+            {supplierRif.trim() && (
+              <ReviewRow label="RIF del proveedor" value={supplierRif.trim()} />
+            )}
             <ReviewRow
               label="Requisición"
               value={
