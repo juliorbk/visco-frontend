@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createRequisition } from "@/lib/services/requisitions"
-import { fetchAllCostCenters } from "@/lib/services/admin"
+import { createRequisition, fetchCostCenters } from "@/lib/services/requisitions"
 import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { CostCenter, ProductDTO } from "@/lib/types"
@@ -106,7 +105,7 @@ export function CreateRequisitionModal({
 
   useEffect(() => {
     if (open) {
-      fetchAllCostCenters(0, 200).then((res) => setCostCenters(res.content ?? [])).catch(() => {})
+      fetchCostCenters().then(setCostCenters).catch(() => {})
     }
   }, [open])
 
