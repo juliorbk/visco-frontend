@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf"
 import type { PurchaseOrderResponse } from "@/lib/types"
+import { TAX_RATE, applyTax } from "@/lib/constants"
 import {
   COLORS,
   addLogoPlaceholder,
@@ -286,24 +287,40 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     ["COND. ENVIO", order.shipConditions ?? "—"],
   ]
   const colW = contentW / 4
+  const termCellPad = 2
+  const termValueLineH = 4
+  let maxTermLines = 1
+  const termWrapped: string[][] = terms.map(([, value]) =>
+    doc.splitTextToSize(value, colW - termCellPad * 2),
+  )
+  termWrapped.forEach((lines) => {
+    if (lines.length > maxTermLines) maxTermLines = lines.length
+  })
+  const termBoxH = 8
+  const termValueH = maxTermLines * termValueLineH
+  const termRowH = termBoxH + termValueH + 4
+
   terms.forEach(([title, value], i) => {
     const cx = x0 + i * colW
     doc.setFillColor(...COLORS.primary)
-    doc.rect(cx, y, colW - 1, 8, "F")
+    doc.rect(cx, y, colW - 1, termBoxH, "F")
     doc.setTextColor(...COLORS.white)
     doc.setFontSize(7)
     doc.setFont("helvetica", "bold")
-    doc.text(title, cx + 2, y + 5.5)
+    doc.text(title, cx + termCellPad, y + 5.5)
     doc.setTextColor(...COLORS.text)
     doc.setFontSize(8)
     doc.setFont("helvetica", "normal")
-    doc.text(value, cx + 2, y + 15)
+    const valueY = y + termBoxH + 4
+    doc.text(termWrapped[i], cx + termCellPad, valueY)
   })
-  y += 22
+  y += termRowH + 4
 
   // ── Items Table ──
   const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
-  const total = subtotal + (order.taxAmount ?? 0) + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
+  const { taxAmount, total: taxBaseTotal } = applyTax(subtotal)
+  const taxAmountFinal = order.taxAmount ?? taxAmount
+  const total = taxBaseTotal + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
   const colWidths = [8, 22, 22, contentW - 8 - 22 - 22 - 16 - 12 - 21 - 22, 16, 12, 21, 22]
   const head = ["#", "C.INT", "C.SAP", "DESCRIPCION", "CANT", "UM", "P/UNIT", "TOTAL"]
@@ -326,8 +343,11 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   // ── Totals ──
   const totalX = pageW - margin - 70
   const totalW = 70
-  const totals = [["SUBTOTAL", formatCurrency(subtotal)]]
-  if (order.taxAmount != null) totals.push(["IMPUESTO", formatCurrency(order.taxAmount)])
+  const taxPctLabel = `IMPUESTO (${Math.round(TAX_RATE * 100)}%)`
+  const totals = [
+    ["SUBTOTAL", formatCurrency(subtotal)],
+    [taxPctLabel, formatCurrency(taxAmountFinal)],
+  ]
   if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
   if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
 

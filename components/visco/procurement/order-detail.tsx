@@ -6,6 +6,7 @@ import { ExportPDFButton } from "@/components/ui/export-pdf-button"
 import { downloadPDF } from "@/lib/pdf/download-pdf"
 import { getCachedUser } from "@/lib/auth-client"
 import { canApprovePurchaseOrders } from "@/lib/permissions"
+import { applyTax, TAX_RATE } from "@/lib/constants"
 import type { PurchaseOrderResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -41,7 +42,9 @@ export function OrderDetail({
   const user = getCachedUser()
   const isApprover = canApprovePurchaseOrders(user)
 
-  const total = order.items.reduce((s, i) => s + i.subtotal, 0)
+  const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
+  const { taxAmount, total } = applyTax(subtotal)
+  const taxPct = Math.round(TAX_RATE * 100)
 
   const isSubmittable = SUBMITTABLE.includes(order.status)
   const isApprovable  = APPROVABLE.includes(order.status) && isApprover
@@ -71,7 +74,9 @@ export function OrderDetail({
 
       {/* ── Stats ── */}
       <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-border">
-        <Stat label="Total"       value={`$${total.toLocaleString()}`} />
+        <Stat label="Subtotal"    value={`$${subtotal.toLocaleString()}`} />
+        <Stat label={`Impuesto (${taxPct}%)`} value={`$${taxAmount.toLocaleString()}`} />
+        <Stat label="Total"       value={`$${total.toLocaleString()}`} bold />
         <Stat label="Solicitante" value={order.createdBy} />
         <Stat label="Tipo"        value={order.type} />
         <Stat label="Items"   value={`${order.items.length}`} />
@@ -223,11 +228,11 @@ export function OrderDetail({
   )
 }
 
-function Stat({ label, value, className }: { label: string; value: string; className?: string }) {
+function Stat({ label, value, className, bold }: { label: string; value: string; className?: string; bold?: boolean }) {
   return (
     <div className={cn("rounded-md border border-border bg-[#fafafa] px-3 py-2.5 min-w-0", className)}>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-0.5 text-sm font-medium text-foreground truncate">{value}</div>
+      <div className={cn("mt-0.5 text-sm text-foreground truncate", bold ? "font-serif text-lg font-semibold" : "font-medium")}>{value}</div>
     </div>
   )
 }

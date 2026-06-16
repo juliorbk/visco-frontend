@@ -1,6 +1,6 @@
 "use client"
 
-import { ORDER_TYPES, PAYMENT_METHODS } from "@/lib/constants"
+import { ORDER_TYPES, PAYMENT_METHODS, TAX_RATE, applyTax } from "@/lib/constants"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Dialog,
@@ -204,6 +204,8 @@ export function CreatePOModal({
   }, [debouncedFinderQuery, searchField, finderOpen])
 
   const total = useMemo(() => lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0), [lines])
+  const { taxAmount, total: totalWithTax } = useMemo(() => applyTax(total), [total])
+  const taxPct = Math.round(TAX_RATE * 100)
 
   const reset = () => {
     setStep(0)
@@ -720,11 +722,21 @@ export function CreatePOModal({
                   ))}
                 </ul>
               )}
-              <div className="flex items-center justify-between px-3 py-3 border-t border-border bg-card rounded-b-lg">
-                <span className="text-sm font-medium text-foreground">Total</span>
-                <span className="font-serif text-lg font-semibold tabular-nums">
-                  ${total.toLocaleString()}
-                </span>
+              <div className="flex flex-col gap-1 px-3 py-3 border-t border-border bg-card rounded-b-lg">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="tabular-nums">${total.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Impuesto ({taxPct}%)</span>
+                  <span className="tabular-nums">${taxAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-2 mt-1">
+                  <span className="text-sm font-medium text-foreground">Total</span>
+                  <span className="font-serif text-lg font-semibold tabular-nums">
+                    ${totalWithTax.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -748,7 +760,9 @@ export function CreatePOModal({
             <ReviewRow label="Tiempo de Entrega" value={leadTime ? `${leadTime} dias` : "-"} />
             <ReviewRow label="Condiciones de Envío" value={shipConditions.trim() || "-"} />
             <ReviewRow label="Artículos" value={`${lines.length}`} />
-            <ReviewRow label="Total" value={`$${total.toLocaleString()}`} bold />
+            <ReviewRow label="Subtotal" value={`$${total.toLocaleString()}`} />
+            <ReviewRow label={`Impuesto (${taxPct}%)`} value={`$${taxAmount.toLocaleString()}`} />
+            <ReviewRow label="Total" value={`$${totalWithTax.toLocaleString()}`} bold />
             <div className="rounded-md border border-border bg-[#fafafa] p-3 text-sm">
               <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
                 Descripción

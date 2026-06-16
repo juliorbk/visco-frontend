@@ -11,3 +11,10 @@ export const PAYMENT_METHODS = ["CASH", "BANK_TRANSFER", "CHECK", "USDT", "PAYPA
 export const ORDER_TYPES = ["SERVICES", "MATERIALS", "MRO", "CAPITAL_EQUIPMENT"]
 
 export const DEFAULT_PAGE_SIZE = 20
+
+export const TAX_RATE = 0.16
+
+export function applyTax(subtotal: number): { taxAmount: number; total: number } {
+  const taxAmount = subtotal * TAX_RATE
+  return { taxAmount, total: subtotal + taxAmount }
+}

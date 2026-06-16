@@ -204,6 +204,7 @@ export interface PurchaseOrderResponse {
   shipConditions?: string | null
   specialConditions?: string | null
   taxAmount?: number | null
+  totalAmount?: number | null
   shippingCost?: number | null
   otherCost?: number | null
   supplier?: {
