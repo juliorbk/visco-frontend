@@ -171,15 +171,15 @@ export function NuevaRecepcionModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-8 border-b border-[#f3f4f6]">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-[#f3f4f6] shrink-0">
           <h2 className="text-2xl font-bold text-[#111827]">Registrar Recepción de Mercancía</h2>
           <button onClick={onClose} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
             <XMarkIcon className="w-6 h-6 text-[#6b7280]" />
           </button>
         </div>
 
-        <div className="p-8">
+        <div className="px-8 py-6 overflow-y-auto flex-1">
           <div className="flex items-center justify-between mb-8">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center flex-1">
@@ -382,36 +382,37 @@ export function NuevaRecepcionModal({
             </div>
           )}
 
-          <div className="flex gap-3 justify-between mt-8">
-            <div>
-              {step > 1 && (
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors"
-                >
-                  ← Volver
-                </button>
-              )}
-            </div>
-            <div className="flex gap-3">
-              {step < 3 ? (
-                <button
-                  onClick={handleNext}
-                  disabled={step === 1 && !selectedPO}
-                  className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                >
-                  Continuar <ChevronRightIcon className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={saving}
-                  className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] transition-colors flex items-center gap-2 disabled:opacity-50"
-                >
-                  {saving ? "Registrando..." : "Confirmar Recepción"}
-                </button>
-              )}
-            </div>
+        </div>
+
+        <div className="flex gap-3 justify-between px-8 py-4 border-t border-[#f3f4f6] bg-white shrink-0">
+          <div>
+            {step > 1 && (
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors"
+              >
+                ← Volver
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            {step < 3 ? (
+              <button
+                onClick={handleNext}
+                disabled={step === 1 && !selectedPO}
+                className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              >
+                Continuar <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={saving}
+                className="px-6 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? "Registrando..." : "Confirmar Recepción"}
+              </button>
+            )}
           </div>
         </div>
       </div>

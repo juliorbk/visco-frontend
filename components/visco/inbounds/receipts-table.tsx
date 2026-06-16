@@ -28,10 +28,15 @@ export function ReceiptsTable({
 }: ReceiptsTableProps) {
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredReceipts =
+  const filteredReceipts = (
     statusFilter === "all"
       ? receipts
       : receipts.filter((r) => r.updatedStatus === statusFilter)
+  )
+    .slice()
+    .sort(
+      (a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
+    )
 
   return (
     <div className="flex-1">
