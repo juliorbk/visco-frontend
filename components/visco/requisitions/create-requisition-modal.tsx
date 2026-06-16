@@ -302,7 +302,17 @@ export function CreateRequisitionModal({
                   align="start"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                  <Command>
+                  <Command
+                    filter={(value, search) => {
+                      if (!search) return 1
+                      const normalize = (s: string) =>
+                        s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                      const v = normalize(value)
+                      const s = normalize(search)
+                      const tokens = s.split(/\s+/).filter(Boolean)
+                      return tokens.every((t) => v.includes(t)) ? 1 : 0
+                    }}
+                  >
                     <CommandInput placeholder="Buscar centro de costo…" />
                     <CommandList>
                       <CommandEmpty>No se encontraron centros de costo.</CommandEmpty>
@@ -310,7 +320,7 @@ export function CreateRequisitionModal({
                         {costCenters.map((cc) => (
                           <CommandItem
                             key={cc.id}
-                            value={`${cc.code} ${cc.fullDescription}`}
+                            value={`${cc.code} ${cc.fullDescription}${cc.managementDescription ? ` ${cc.managementDescription}` : ""}${cc.generalManagementDescription ? ` ${cc.generalManagementDescription}` : ""}`}
                             onSelect={() => {
                               setCostCenterId(cc.id)
                               setOpenCc(false)

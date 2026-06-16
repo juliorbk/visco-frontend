@@ -418,39 +418,49 @@ export function NuevoDespachoModal({ isOpen, onClose, onSubmit }: NuevoDespachoM
                     align="start"
                     onOpenAutoFocus={(e) => e.preventDefault()}
                   >
-                    <Command>
-                      <CommandInput placeholder="Buscar centro de costo…" />
-                      <CommandList>
-                        <CommandEmpty>No se encontraron centros de costo.</CommandEmpty>
-                        <CommandGroup>
-                          {costCenters.map((cc) => (
-                            <CommandItem
-                              key={cc.id}
-                              value={`${cc.code} ${cc.fullDescription}`}
-                              onSelect={() => {
-                                setCostCenterId(cc.id)
-                                setOpenCc(false)
-                              }}
-                            >
-                              <CheckIcon
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  costCenterId === cc.id ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                              <div className="flex flex-col">
-                                <span className="font-medium">{cc.code} — {cc.fullDescription}</span>
-                                {cc.managementDescription && (
-                                  <span className="text-xs text-muted-foreground">
-                                    Gerencia: {cc.managementDescription}
-                                  </span>
-                                )}
-                              </div>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
+                  <Command
+                    filter={(value, search) => {
+                      if (!search) return 1
+                      const normalize = (s: string) =>
+                        s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                      const v = normalize(value)
+                      const s = normalize(search)
+                      const tokens = s.split(/\s+/).filter(Boolean)
+                      return tokens.every((t) => v.includes(t)) ? 1 : 0
+                    }}
+                  >
+                    <CommandInput placeholder="Buscar centro de costo…" />
+                    <CommandList>
+                      <CommandEmpty>No se encontraron centros de costo.</CommandEmpty>
+                      <CommandGroup>
+                        {costCenters.map((cc) => (
+                          <CommandItem
+                            key={cc.id}
+                            value={`${cc.code} ${cc.fullDescription}${cc.managementDescription ? ` ${cc.managementDescription}` : ""}${cc.generalManagementDescription ? ` ${cc.generalManagementDescription}` : ""}`}
+                            onSelect={() => {
+                              setCostCenterId(cc.id)
+                              setOpenCc(false)
+                            }}
+                          >
+                            <CheckIcon
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                costCenterId === cc.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{cc.code} — {cc.fullDescription}</span>
+                              {cc.managementDescription && (
+                                <span className="text-xs text-muted-foreground">
+                                  Gerencia: {cc.managementDescription}
+                                </span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
                   </PopoverContent>
                 </Popover>
               </div>
