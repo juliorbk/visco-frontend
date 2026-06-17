@@ -189,3 +189,185 @@ export function addWrappedText(
   })
   return finalLines.length * lineHeight
 }
+
+export const PAGE_HEIGHT = 297
+export const PAGE_WIDTH = 210
+export const DEFAULT_MARGIN = 20
+export const DEFAULT_MAX_Y = PAGE_HEIGHT - DEFAULT_MARGIN
+export const DEFAULT_TOP_Y = DEFAULT_MARGIN
+
+export function ensureSpace(
+  doc: jsPDF,
+  y: number,
+  needed: number,
+  options: {
+    topY?: number
+    maxY?: number
+    drawContinuation?: (newY: number) => number
+  } = {},
+): number {
+  const maxY = options.maxY ?? DEFAULT_MAX_Y
+  const topY = options.topY ?? DEFAULT_TOP_Y
+  if (y + needed <= maxY) return y
+  doc.addPage()
+  return options.drawContinuation ? options.drawContinuation(topY) : topY
+}
+
+export function addContinuationBanner(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  title: string,
+  subtitle?: string,
+): number {
+  const h = 8
+  doc.setFillColor(...COLORS.bgLight)
+  doc.setDrawColor(...COLORS.primary)
+  doc.setLineWidth(0.4)
+  doc.rect(x, y, w, h, "FD")
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(7.5)
+  doc.setTextColor(...COLORS.primary)
+  doc.text(title, x + 4, y + 5.4)
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7)
+  doc.setTextColor(...COLORS.textMuted)
+  doc.text(subtitle ?? "(continuación)", x + w - 4, y + 5.4, { align: "right" })
+  return y + h + 2
+}
+
+export function addPageNumbers(
+  doc: jsPDF,
+  options: {
+    x?: number
+    y?: number
+    align?: "left" | "center" | "right"
+    prefix?: string
+  } = {},
+) {
+  const total = doc.getNumberOfPages()
+  const align = options.align ?? "center"
+  const x =
+    options.x ??
+    (align === "center" ? PAGE_WIDTH / 2 : align === "right" ? PAGE_WIDTH - DEFAULT_MARGIN : DEFAULT_MARGIN)
+  const y = options.y ?? PAGE_HEIGHT - 10
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(7)
+    doc.setTextColor(...COLORS.textMuted)
+    doc.text(`${options.prefix ?? "Página"} ${i} / ${total}`, x, y, { align })
+  }
+}
+
+export interface TableOptions {
+  colWidths: number[]
+  rowH?: number
+  headH?: number
+  cellPadding?: number
+  topY?: number
+  maxY?: number
+  continuationLabel?: string
+  repeatHeader?: boolean
+}
+
+export function addTable(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  head: string[],
+  body: string[][],
+  options: TableOptions,
+): number {
+  const colWidths = options.colWidths
+  const rowH = options.rowH ?? 6
+  const headH = options.headH ?? 7
+  const cellPadding = options.cellPadding ?? 2
+  const topY = options.topY ?? DEFAULT_TOP_Y
+  const maxY = options.maxY ?? DEFAULT_MAX_Y
+  const repeatHeader = options.repeatHeader !== false
+
+  const border = COLORS.border
+  const primary = COLORS.primary
+  const white = COLORS.white
+  const text = COLORS.text
+
+  const drawHead = (yy: number) => {
+    doc.setFillColor(...primary)
+    doc.rect(x, yy, w, headH, "F")
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(7)
+    doc.setTextColor(...white)
+    let cx = x
+    head.forEach((h, i) => {
+      doc.text(h, cx + cellPadding, yy + headH / 2 + 2)
+      cx += colWidths[i]
+      if (i < head.length - 1) {
+        doc.setDrawColor(...white)
+        doc.setLineWidth(0.2)
+        doc.line(cx, yy, cx, yy + headH)
+      }
+    })
+    doc.setDrawColor(...border)
+    doc.setLineWidth(0.3)
+    doc.line(x, yy + headH, x + w, yy + headH)
+  }
+
+  drawHead(y)
+  let cy = y + headH
+
+  body.forEach((row, ri) => {
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(8)
+    doc.setTextColor(...text)
+
+    let maxLines = 1
+    const cellTexts: string[][] = []
+    row.forEach((cell, ci) => {
+      const lines = doc.splitTextToSize(cell, colWidths[ci] - cellPadding * 2)
+      cellTexts.push(lines)
+      if (lines.length > maxLines) maxLines = lines.length
+    })
+
+    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
+
+    if (cy + rowHeight > maxY) {
+      doc.addPage()
+      let contY = topY
+      if (options.continuationLabel) {
+        contY = addContinuationBanner(doc, x, contY, w, options.continuationLabel, head.join("  •  "))
+      }
+      if (repeatHeader) {
+        drawHead(contY)
+        cy = contY + headH
+      } else {
+        cy = contY
+      }
+    }
+
+    if (ri % 2 === 1) {
+      doc.setFillColor(249, 250, 251)
+      doc.rect(x, cy, w, rowHeight, "F")
+    }
+
+    let rx = x
+    row.forEach((_, ci) => {
+      const lines = cellTexts[ci]
+      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
+      lines.forEach((line, li) => {
+        doc.text(line, rx + cellPadding, textY + li * 4.5)
+      })
+      rx += colWidths[ci]
+      if (ci < row.length - 1) {
+        doc.line(rx, cy, rx, cy + rowHeight)
+      }
+    })
+
+    cy += rowHeight
+    doc.line(x, cy, x + w, cy)
+  })
+
+  return cy
+}

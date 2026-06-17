@@ -4,89 +4,11 @@ import {
   COLORS,
   addLogoPlaceholder,
   addSeparator,
+  addTable,
+  addPageNumbers,
+  ensureSpace,
   formatDateLong,
 } from "./pdf-utils"
-
-function addTable(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  w: number,
-  head: string[],
-  body: string[][],
-  colWidths: number[],
-) {
-  const rowH = 6
-  const headH = 7
-  const cellPadding = 2
-  const border = COLORS.border
-  const primary = COLORS.primary
-  const white = COLORS.white
-  const text = COLORS.text
-
-  doc.setFillColor(...primary)
-  doc.rect(x, y, w, headH, "F")
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(7)
-  doc.setTextColor(...white)
-
-  let cx = x
-  head.forEach((h, i) => {
-    doc.text(h, cx + cellPadding, y + headH / 2 + 2)
-    cx += colWidths[i]
-    if (i < head.length - 1) {
-      doc.setDrawColor(...white)
-      doc.setLineWidth(0.2)
-      doc.line(cx, y, cx, y + headH)
-    }
-  })
-
-  doc.setDrawColor(...border)
-  doc.setLineWidth(0.3)
-  doc.line(x, y + headH, x + w, y + headH)
-
-  let cy = y + headH
-  body.forEach((row, ri) => {
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(8)
-    doc.setTextColor(...text)
-
-    let maxLines = 1
-    let rx = x
-    const cellTexts: string[][] = []
-
-    row.forEach((cell, ci) => {
-      const lines = doc.splitTextToSize(cell, colWidths[ci] - cellPadding * 2)
-      cellTexts.push(lines)
-      if (lines.length > maxLines) maxLines = lines.length
-    })
-
-    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
-
-    if (ri % 2 === 1) {
-      doc.setFillColor(249, 250, 251)
-      doc.rect(x, cy, w, rowHeight, "F")
-    }
-
-    rx = x
-    row.forEach((_, ci) => {
-      const lines = cellTexts[ci]
-      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
-      lines.forEach((line, li) => {
-        doc.text(line, rx + cellPadding, textY + li * 4.5)
-      })
-      rx += colWidths[ci]
-      if (ci < row.length - 1) {
-        doc.line(rx, cy, rx, cy + rowHeight)
-      }
-    })
-
-    cy += rowHeight
-    doc.line(x, cy, x + w, cy)
-  })
-
-  return cy
-}
 
 export async function generateDispatchNotePDF(
   dispatch: DispatchResponse,
@@ -105,7 +27,6 @@ export async function generateDispatchNotePDF(
   const x0 = margin
   let y = margin
 
-  // ── Header ──
   await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(22)
@@ -122,7 +43,6 @@ export async function generateDispatchNotePDF(
   addSeparator(doc, x0, y, contentW)
   y += 8
 
-  // ── Document Info ──
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
@@ -139,7 +59,6 @@ export async function generateDispatchNotePDF(
 
   y += 14
 
-  // Warehouse extra info (address / SAP / responsible) when backend provides it
   const wh = dispatch.warehouse
   if (wh && (wh.physicalAddress || wh.sapCenterCode || wh.responsibleUserName)) {
     doc.setFont("helvetica", "bold")
@@ -164,7 +83,6 @@ export async function generateDispatchNotePDF(
     }
   }
 
-  // Cost center
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
@@ -184,7 +102,6 @@ export async function generateDispatchNotePDF(
 
   y += costCenterManagement ? 18 : 14
 
-  // Created by
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
@@ -209,7 +126,6 @@ export async function generateDispatchNotePDF(
   addSeparator(doc, x0, y, contentW)
   y += 8
 
-  // ── Items Table ──
   const totalItems = dispatch.items.reduce((s, i) => s + i.quantity, 0)
 
   const colWidths = [24, 24, contentW - 24 - 24 - 18 - 14 - 22, 18, 14, 22]
@@ -223,10 +139,13 @@ export async function generateDispatchNotePDF(
     String(item.quantity),
   ])
 
-  y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
+  y = addTable(doc, x0, y, contentW, head, bodyRows, {
+    colWidths,
+    continuationLabel: `Items del Despacho (${dispatch.items.length})`,
+  })
   y += 6
 
-  // ── Total items summary ──
+  y = ensureSpace(doc, y, 12)
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
   const sumX = pageW - margin - 70
@@ -236,11 +155,12 @@ export async function generateDispatchNotePDF(
   doc.text(`${totalItems} uds.`, sumX + 68, y, { align: "right" })
   y += 12
 
-  // ── Notes ──
   if (dispatch.notes) {
+    const notesH = 40
+    y = ensureSpace(doc, y, notesH)
     doc.setDrawColor(...COLORS.border)
     doc.setFillColor(...COLORS.bgLight)
-    doc.roundedRect(x0, y, contentW, 40, 2, 2, "FD")
+    doc.roundedRect(x0, y, contentW, notesH, 2, 2, "FD")
     doc.setFont("helvetica", "bold")
     doc.setFontSize(7)
     doc.setTextColor(...COLORS.primary)
@@ -250,15 +170,16 @@ export async function generateDispatchNotePDF(
     doc.setTextColor(...COLORS.text)
     const noteLines = doc.splitTextToSize(dispatch.notes, contentW - 8)
     doc.text(noteLines, x0 + 4, y + 14)
-    y += 48
+    y += notesH + 8
   }
 
-  // ── Signature ──
   const footBoxW = (contentW - 8) / 2
+  const footBoxH = 40
+  y = ensureSpace(doc, y, footBoxH)
 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
-  doc.roundedRect(x0, y, footBoxW, 40, 2, 2, "FD")
+  doc.roundedRect(x0, y, footBoxW, footBoxH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
@@ -271,7 +192,7 @@ export async function generateDispatchNotePDF(
   doc.text("Nombre y Firma", x0 + footBoxW / 2, y + 34, { align: "center" })
 
   const obsX = x0 + footBoxW + 8
-  doc.roundedRect(obsX, y, footBoxW, 40, 2, 2, "FD")
+  doc.roundedRect(obsX, y, footBoxW, footBoxH, 2, 2, "FD")
   doc.setFont("helvetica", "bold")
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.primary)
@@ -282,6 +203,8 @@ export async function generateDispatchNotePDF(
   doc.setFontSize(7)
   doc.setTextColor(...COLORS.textMuted)
   doc.text("Nombre & Firma", obsX + footBoxW / 2, y + 34, { align: "center" })
+
+  addPageNumbers(doc)
 
   return doc
 }

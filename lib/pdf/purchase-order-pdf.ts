@@ -6,7 +6,10 @@ import {
   addLogoPlaceholder,
   addSectionTitle,
   addSeparator,
+  addTable,
   addWrappedText,
+  addPageNumbers,
+  ensureSpace,
   formatDateShort,
   formatCurrency,
   translatePaymentMethod,
@@ -14,87 +17,6 @@ import {
   translateOrderStatus,
   statusColor,
 } from "./pdf-utils"
-
-function addTable(
-  doc: jsPDF,
-  x: number,
-  y: number,
-  w: number,
-  head: string[],
-  body: string[][],
-  colWidths: number[],
-) {
-  const rowH = 6
-  const headH = 7
-  const cellPadding = 2
-  const border = COLORS.border
-  const primary = COLORS.primary
-  const white = COLORS.white
-  const text = COLORS.text
-
-  doc.setFillColor(...primary)
-  doc.rect(x, y, w, headH, "F")
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(7)
-  doc.setTextColor(...white)
-
-  let cx = x
-  head.forEach((h, i) => {
-    doc.text(h, cx + cellPadding, y + headH / 2 + 2)
-    cx += colWidths[i]
-    if (i < head.length - 1) {
-      doc.setDrawColor(...white)
-      doc.setLineWidth(0.2)
-      doc.line(cx, y, cx, y + headH)
-    }
-  })
-
-  doc.setDrawColor(...border)
-  doc.setLineWidth(0.3)
-  doc.line(x, y + headH, x + w, y + headH)
-
-  let cy = y + headH
-  body.forEach((row, ri) => {
-    doc.setFont("helvetica", "normal")
-    doc.setFontSize(8)
-    doc.setTextColor(...text)
-
-    let maxLines = 1
-    let rx = x
-    const cellTexts: string[][] = []
-
-    row.forEach((cell, ci) => {
-      const lines = doc.splitTextToSize(cell, colWidths[ci] - cellPadding * 2)
-      cellTexts.push(lines)
-      if (lines.length > maxLines) maxLines = lines.length
-    })
-
-    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
-
-    if (ri % 2 === 1) {
-      doc.setFillColor(249, 250, 251)
-      doc.rect(x, cy, w, rowHeight, "F")
-    }
-
-    rx = x
-    row.forEach((_, ci) => {
-      const lines = cellTexts[ci]
-      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
-      lines.forEach((line, li) => {
-        doc.text(line, rx + cellPadding, textY + li * 4.5)
-      })
-      rx += colWidths[ci]
-      if (ci < row.length - 1) {
-        doc.line(rx, cy, rx, cy + rowHeight)
-      }
-    })
-
-    cy += rowHeight
-    doc.line(x, cy, x + w, cy)
-  })
-
-  return cy
-}
 
 export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Promise<jsPDF> {
   const doc = new jsPDF({
@@ -115,7 +37,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const warehouseName = warehouse?.name ?? order.destinationWarehouseName ?? "—"
   const warehouseAddress = warehouse?.physicalAddress ?? "—"
 
-  // ── Logo + Title + Info ──
   await addLogoPlaceholder(doc, x0, y, 40, 22)
 
   doc.setFontSize(20)
@@ -123,7 +44,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setTextColor(...COLORS.primary)
   doc.text("ORDEN DE COMPRA", pageW / 2, y + 10, { align: "center" })
 
-  // Status badge under title
   const statusLabel = translateOrderStatus(order.status).toUpperCase()
   const statusRgb = statusColor(order.status)
   doc.setFontSize(8)
@@ -163,12 +83,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   addSeparator(doc, x0, y, contentW)
   y += 8
 
-  // ── Supplier / Ship To boxes ──
   const boxW = (contentW - 6) / 2
   const HEADER_H = 8
   const PAD = 4
 
-  // Supplier box
   const supplierLines: string[] = []
   supplierLines.push(supplier?.name ?? order.supplierName)
   if (order.supplierRif) supplierLines.push(`RIF: ${order.supplierRif}`)
@@ -203,7 +121,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     by += 1.5
   }
 
-  // Ship To box
   const x1 = x0 + boxW + 6
   const shipLines: { kind: "name" | "text" | "label" | "value"; text: string; value?: string }[] = []
   shipLines.push({ kind: "name", text: warehouseName })
@@ -221,7 +138,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   }
   if (warehouse?.sapCenterCode) {
     shipLines.push({ kind: "label", text: "SAP" })
-    // FIX: Parse a String para que jsPDF pueda dibujarlo si viene como un número
     shipLines.push({ kind: "value", text: "", value: String(warehouse.sapCenterCode) })
   }
   if (warehouse?.description) {
@@ -280,7 +196,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   y += Math.max(supplierH, shipH) + 6
 
-  // ─ Terms Row ──
   const terms = [
     ["COMPRADOR", order.createdBy],
     ["TIEMPO ENTREGA", order.leadTime ? `${order.leadTime} dias` : "—"],
@@ -317,7 +232,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   })
   y += termRowH + 4
 
-  // ── Items Table ──
   const subtotal = order.subtotal ?? order.items.reduce((s, i) => s + i.subtotal, 0)
   const { taxAmount, total: taxBaseTotal } = applyTax(subtotal)
   const taxAmountFinal = order.taxAmount ?? taxAmount
@@ -335,13 +249,13 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     formatCurrency(item.unitPrice),
     formatCurrency(item.subtotal),
   ])
-  const emptyCount = Math.max(0, 5 - order.items.length)
-  for (let e = 0; e < emptyCount; e++) bodyRows.push(["", "", "", "", "", "", "", ""])
 
-  y = addTable(doc, x0, y, contentW, head, bodyRows, colWidths)
+  y = addTable(doc, x0, y, contentW, head, bodyRows, {
+    colWidths,
+    continuationLabel: `Items de la Orden (${order.items.length})`,
+  })
   y += 6
 
-  // ── Totals ──
   const totalX = pageW - margin - 70
   const totalW = 70
   const taxPctLabel = `IMPUESTO (${Math.round(TAX_RATE * 100)}%)`
@@ -351,6 +265,9 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   ]
   if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
   if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
+  const totalsBlockH = totals.length * 5 + 2 + 6 + 4
+
+  y = ensureSpace(doc, y, totalsBlockH + 6)
 
   totals.forEach(([label, value], i) => {
     doc.setFontSize(8)
@@ -372,7 +289,6 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   y = totalY + 14
 
-  // ── Approval / Rejection info ──
   if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
     const isRejected = !!order.rejectionReason
     const sectionLabel = isRejected ? "Info de Rechazo" : "Info de Aprobacion"
@@ -413,14 +329,17 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     y = ay + 6
   }
 
-  // ── Comments ──
   const commentsText = order.specialConditions || order.description || "—"
+  const commentsLines = doc.splitTextToSize(commentsText, contentW - 8)
+  const commentsBlockH = 12 + commentsLines.length * 4.5 + 4
+  y = ensureSpace(doc, y, commentsBlockH + 4)
   addSectionTitle(doc, x0, y, contentW, "Comentarios o Instrucciones Especiales")
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...COLORS.text)
-  const lines = doc.splitTextToSize(commentsText, contentW - 8)
-  doc.text(lines, x0 + 4, y + 16)
+  doc.text(commentsLines, x0 + 4, y + 16)
+
+  addPageNumbers(doc)
 
   return doc
 }
