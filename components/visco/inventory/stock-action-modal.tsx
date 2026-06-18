@@ -85,7 +85,6 @@ export function StockActionModal({
         toWarehouseId,
         quantity: qty,
         createdById: user.id,
-        unitCost: unitCost ? Number(unitCost) : null,
       })
       toast.success(`${qty} unidades transferidas`)
       if (product.totalStock - qty <= product.reorderPoint) {

@@ -366,7 +366,6 @@ export interface TransferStockRequest {
   toWarehouseId: number
   quantity: number
   createdById: string
-  unitCost?: number | null
   reason?: string | null
 }
 

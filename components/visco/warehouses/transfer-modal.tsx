@@ -49,7 +49,6 @@ export function TransferModal({
   const [fromWarehouseId, setFromWarehouseId] = useState<number>(0)
   const [toWarehouseId, setToWarehouseId] = useState<number>(0)
   const [quantity, setQuantity] = useState("1")
-  const [unitCost, setUnitCost] = useState("")
   const [reason, setReason] = useState("")
   const [saving, setSaving] = useState(false)
   const [loadingWarehouses, setLoadingWarehouses] = useState(false)
@@ -127,7 +126,6 @@ export function TransferModal({
   const close = () => {
     onOpenChange(false)
     setQuantity("1")
-    setUnitCost("")
     setReason("")
     setProductId(0)
     setSearchTerm("")
@@ -155,7 +153,6 @@ export function TransferModal({
         toWarehouseId,
         quantity: qty,
         createdById: user.id,
-        unitCost: unitCost ? Number(unitCost) : null,
         reason: reason || null,
       })
       toast.success(`${qty} unidades transferidas`)
@@ -329,11 +326,6 @@ export function TransferModal({
                   <p className="text-xs text-muted-foreground">Stock disponible: {selectedProduct.currentStock}</p>
                 )}
                 <Input type="number" min="1" max={selectedProduct?.currentStock} required value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={saving} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Costo unitario <span className="text-[#6b7280]">(opcional)</span></Label>
-                <Input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" disabled={saving} />
               </div>
 
               <div className="space-y-1.5">
