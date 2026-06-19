@@ -26,7 +26,7 @@ import { fetchWarehouses } from "@/lib/services/warehouse"
 import type { CreatePurchaseOrderRequest, ProductDTO, RequisitionResponse, SupplierDTO } from "@/lib/types"
 import { fetchSuppliers, createSupplier } from "@/lib/services/suppliers"
 import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
-import { fetchRequisitions } from "@/lib/services/requisitions"
+import { fetchRequisition, fetchRequisitions } from "@/lib/services/requisitions"
 import { getCachedUser } from "@/lib/auth-client"
 import { canCreateSupplierFromPo } from "@/lib/permissions"
 import { CheckIcon, ArrowPathIcon, PlusIcon, TrashIcon, MagnifyingGlassIcon, XMarkIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline"
@@ -52,6 +52,15 @@ interface LineItem {
   quantity: number
   unitPrice: number
   sku: string
+  // Only set when this line is fulfilling a specific RequisitionItem
+  // (i.e. the PO is tied to a requisition). The backend uses it for
+  // per-line award tracking and over-award validation.
+  requisitionItemId: number | null
+  // Informational: how much of this requisition line is still pending
+  // (only set when the line came from a requisition). Used to display a
+  // soft cap so the user can avoid over-awarding.
+  requestedQuantity: number | null
+  alreadyAwardedQuantity: number | null
 }
 
 const STEPS = ["Información", "Productos", "Revisión"] as const
@@ -130,8 +139,19 @@ export function CreatePOModal({
         setWarehouses(wh)
         setDestinationWarehouseId((prev) => prev ?? wh[0]?.id ?? null)
       }),
-      fetchRequisitions(0, 200, "APPROVED").then((reqRes) => {
-        setRequisitions(reqRes.content ?? [])
+      // With the multi-PO model, a requisition is "open for award" when
+      // it is APPROVED (no PO yet) OR PARTIALLY_CONVERTED (at least one
+      // PO but still pending lines). We pull both lists in parallel and
+      // merge, deduplicating by id.
+      Promise.all([
+        fetchRequisitions(0, 100, "APPROVED"),
+        fetchRequisitions(0, 100, "PARTIALLY_CONVERTED"),
+      ]).then(([approvedRes, partialRes]) => {
+        const merged = new Map<number, RequisitionResponse>()
+        for (const r of approvedRes.content ?? []) merged.set(r.id, r)
+        for (const r of partialRes.content ?? []) merged.set(r.id, r)
+        setRequisitions(Array.from(merged.values()))
+      }).catch(() => {
       }),
     ]).catch(() => {
     })
@@ -156,6 +176,9 @@ export function CreatePOModal({
           quantity: item.quantity,
           unitPrice: 0,
           sku: item.productSku,
+          requisitionItemId: item.id ?? null,
+          requestedQuantity: item.quantity,
+          alreadyAwardedQuantity: item.awardedQuantity ?? 0,
         }
       }),
     )
@@ -244,28 +267,39 @@ export function CreatePOModal({
     closeTimerRef.current = setTimeout(reset, 200)
   }
 
-  const handleRequisitionChange = (idStr: string) => {
+  const handleRequisitionChange = async (idStr: string) => {
     const id = idStr ? Number(idStr) : null
     setSelectedRequisitionId(id)
-    if (id) {
-      const req = requisitions.find((r) => r.id === id)
-      if (req) {
-        setDescription(req.description)
-        setLines(
-          req.items.map((item) => {
-            const id = nextLineIdRef.current++
-            return {
-              id,
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: 0,
-              sku: item.productSku,
-            }
-          }),
-        )
-      }
+    if (!id) {
+      return
     }
+    // Refetch the single-requisition detail so we get the awarded /
+    // pending quantities (the list endpoint is paged and doesn't enrich
+    // per-item data).
+    let detail: RequisitionResponse | undefined
+    try {
+      detail = await fetchRequisition(id)
+    } catch {
+      detail = requisitions.find((r) => r.id === id)
+    }
+    if (!detail) return
+    setDescription(detail.description)
+    setLines(
+      detail.items.map((item) => {
+        const lid = nextLineIdRef.current++
+        return {
+          id: lid,
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: 0,
+          sku: item.productSku,
+          requisitionItemId: item.id ?? null,
+          requestedQuantity: item.quantity,
+          alreadyAwardedQuantity: item.awardedQuantity ?? 0,
+        }
+      }),
+    )
   }
 
   const handleCreateSupplier = async (data: Partial<SupplierDTO>) => {
@@ -303,7 +337,18 @@ export function CreatePOModal({
     }
     setLines((prev) => [
       ...prev,
-      { id: nextLineIdRef.current++, productId: pickProduct.id, productName: pickProduct.name, quantity: qty, unitPrice: price, sku: pickProduct.sku },
+      {
+        id: nextLineIdRef.current++,
+        productId: pickProduct.id,
+        productName: pickProduct.name,
+        quantity: qty,
+        unitPrice: price,
+        sku: pickProduct.sku,
+        // Free-added products (not from a requisition) leave this null.
+        requisitionItemId: null,
+        requestedQuantity: null,
+        alreadyAwardedQuantity: null,
+      },
     ])
     setPickProduct(null)
     setPickQty("1")
@@ -347,7 +392,12 @@ export function CreatePOModal({
         paymentMethod: paymentMethod as CreatePurchaseOrderRequest["paymentMethod"],
         type: type as CreatePurchaseOrderRequest["type"],
         createdById: user.id,
-        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+        items: lines.map((l) => ({
+          productId: l.productId,
+          quantity: l.quantity,
+          unitPrice: l.unitPrice,
+          requisitionItemId: l.requisitionItemId,
+        })),
       }
       if (leadTime) body.leadTime = Number(leadTime)
       if (shipConditions.trim()) body.shipConditions = shipConditions.trim()
@@ -675,81 +725,102 @@ export function CreatePOModal({
                 </div>
               ) : (
                 <ul>
-                  {lines.map((l) => (
-                    <li
-                      key={l.id}
-                      className="flex items-center gap-3 px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground truncate">{l.productName}</div>
-                        <div className="text-xs text-muted-foreground font-mono">{l.sku}</div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <input
-                          type="number"
-                          min="1"
-                          placeholder="0"
-                          className="w-16 rounded-md border border-border bg-card px-2 py-1 text-center text-xs tabular-nums"
-                          value={l.quantity || ""}
-                          onChange={(e) => {
-                            if (e.target.value === "") {
-                              setLines((prev) =>
-                                prev.map((line) =>
-                                  line.id === l.id ? { ...line, quantity: 0 } : line,
-                                ),
-                              )
-                              return
-                            }
-                            const v = parseInt(e.target.value, 10)
-                            if (!isNaN(v) && v >= 0) {
-                              setLines((prev) =>
-                                prev.map((line) =>
-                                  line.id === l.id ? { ...line, quantity: v } : line,
-                                ),
-                              )
-                            }
-                          }}
-                        />
-                        <span className="text-xs text-muted-foreground">×</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                          className="w-24 rounded-md border border-border bg-card px-2 py-1 text-right text-xs tabular-nums"
-                          value={l.unitPrice || ""}
-                          onChange={(e) => {
-                            if (e.target.value === "") {
-                              setLines((prev) =>
-                                prev.map((line) =>
-                                  line.id === l.id ? { ...line, unitPrice: 0 } : line,
-                                ),
-                              )
-                              return
-                            }
-                            const v = parseFloat(e.target.value)
-                            if (!isNaN(v)) {
-                              setLines((prev) =>
-                                prev.map((line) =>
-                                  line.id === l.id ? { ...line, unitPrice: v } : line,
-                                ),
-                              )
-                            }
-                          }}
-                        />
-                        <span className="tabular-nums font-medium w-24 text-right text-xs">
-                          ${(l.quantity * l.unitPrice).toLocaleString()}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
-                        className="text-muted-foreground hover:text-red-600 shrink-0"
-                        aria-label="Eliminar línea"
+                  {lines.map((l) => {
+                    const pending =
+                      l.requestedQuantity != null && l.alreadyAwardedQuantity != null
+                        ? Math.max(0, l.requestedQuantity - l.alreadyAwardedQuantity)
+                        : null
+                    const overAward = pending != null && l.quantity > pending
+                    return (
+                      <li
+                        key={l.id}
+                        className="px-3 py-2.5 border-b last:border-b-0 border-border text-sm"
                       >
-                        <TrashIcon className="size-4" />
-                      </button>
-                    </li>
-                  ))}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-foreground truncate">{l.productName}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{l.sku}</div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="0"
+                              className="w-16 rounded-md border border-border bg-card px-2 py-1 text-center text-xs tabular-nums"
+                              value={l.quantity || ""}
+                              onChange={(e) => {
+                                if (e.target.value === "") {
+                                  setLines((prev) =>
+                                    prev.map((line) =>
+                                      line.id === l.id ? { ...line, quantity: 0 } : line,
+                                    ),
+                                  )
+                                  return
+                                }
+                                const v = parseInt(e.target.value, 10)
+                                if (!isNaN(v) && v >= 0) {
+                                  setLines((prev) =>
+                                    prev.map((line) =>
+                                      line.id === l.id ? { ...line, quantity: v } : line,
+                                    ),
+                                  )
+                                }
+                              }}
+                            />
+                            <span className="text-xs text-muted-foreground">×</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="0.00"
+                              className="w-24 rounded-md border border-border bg-card px-2 py-1 text-right text-xs tabular-nums"
+                              value={l.unitPrice || ""}
+                              onChange={(e) => {
+                                if (e.target.value === "") {
+                                  setLines((prev) =>
+                                    prev.map((line) =>
+                                      line.id === l.id ? { ...line, unitPrice: 0 } : line,
+                                    ),
+                                  )
+                                  return
+                                }
+                                const v = parseFloat(e.target.value)
+                                if (!isNaN(v)) {
+                                  setLines((prev) =>
+                                    prev.map((line) =>
+                                      line.id === l.id ? { ...line, unitPrice: v } : line,
+                                    ),
+                                  )
+                                }
+                              }}
+                            />
+                            <span className="tabular-nums font-medium w-24 text-right text-xs">
+                              ${(l.quantity * l.unitPrice).toLocaleString()}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
+                            className="text-muted-foreground hover:text-red-600 shrink-0"
+                            aria-label="Eliminar línea"
+                          >
+                            <TrashIcon className="size-4" />
+                          </button>
+                        </div>
+                        {pending != null && (
+                          <div
+                            className={cn(
+                              "mt-1.5 text-[11px] tabular-nums",
+                              overAward ? "text-red-600" : "text-muted-foreground",
+                            )}
+                          >
+                            Solicitado: {l.requestedQuantity} · Ya adjudicado:{" "}
+                            {l.alreadyAwardedQuantity} · Pendiente: {pending}
+                            {overAward && " · ⚠ excede el pendiente de la requisición"}
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
               <div className="flex flex-col gap-1 px-3 py-3 border-t border-border bg-card rounded-b-lg">

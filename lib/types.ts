@@ -237,6 +237,9 @@ export interface PurchaseOrderItemResponse {
   quantity: number
   unitPrice: number
   subtotal: number
+  // Back-reference to the requisition line this PO item is fulfilling.
+  // Null when the PO is not tied to a requisition (direct POs).
+  requisitionItemId?: number | null
 }
 
 // Lightweight summary of a purchase order from the perspective of a single
@@ -261,7 +264,14 @@ export interface CreatePurchaseOrderRequest {
   requisitionId?: number
   leadTime?: number | null
   shipConditions?: string | null
-  items: { productId: number; quantity: number; unitPrice: number }[]
+  // Each item may carry a `requisitionItemId` so the backend can track
+  // partial fulfillment of a requisition across multiple POs.
+  items: {
+    productId: number
+    quantity: number
+    unitPrice: number
+    requisitionItemId?: number | null
+  }[]
 }
 
 // ── Goods Receipt ──
@@ -490,6 +500,7 @@ export type RequisitionStatus =
   | "PENDING"
   | "AWAITING_APPROVAL"
   | "APPROVED"
+  | "PARTIALLY_CONVERTED"
   | "REJECTED"
   | "CANCELLED"
   | "CONVERTED"
@@ -507,9 +518,23 @@ export interface RequisitionResponse {
   approvedAt: string | null
   createdAt: string
   items: RequisitionItemResponse[]
+  // POs already awarded against this requisition. Populated only on the
+  // single-detail fetch path (and only when the requisition has at least
+  // one awarded PO).
+  purchaseOrders?: RequisitionPurchaseOrderSummary[]
+}
+
+export interface RequisitionPurchaseOrderSummary {
+  id: number
+  orderNumber: string
+  supplierName: string
+  status: string
+  totalAmount?: number | null
+  createdAt: string
 }
 
 export interface RequisitionItemResponse {
+  id?: number
   productId: number
   productName: string
   productSku: string
@@ -518,6 +543,10 @@ export interface RequisitionItemResponse {
   uom: string
   quantity: number
   notes: string | null
+  // Fulfillment progress (only present on the single-detail fetch path).
+  awardedQuantity?: number | null
+  pendingQuantity?: number | null
+  fullyAwarded?: boolean
 }
 
 export interface CreateRequisitionRequest {

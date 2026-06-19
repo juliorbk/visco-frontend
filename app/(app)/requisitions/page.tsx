@@ -16,7 +16,7 @@ import { CreateRequisitionModal } from "@/components/visco/requisitions/create-r
 import { RequisitionDetail } from "@/components/visco/requisitions/requisition-detail"
 import { RequisitionStepper } from "@/components/visco/requisitions/requisition-stepper"
 import { CreatePOModal } from "@/components/visco/procurement/create-po-modal"
-import { fetchRequisitions } from "@/lib/services/requisitions"
+import { fetchRequisition, fetchRequisitions } from "@/lib/services/requisitions"
 import { fetchCostCenters } from "@/lib/services/requisitions"
 import type { RequisitionResponse, Page, CostCenter } from "@/lib/types"
 import { PlusIcon, ArrowPathIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline"
@@ -30,6 +30,7 @@ const STATUS_FILTERS = [
   { value: "PENDING", label: "Pendientes" },
   { value: "AWAITING_APPROVAL", label: "Esperando Aprobación" },
   { value: "APPROVED", label: "Aprobadas" },
+  { value: "PARTIALLY_CONVERTED", label: "Adjudicación Parcial" },
   { value: "REJECTED", label: "Rechazadas" },
   { value: "CONVERTED", label: "Convertidas" },
   { value: "CANCELLED", label: "Canceladas" },
@@ -85,8 +86,18 @@ export default function RequisitionsPage() {
 
   const ccByArea = new Map(costCenters.map((cc) => [cc.fullDescription, cc]))
 
-  const handleConvert = (req: RequisitionResponse) => {
-    setConvertRequisition(req)
+  const handleConvert = async (req: RequisitionResponse) => {
+    // Refetch the single requisition so the modal gets the enriched
+    // view with per-line awarded/pending quantities (the list endpoint
+    // is paged and doesn't include them).
+    try {
+      const detail = await fetchRequisition(req.id)
+      setConvertRequisition(detail)
+    } catch {
+      // Fallback to the list-view row if the refetch fails — the modal
+      // will still work, it just won't show the per-line progress.
+      setConvertRequisition(req)
+    }
     setPoModalOpen(true)
   }
 

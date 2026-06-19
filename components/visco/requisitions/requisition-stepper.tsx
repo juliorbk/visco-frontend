@@ -2,14 +2,26 @@ import { CheckIcon } from "@heroicons/react/24/outline"
 import { cn } from "@/lib/utils"
 import type { RequisitionStatus } from "@/lib/types"
 
-const STEPS = ["Borrador", "Pendiente", "Esperando Aprobación", "Aprobado", "Convertido"] as const
+// Order matters: the position of each label in this array is the step
+// number that the stepper highlights. We include an "Adjudicación
+// Parcial" stage between "Aprobado" and "Convertido" so the user can
+// visually see a multi-PO requisition in progress.
+const STEPS = [
+  "Borrador",
+  "Pendiente",
+  "Esperando Aprobación",
+  "Aprobado",
+  "Adjudicación Parcial",
+  "Convertido",
+] as const
 
 const STATUS_TO_STEP: Record<string, number> = {
   DRAFT: 0,
   PENDING: 1,
   AWAITING_APPROVAL: 2,
   APPROVED: 3,
-  CONVERTED: 4,
+  PARTIALLY_CONVERTED: 4,
+  CONVERTED: 5,
   REJECTED: -1,
   CANCELLED: -1,
 }
