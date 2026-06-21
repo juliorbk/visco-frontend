@@ -6,7 +6,8 @@ import {
   ArrowPathIcon,
   EqualsIcon,
   ExclamationTriangleIcon,
-  ChevronUpDownIcon,
+  PlusIcon,
+  TrashIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline"
 import {
@@ -19,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { adjustStock, fetchWarehouses } from "@/lib/services/warehouse"
+import { adjustStockBatch, fetchWarehouses } from "@/lib/services/warehouse"
 import { fetchProducts, type ProductFilters } from "@/lib/services/inventory"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductDTO, WarehouseResponse } from "@/lib/types"
@@ -36,6 +37,16 @@ const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
 
 const PRODUCT_SEARCH_PAGE_SIZE = 50
 
+interface LineItem {
+  id: number
+  productId: number
+  productName: string
+  sku: string
+  currentStock: number
+  reorderPoint: number
+  newStock: number
+}
+
 export function AdjustModal({
   open,
   onOpenChange,
@@ -45,13 +56,12 @@ export function AdjustModal({
   onOpenChange: (o: boolean) => void
   onDone: () => void
 }) {
+  const nextLineIdRef = useRef(1)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [products, setProducts] = useState<ProductDTO[]>([])
-  const [productId, setProductId] = useState<number>(0)
   const [warehouseId, setWarehouseId] = useState<number>(0)
-  const [newStock, setNewStock] = useState("0")
+  const [lines, setLines] = useState<LineItem[]>([])
   const [reason, setReason] = useState("")
-  const [unitCost, setUnitCost] = useState("")
   const [saving, setSaving] = useState(false)
   const [loadingWarehouses, setLoadingWarehouses] = useState(false)
 
@@ -82,11 +92,11 @@ export function AdjustModal({
       setLoadingSearch(true)
       try {
         const trimmed = debouncedSearchTerm.trim()
-        const filters: ProductFilters = { hasStock: true }
+        const filters: ProductFilters = {}
         if (trimmed) filters[searchField] = trimmed
         const res = await fetchProducts(0, PRODUCT_SEARCH_PAGE_SIZE, filters, controller.signal)
         if (!controller.signal.aborted) {
-          setProducts((res.content ?? []).filter((p) => p.totalStock > 0))
+          setProducts(res.content ?? [])
         }
       } catch {
       } finally {
@@ -112,42 +122,69 @@ export function AdjustModal({
 
   const close = () => {
     onOpenChange(false)
-    setNewStock("0")
+    setLines([])
     setReason("")
-    setUnitCost("")
-    setProductId(0)
+    setSearchTerm("")
+    setSearchOpen(false)
+    nextLineIdRef.current = 1
+  }
+
+  const addLine = (product: ProductDTO) => {
+    if (lines.some((l) => l.productId === product.id)) {
+      toast.error("Este producto ya está en la lista")
+      return
+    }
+    setLines((prev) => [
+      ...prev,
+      {
+        id: nextLineIdRef.current++,
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        currentStock: product.totalStock,
+        reorderPoint: product.reorderPoint,
+        newStock: product.totalStock,
+      },
+    ])
     setSearchTerm("")
     setSearchOpen(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     const user = getCachedUser()
     if (!user) { toast.error("Debes iniciar sesión"); return }
-    const ns = Number(newStock)
-    if (ns < 0) { toast.error("El stock no puede ser negativo"); return }
-    if (!productId) { toast.error("Selecciona un producto"); return }
+    if (lines.length === 0) { toast.error("Agrega al menos un producto"); return }
+    if (!warehouseId) { toast.error("Selecciona un almacén"); return }
+
+    for (const line of lines) {
+      if (line.newStock < 0) {
+        toast.error(`Stock inválido para ${line.productName}`)
+        return
+      }
+    }
 
     setSaving(true)
     try {
-      await adjustStock({
-        productId,
+      const movements = await adjustStockBatch({
         warehouseId,
-        newStock: ns,
-        reason,
+        items: lines.map((l) => ({ productId: l.productId, newStock: l.newStock })),
+        reason: reason || null,
         createdById: user.id,
-        unitCost: unitCost ? Number(unitCost) : null,
       })
-      toast.success(`Stock ajustado a ${ns}`)
-      if (selectedProduct && ns <= selectedProduct.reorderPoint) {
+      toast.success(`${lines.length} producto(s) ajustado(s)`)
+
+      const belowReorder = lines.filter((l) => l.newStock <= l.reorderPoint)
+      if (belowReorder.length > 0) {
+        const names = belowReorder.map((l) => l.productName).join(", ")
         toast.warning(
           <div className="flex items-center gap-2">
             <ExclamationTriangleIcon className="size-4" />
-            <span>Stock por debajo del punto de reorden ({selectedProduct.reorderPoint})</span>
+            <span>Productos por debajo del punto de reorden: {names}</span>
           </div>,
           { duration: 6000 }
         )
       }
+
       onDone()
       close()
     } catch (err) {
@@ -157,9 +194,9 @@ export function AdjustModal({
     }
   }
 
-  const selectedProduct = products.find((p) => p.id === productId)
-
   if (!open) return null
+
+  const totalQty = lines.reduce((s, l) => s + l.newStock, 0)
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -167,7 +204,9 @@ export function AdjustModal({
         <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6]">
           <div>
             <h2 className="text-xl font-bold text-[#111827]">Ajustar Stock</h2>
-            <p className="text-sm text-[#6b7280] mt-0.5">Ajusta manualmente el stock de un producto en un almacén.</p>
+            <p className="text-sm text-[#6b7280] mt-0.5">
+              Ajusta manualmente el stock de productos en un almacén.
+            </p>
           </div>
           <button onClick={close} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
             <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
@@ -179,113 +218,8 @@ export function AdjustModal({
             <ArrowPathIcon className="size-6 animate-spin text-[#6b7280]" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <div>
             <div className="p-6 space-y-5">
-              <div className="space-y-1.5">
-                <Label>Producto</Label>
-                {selectedProduct ? (
-                  <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-card text-sm">
-                    <span className="flex-1 truncate">
-                      {selectedProduct.name} ({selectedProduct.sku})
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProductId(0)
-                        setSearchTerm("")
-                        setSearchOpen(true)
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label="Cambiar producto"
-                    >
-                      <ChevronUpDownIcon className="size-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative" ref={searchRef}>
-                    <div className="flex gap-2">
-                      <Select
-                        value={searchField}
-                        onValueChange={(v) => setSearchField(v as SearchField)}
-                        disabled={saving}
-                      >
-                        <SelectTrigger className="w-[150px] bg-card">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="name">Nombre</SelectItem>
-                          <SelectItem value="sapCode">Cód. SAP</SelectItem>
-                          <SelectItem value="sku">SKU</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="relative flex-1">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                        <Input
-                          placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
-                          className="pl-9 bg-card"
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value)
-                            setSearchOpen(true)
-                          }}
-                          onFocus={() => setSearchOpen(true)}
-                          disabled={saving}
-                        />
-                      </div>
-                    </div>
-
-                    {searchOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
-                        {loadingSearch ? (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
-                            Buscando…
-                          </div>
-                        ) : products.length === 0 ? (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            {debouncedSearchTerm.trim()
-                              ? "No se encontraron productos"
-                              : "No hay productos con stock disponibles"}
-                          </div>
-                        ) : (
-                          products.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50"
-                              onClick={() => {
-                                setProductId(p.id)
-                                setSearchOpen(false)
-                                setSearchTerm("")
-                              }}
-                            >
-                              <div className="font-medium text-foreground">{p.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.totalStock} {p.uom}
-                              </div>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {selectedProduct && (
-                <div className="bg-[#f5f5f7] rounded-lg p-3 text-sm text-[#6b7280] flex items-center gap-2">
-                  <span>Stock actual:</span>
-                  <span className="font-semibold text-[#111827]">{selectedProduct.totalStock}</span>
-                  <span className="text-[#9ca3af]">{selectedProduct.uom}</span>
-                  {selectedProduct.reorderPoint > 0 && (
-                    <>
-                      <span className="text-[#d1d5db]">&middot;</span>
-                      <span>Punto de reorden: {selectedProduct.reorderPoint}</span>
-                    </>
-                  )}
-                </div>
-              )}
-
               <div className="space-y-1.5">
                 <Label>Almacén</Label>
                 <Select value={String(warehouseId)} onValueChange={(v) => setWarehouseId(Number(v))} disabled={saving}>
@@ -299,18 +233,137 @@ export function AdjustModal({
               </div>
 
               <div className="space-y-1.5">
-                <Label>Nuevo stock</Label>
-                <Input type="number" min="0" required value={newStock} onChange={(e) => setNewStock(e.target.value)} disabled={saving} />
+                <Label>Agregar producto</Label>
+                <div className="relative" ref={searchRef}>
+                  <div className="flex gap-2">
+                    <Select
+                      value={searchField}
+                      onValueChange={(v) => setSearchField(v as SearchField)}
+                      disabled={saving}
+                    >
+                      <SelectTrigger className="w-[150px] bg-card">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Nombre</SelectItem>
+                        <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                        <SelectItem value="sku">SKU</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="relative flex-1">
+                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+                        className="pl-9 bg-card"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value)
+                          setSearchOpen(true)
+                        }}
+                        onFocus={() => setSearchOpen(true)}
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
+
+                  {searchOpen && (
+                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
+                      {loadingSearch ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                          Buscando…
+                        </div>
+                      ) : products.length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          {debouncedSearchTerm.trim()
+                            ? "No se encontraron productos"
+                            : "No hay productos registrados"}
+                        </div>
+                      ) : (
+                        products.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50 flex items-center justify-between"
+                            onClick={() => addLine(p)}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-foreground">{p.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · SAP: {p.sapCode} · Stock actual: {p.totalStock} {p.uom}
+                              </div>
+                            </div>
+                            <PlusIcon className="size-4 shrink-0 text-muted-foreground ml-2" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#f3f4f6]">
+                {lines.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-[#6b7280]">
+                    Sin productos agregados aún.
+                  </div>
+                ) : (
+                  <>
+                    <ul>
+                      {lines.map((l) => {
+                        const belowReorder = l.newStock <= l.reorderPoint
+                        return (
+                          <li
+                            key={l.id}
+                            className="flex items-center justify-between gap-3 px-4 py-3 border-b last:border-b-0 border-[#f3f4f6] text-sm"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-[#111827] truncate">{l.productName}</div>
+                              <div className="text-xs text-[#6b7280]">
+                                {l.sku} · Actual: {l.currentStock}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="w-20">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  className={`h-8 text-xs text-center ${belowReorder ? "border-amber-400" : ""}`}
+                                  value={l.newStock ?? ""}
+                                  onChange={(e) => {
+                                    const v = Math.max(0, parseInt(e.target.value, 10) || 0)
+                                    setLines((prev) =>
+                                      prev.map((line) =>
+                                        line.id === l.id ? { ...line, newStock: v } : line,
+                                      ),
+                                    )
+                                  }}
+                                  disabled={saving}
+                                />
+                              </div>
+                              <button
+                                onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
+                                className="text-[#6b7280] hover:text-red-600 shrink-0"
+                                aria-label="Eliminar línea"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-[#f3f4f6] bg-[#fafafa] rounded-b-lg">
+                      <span className="text-sm font-medium text-[#111827]">Total productos</span>
+                      <span className="font-semibold text-lg">{lines.length}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <Label>Motivo</Label>
+                <Label>Motivo <span className="text-[#6b7280]">(opcional)</span></Label>
                 <Textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Razón del ajuste…" disabled={saving} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Costo unitario <span className="text-[#6b7280]">(opcional)</span></Label>
-                <Input type="number" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0.00" disabled={saving} />
               </div>
             </div>
 
@@ -324,18 +377,19 @@ export function AdjustModal({
                 Cancelar
               </button>
               <button
-                type="submit"
-                disabled={saving || loadingWarehouses}
+                type="button"
+                onClick={handleSubmit}
+                disabled={saving || loadingWarehouses || lines.length === 0}
                 className="px-5 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {saving ? (
                   <><ArrowPathIcon className="size-4 animate-spin" /> Ajustando…</>
                 ) : (
-                  <><EqualsIcon className="size-4" /> Ajustar</>
+                  <><EqualsIcon className="size-4" /> Ajustar ({lines.length})</>
                 )}
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </div>

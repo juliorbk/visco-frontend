@@ -370,6 +370,11 @@ export interface ProductStockBreakdown {
   }[]
 }
 
+export interface TransferStockItem {
+  productId: number
+  quantity: number
+}
+
 export interface TransferStockRequest {
   productId: number
   fromWarehouseId: number
@@ -379,6 +384,20 @@ export interface TransferStockRequest {
   reason?: string | null
 }
 
+export interface TransferStockBatchRequest {
+  fromWarehouseId: number
+  toWarehouseId: number
+  items: TransferStockItem[]
+  reason?: string | null
+  createdById: string
+}
+
+export interface AdjustStockItem {
+  productId: number
+  newStock: number
+  unitCost?: number | null
+}
+
 export interface AdjustStockRequest {
   productId: number
   warehouseId: number
@@ -386,6 +405,13 @@ export interface AdjustStockRequest {
   reason?: string
   createdById: string
   unitCost?: number | null
+}
+
+export interface AdjustStockBatchRequest {
+  warehouseId: number
+  items: AdjustStockItem[]
+  reason?: string | null
+  createdById: string
 }
 
 // ── Category ──

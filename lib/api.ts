@@ -58,7 +58,13 @@ async function request<T>(
     throw new Error(messages.join("; ") || `Error ${res.status}`)
   }
 
-  return res.json()
+  // Some endpoints (transferStock, adjustStock, …) return 200 OK with an
+  // empty body. Calling res.json() on an empty string throws
+  // "Unexpected end of JSON input", so we read as text first and only
+  // parse when there's actual content.
+  const text = await res.text()
+  if (!text) return undefined as T
+  return JSON.parse(text) as T
 }
 
 export const api = {

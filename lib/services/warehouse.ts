@@ -8,7 +8,9 @@ import type {
   ReceiveGoodsRequest,
   CreateWarehouseRequest,
   TransferStockRequest,
+  TransferStockBatchRequest,
   AdjustStockRequest,
+  AdjustStockBatchRequest,
   InventoryMovementResponse,
   PurchaseOrderReceiptSummary,
   ProductOnStock,
@@ -54,8 +56,16 @@ export async function transferStock(data: TransferStockRequest): Promise<void> {
   await api.post("/api/warehouse/stock/transfer", data)
 }
 
+export async function transferStockBatch(data: TransferStockBatchRequest): Promise<InventoryMovementResponse[]> {
+  return api.post<InventoryMovementResponse[]>("/api/warehouse/stock/transfer-batch", data)
+}
+
 export async function adjustStock(data: AdjustStockRequest): Promise<void> {
   await api.post("/api/warehouse/stock/adjust", data)
+}
+
+export async function adjustStockBatch(data: AdjustStockBatchRequest): Promise<InventoryMovementResponse[]> {
+  return api.post<InventoryMovementResponse[]>("/api/warehouse/stock/adjust-batch", data)
 }
 
 export async function fetchMovements(

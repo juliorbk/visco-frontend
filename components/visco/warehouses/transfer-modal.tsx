@@ -7,6 +7,8 @@ import {
   ArrowsRightLeftIcon,
   ChevronUpDownIcon,
   MagnifyingGlassIcon,
+  PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline"
 import {
   Select,
@@ -18,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { transferStock, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
+import { transferStockBatch, fetchWarehouses, fetchProductsOnStock } from "@/lib/services/warehouse"
 import { getCachedUser } from "@/lib/auth-client"
 import type { ProductOnStock, WarehouseResponse } from "@/lib/types"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -34,6 +36,14 @@ const SEARCH_FIELD_PLACEHOLDERS: Record<SearchField, string> = {
 
 const PRODUCT_SEARCH_PAGE_SIZE = 50
 
+interface LineItem {
+  id: number
+  productId: number
+  productName: string
+  sku: string
+  quantity: number
+}
+
 export function TransferModal({
   open,
   onOpenChange,
@@ -43,12 +53,12 @@ export function TransferModal({
   onOpenChange: (o: boolean) => void
   onDone: () => void
 }) {
+  const nextLineIdRef = useRef(1)
   const [warehouses, setWarehouses] = useState<WarehouseResponse[]>([])
   const [products, setProducts] = useState<ProductOnStock[]>([])
-  const [productId, setProductId] = useState<number>(0)
   const [fromWarehouseId, setFromWarehouseId] = useState<number>(0)
   const [toWarehouseId, setToWarehouseId] = useState<number>(0)
-  const [quantity, setQuantity] = useState("1")
+  const [lines, setLines] = useState<LineItem[]>([])
   const [reason, setReason] = useState("")
   const [saving, setSaving] = useState(false)
   const [loadingWarehouses, setLoadingWarehouses] = useState(false)
@@ -59,8 +69,6 @@ export function TransferModal({
   const [loadingSearch, setLoadingSearch] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-
-  const selectedProduct = products.find((p) => p.id === productId)
 
   useEffect(() => {
     if (open) {
@@ -125,37 +133,56 @@ export function TransferModal({
 
   const close = () => {
     onOpenChange(false)
-    setQuantity("1")
+    setLines([])
     setReason("")
-    setProductId(0)
+    setSearchTerm("")
+    setSearchOpen(false)
+    nextLineIdRef.current = 1
+  }
+
+  const addLine = (product: ProductOnStock) => {
+    if (lines.some((l) => l.productId === product.id)) {
+      toast.error("Este producto ya está en la lista")
+      return
+    }
+    setLines((prev) => [
+      ...prev,
+      {
+        id: nextLineIdRef.current++,
+        productId: product.id,
+        productName: product.name,
+        sku: product.sku,
+        quantity: 1,
+      },
+    ])
     setSearchTerm("")
     setSearchOpen(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     const user = getCachedUser()
     if (!user) { toast.error("Debes iniciar sesión"); return }
-    const qty = Number(quantity)
-    if (qty <= 0) { toast.error("La cantidad debe ser mayor a cero"); return }
+    if (lines.length === 0) { toast.error("Agrega al menos un producto"); return }
     if (fromWarehouseId === toWarehouseId) { toast.error("Origen y destino deben ser diferentes"); return }
-    if (!productId) { toast.error("Selecciona un producto"); return }
-    if (selectedProduct && qty > selectedProduct.currentStock) {
-      toast.error(`Stock insuficiente. Disponible: ${selectedProduct.currentStock}`)
-      return
+    if (!fromWarehouseId || !toWarehouseId) { toast.error("Selecciona origen y destino"); return }
+
+    for (const line of lines) {
+      if (line.quantity <= 0) {
+        toast.error(`Cantidad inválida para ${line.productName}`)
+        return
+      }
     }
 
     setSaving(true)
     try {
-      await transferStock({
-        productId,
+      const movements = await transferStockBatch({
         fromWarehouseId,
         toWarehouseId,
-        quantity: qty,
-        createdById: user.id,
+        items: lines.map((l) => ({ productId: l.productId, quantity: l.quantity })),
         reason: reason || null,
+        createdById: user.id,
       })
-      toast.success(`${qty} unidades transferidas`)
+      toast.success(`${lines.length} producto(s) transferido(s)`)
       onDone()
       close()
     } catch (err) {
@@ -173,7 +200,9 @@ export function TransferModal({
         <div className="flex items-center justify-between p-6 border-b border-[#f3f4f6]">
           <div>
             <h2 className="text-xl font-bold text-[#111827]">Transferir Stock</h2>
-            <p className="text-sm text-[#6b7280] mt-0.5">Transfiere existencias entre almacenes.</p>
+            <p className="text-sm text-[#6b7280] mt-0.5">
+              Transfiere existencias entre almacenes.
+            </p>
           </div>
           <button onClick={close} className="p-2 hover:bg-[#f5f5f7] rounded-lg transition-colors">
             <XMarkIcon className="w-5 h-5 text-[#6b7280]" />
@@ -185,103 +214,8 @@ export function TransferModal({
             <ArrowPathIcon className="size-6 animate-spin text-[#6b7280]" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
+          <div>
             <div className="p-6 space-y-5">
-              <div className="space-y-1.5">
-                <Label>Producto</Label>
-                {selectedProduct ? (
-                  <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-input bg-card text-sm">
-                    <span className="flex-1 truncate">
-                      {selectedProduct.name} ({selectedProduct.sku})
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProductId(0)
-                        setSearchTerm("")
-                        setSearchOpen(true)
-                      }}
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label="Cambiar producto"
-                    >
-                      <ChevronUpDownIcon className="size-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative" ref={searchRef}>
-                    <div className="flex gap-2">
-                      <Select
-                        value={searchField}
-                        onValueChange={(v) => setSearchField(v as SearchField)}
-                        disabled={saving}
-                      >
-                        <SelectTrigger className="w-[150px] bg-card">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="name">Nombre</SelectItem>
-                          <SelectItem value="sapCode">Cód. SAP</SelectItem>
-                          <SelectItem value="sku">SKU</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <div className="relative flex-1">
-                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                        <Input
-                          placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
-                          className="pl-9 bg-card"
-                          value={searchTerm}
-                          onChange={(e) => {
-                            setSearchTerm(e.target.value)
-                            setSearchOpen(true)
-                          }}
-                          onFocus={() => setSearchOpen(true)}
-                          disabled={saving}
-                        />
-                      </div>
-                    </div>
-
-                    {searchOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
-                        {loadingSearch ? (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
-                            Buscando…
-                          </div>
-                        ) : !fromWarehouseId ? (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            Selecciona un almacén de origen
-                          </div>
-                        ) : products.length === 0 ? (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            {debouncedSearchTerm.trim()
-                              ? "No se encontraron productos"
-                              : "No hay productos con stock en este almacén"}
-                          </div>
-                        ) : (
-                          products.map((p) => (
-                            <button
-                              key={p.id}
-                              type="button"
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50"
-                              onClick={() => {
-                                setProductId(p.id)
-                                setSearchOpen(false)
-                                setSearchTerm("")
-                              }}
-                            >
-                              <div className="font-medium text-foreground">{p.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.currentStock} {p.uom}
-                              </div>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Origen</Label>
@@ -290,7 +224,7 @@ export function TransferModal({
                     onValueChange={(v) => {
                       const id = Number(v)
                       setFromWarehouseId(id)
-                      setProductId(0)
+                      setLines([])
                       setSearchTerm("")
                       if (id === toWarehouseId) {
                         const other = warehouses.find((w) => w.id !== id)
@@ -321,11 +255,129 @@ export function TransferModal({
               </div>
 
               <div className="space-y-1.5">
-                <Label>Cantidad</Label>
-                {selectedProduct && (
-                  <p className="text-xs text-muted-foreground">Stock disponible: {selectedProduct.currentStock}</p>
+                <Label>Agregar producto</Label>
+                <div className="relative" ref={searchRef}>
+                  <div className="flex gap-2">
+                    <Select
+                      value={searchField}
+                      onValueChange={(v) => setSearchField(v as SearchField)}
+                      disabled={saving}
+                    >
+                      <SelectTrigger className="w-[150px] bg-card">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Nombre</SelectItem>
+                        <SelectItem value="sapCode">Cód. SAP</SelectItem>
+                        <SelectItem value="sku">SKU</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="relative flex-1">
+                      <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                      <Input
+                        placeholder={SEARCH_FIELD_PLACEHOLDERS[searchField]}
+                        className="pl-9 bg-card"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value)
+                          setSearchOpen(true)
+                        }}
+                        onFocus={() => setSearchOpen(true)}
+                        disabled={saving}
+                      />
+                    </div>
+                  </div>
+
+                  {searchOpen && (
+                    <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg max-h-60 overflow-y-auto">
+                      {loadingSearch ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          <ArrowPathIcon className="size-4 animate-spin inline mr-2" />
+                          Buscando…
+                        </div>
+                      ) : !fromWarehouseId ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          Selecciona un almacén de origen
+                        </div>
+                      ) : products.length === 0 ? (
+                        <div className="p-3 text-sm text-muted-foreground text-center">
+                          {debouncedSearchTerm.trim()
+                            ? "No se encontraron productos"
+                            : "No hay productos con stock en este almacén"}
+                        </div>
+                      ) : (
+                        products.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-secondary transition-colors border-b last:border-b-0 border-border/50 flex items-center justify-between"
+                            onClick={() => addLine(p)}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-foreground">{p.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                SKU: {p.sku} · SAP: {p.sapCode} · Stock: {p.currentStock} {p.uom}
+                              </div>
+                            </div>
+                            <PlusIcon className="size-4 shrink-0 text-muted-foreground ml-2" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[#f3f4f6]">
+                {lines.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-[#6b7280]">
+                    Sin productos agregados aún.
+                  </div>
+                ) : (
+                  <>
+                    <ul>
+                      {lines.map((l) => (
+                        <li
+                          key={l.id}
+                          className="flex items-center justify-between gap-3 px-4 py-3 border-b last:border-b-0 border-[#f3f4f6] text-sm"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-[#111827] truncate">{l.productName}</div>
+                            <div className="text-xs text-[#6b7280]">{l.sku}</div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Input
+                              type="number"
+                              min="1"
+                              className="w-20 h-8 text-xs text-center"
+                              value={l.quantity || ""}
+                              onChange={(e) => {
+                                const v = Math.max(1, parseInt(e.target.value, 10) || 0)
+                                setLines((prev) =>
+                                  prev.map((line) =>
+                                    line.id === l.id ? { ...line, quantity: v } : line,
+                                  ),
+                                )
+                              }}
+                              disabled={saving}
+                            />
+                            <button
+                              onClick={() => setLines((prev) => prev.filter((line) => line.id !== l.id))}
+                              className="text-[#6b7280] hover:text-red-600 shrink-0"
+                              aria-label="Eliminar línea"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-[#f3f4f6] bg-[#fafafa] rounded-b-lg">
+                      <span className="text-sm font-medium text-[#111827]">Total productos</span>
+                      <span className="font-semibold text-lg">{lines.length}</span>
+                    </div>
+                  </>
                 )}
-                <Input type="number" min="1" max={selectedProduct?.currentStock} required value={quantity} onChange={(e) => setQuantity(e.target.value)} disabled={saving} />
               </div>
 
               <div className="space-y-1.5">
@@ -344,18 +396,19 @@ export function TransferModal({
                 Cancelar
               </button>
               <button
-                type="submit"
-                disabled={saving || loadingWarehouses}
+                type="button"
+                onClick={handleSubmit}
+                disabled={saving || loadingWarehouses || lines.length === 0}
                 className="px-5 py-2 bg-[#7b1a1a] text-white rounded-lg font-medium hover:bg-[#5c1212] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {saving ? (
                   <><ArrowPathIcon className="size-4 animate-spin" /> Transfiriendo…</>
                 ) : (
-                  <><ArrowsRightLeftIcon className="size-4" /> Transferir</>
+                  <><ArrowsRightLeftIcon className="size-4" /> Transferir ({lines.length})</>
                 )}
               </button>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </div>

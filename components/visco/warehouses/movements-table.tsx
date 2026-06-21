@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { InventoryMovementResponse, MovementType, Page } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, TruckIcon, ChevronLeftIcon, ChevronRightIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline"
+import { ArrowPathIcon, ArrowsRightLeftIcon, EqualsIcon, TruckIcon, ChevronLeftIcon, ChevronRightIcon, ArrowDownTrayIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { MovementDetailModal } from "@/components/visco/warehouses/movement-detail-modal"
 import { exportMovements } from "@/lib/services/warehouse"
+import { downloadPDF } from "@/lib/pdf/download-pdf"
 import { toast } from "sonner"
 
 const typeConfig: Record<MovementType, { label: string; color: string; icon: typeof ArrowsRightLeftIcon }> = {
@@ -81,6 +82,24 @@ export function MovementsTable({
       setExporting(false)
     }
   }
+  const handleDownloadPdf = async (m: InventoryMovementResponse) => {
+    try {
+      if (m.type === "TRANSFER") {
+        const { generateTransferNotePDF } = await import("@/lib/pdf/transfer-note-pdf")
+        const doc = await generateTransferNotePDF(m)
+        downloadPDF(doc, `TRANSFER_${m.createdAt.split("T")[0]}_${m.id}.pdf`)
+        toast.success("PDF descargado")
+      } else if (m.type === "ADJUSTMENT") {
+        const { generateAdjustNotePDF } = await import("@/lib/pdf/adjust-note-pdf")
+        const doc = await generateAdjustNotePDF(m)
+        downloadPDF(doc, `ADJUST_${m.createdAt.split("T")[0]}_${m.id}.pdf`)
+        toast.success("PDF descargado")
+      }
+    } catch (err) {
+      toast.error("Error al generar PDF")
+    }
+  }
+
   return (
     <div>
       <div className="mb-3 flex items-center gap-3 flex-wrap">
@@ -161,6 +180,15 @@ export function MovementsTable({
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground shrink-0">{new Date(m.createdAt).toLocaleDateString()}</span>
+                    {(m.type === "TRANSFER" || m.type === "ADJUSTMENT") && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDownloadPdf(m) }}
+                        className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-[#7b1a1a] hover:bg-[#fde8e8] transition-colors"
+                        title="Descargar PDF"
+                      >
+                        <DocumentArrowDownIcon className="size-4" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
