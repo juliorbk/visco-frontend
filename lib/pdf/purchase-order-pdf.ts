@@ -265,8 +265,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   })
   y += 3
 
-  const totalX = pageW - margin - 70
-  const totalW = 70
+  const totalsBoxW = 78
+  const totalX = pageW - margin - totalsBoxW
+  const labelX = totalX + 5
+  const valueX = totalX + totalsBoxW - 5
   const taxPctLabel = `IVA (${Math.round(TAX_RATE * 100)}%)`
   const totals = [
     ["SUBTOTAL", formatCurrency(subtotal)],
@@ -274,33 +276,34 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   ]
   if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
   if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
-  const totalsBlockH = totals.length * 4.5 + 2 + 4 + 4
+  const rowCount = totals.length
+  const totalsBlockH = rowCount * 4.5 + 2 + 5 + 4
 
   y = ensureSpace(doc, y, totalsBlockH + 3)
 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
-  doc.roundedRect(totalX - 4, y - 1, totalW + 8, totalsBlockH, 2, 2, "FD")
+  doc.roundedRect(totalX, y, totalsBoxW, totalsBlockH, 2, 2, "FD")
 
+  doc.setFontSize(7)
   totals.forEach(([label, value], i) => {
-    doc.setFontSize(7)
     doc.setFont("helvetica", "normal")
     doc.setTextColor(...COLORS.text)
-    doc.text(label, totalX, y + i * 4.5)
-    doc.text(value, totalX + totalW, y + i * 4.5, { align: "right" })
+    doc.text(label, labelX, y + 3 + i * 4.5)
+    doc.text(value, valueX, y + 3 + i * 4.5, { align: "right" })
   })
 
-  const totalY = y + totals.length * 4.5 + 2
+  const totalY = y + 3 + rowCount * 4.5 + 2
   doc.setDrawColor(...COLORS.primary)
   doc.setLineWidth(0.5)
-  doc.line(totalX, totalY, totalX + totalW, totalY)
+  doc.line(labelX, totalY, valueX, totalY)
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text("TOTAL", totalX, totalY + 4)
-  doc.text(formatCurrency(total), totalX + totalW, totalY + 4, { align: "right" })
+  doc.text("TOTAL", labelX, totalY + 5)
+  doc.text(formatCurrency(total), valueX, totalY + 5, { align: "right" })
 
-  y = totalY + 9
+  y = totalY + 10
 
   if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
     const isRejected = !!order.rejectionReason
