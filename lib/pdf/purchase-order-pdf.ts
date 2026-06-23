@@ -265,16 +265,16 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   })
   y += 3
 
-  const totalX = pageW - margin - 65
-  const totalW = 65
-  const taxPctLabel = `IMPUESTO (${Math.round(TAX_RATE * 100)}%)`
+  const totalX = pageW - margin - 70
+  const totalW = 70
+  const taxPctLabel = `IVA (${Math.round(TAX_RATE * 100)}%)`
   const totals = [
     ["SUBTOTAL", formatCurrency(subtotal)],
     [taxPctLabel, formatCurrency(taxAmountFinal)],
   ]
   if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
   if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
-  const totalsBlockH = totals.length * 4.5 + 2 + 4 + 3
+  const totalsBlockH = totals.length * 4.5 + 2 + 4 + 4
 
   y = ensureSpace(doc, y, totalsBlockH + 3)
 
