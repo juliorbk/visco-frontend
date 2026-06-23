@@ -24,21 +24,21 @@ export async function generateTransferNotePDF(
   const x0 = margin
   let y = margin
 
-  await addLogoPlaceholder(doc, x0, y, 40, 22)
+  await addLogoPlaceholder(doc, x0, y, 36, 20)
 
-  doc.setFontSize(22)
+  doc.setFontSize(16)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.accent)
-  doc.text("NOTA DE TRANSFERENCIA", pageW / 2, y + 10, { align: "center" })
+  doc.text("NOTA DE TRANSFERENCIA", pageW / 2, y + 8, { align: "center" })
 
-  doc.setFontSize(11)
+  doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text(`N° ${movement.id}`, pageW / 2, y + 19, { align: "center" })
+  doc.text(`N° ${movement.id}`, pageW / 2, y + 15, { align: "center" })
 
-  y += 30
+  y += 26
   addSeparator(doc, x0, y, contentW)
-  y += 8
+  y += 6
 
   const rows: { label: string; value: string }[] = [
     { label: "FECHA", value: formatDateLong(movement.createdAt) },
@@ -54,17 +54,25 @@ export async function generateTransferNotePDF(
     rows.push({ label: "MOTIVO", value: movement.reason })
   }
 
-  for (const row of rows) {
+  const rowH = 5.5
+  const infoBoxH = 7 + rows.length * rowH + 4
+  doc.setDrawColor(...COLORS.border)
+  doc.setFillColor(...COLORS.bgLight)
+  doc.roundedRect(x0, y, contentW, infoBoxH, 2, 2, "FD")
+
+  for (const [i, row] of rows.entries()) {
+    const ry = y + 5 + i * rowH
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(7)
+    doc.setFontSize(6.5)
     doc.setTextColor(...COLORS.textMuted)
-    doc.text(row.label, x0, y)
+    doc.text(row.label, x0 + 4, ry)
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(9)
+    doc.setFontSize(8)
     doc.setTextColor(...COLORS.text)
-    doc.text(row.value, x0, y + 5)
-    y += 12
+    doc.text(row.value, x0 + 4 + 60, ry)
   }
+
+  y += infoBoxH + 8
 
   addPageNumbers(doc)
 

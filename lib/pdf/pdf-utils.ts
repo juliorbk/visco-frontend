@@ -160,11 +160,11 @@ export async function addLogoPlaceholder(
 
 export function addSectionTitle(doc: jsPDF, x: number, y: number, w: number, text: string) {
   doc.setFillColor(...COLORS.primary)
-  doc.rect(x, y, w, 10, "F")
+  doc.rect(x, y, w, 8, "F")
   doc.setTextColor(...COLORS.white)
-  doc.setFontSize(8)
+  doc.setFontSize(7)
   doc.setFont("helvetica", "bold")
-  doc.text(text.toUpperCase(), x + 4, y + 7)
+  doc.text(text.toUpperCase(), x + 4, y + 6)
 }
 
 export function addSeparator(doc: jsPDF, x: number, y: number, w: number, color?: [number, number, number]) {
@@ -179,7 +179,7 @@ export function addWrappedText(
   x: number,
   y: number,
   maxWidth: number,
-  lineHeight: number = 5,
+  lineHeight: number = 4,
   maxLines?: number,
 ): number {
   const lines = doc.splitTextToSize(text, maxWidth)
@@ -221,19 +221,19 @@ export function addContinuationBanner(
   title: string,
   subtitle?: string,
 ): number {
-  const h = 8
+  const h = 7
   doc.setFillColor(...COLORS.bgLight)
   doc.setDrawColor(...COLORS.primary)
   doc.setLineWidth(0.4)
   doc.rect(x, y, w, h, "FD")
   doc.setFont("helvetica", "bold")
-  doc.setFontSize(7.5)
+  doc.setFontSize(6.5)
   doc.setTextColor(...COLORS.primary)
-  doc.text(title, x + 4, y + 5.4)
+  doc.text(title, x + 4, y + 4.8)
   doc.setFont("helvetica", "normal")
-  doc.setFontSize(7)
+  doc.setFontSize(6)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text(subtitle ?? "(continuación)", x + w - 4, y + 5.4, { align: "right" })
+  doc.text(subtitle ?? "(continuación)", x + w - 4, y + 4.8, { align: "right" })
   return y + h + 2
 }
 
@@ -255,7 +255,7 @@ export function addPageNumbers(
   for (let i = 1; i <= total; i++) {
     doc.setPage(i)
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(7)
+    doc.setFontSize(6)
     doc.setTextColor(...COLORS.textMuted)
     doc.text(`${options.prefix ?? "Página"} ${i} / ${total}`, x, y, { align })
   }
@@ -282,9 +282,9 @@ export function addTable(
   options: TableOptions,
 ): number {
   const colWidths = options.colWidths
-  const rowH = options.rowH ?? 6
-  const headH = options.headH ?? 7
-  const cellPadding = options.cellPadding ?? 2
+  const rowH = options.rowH ?? 5
+  const headH = options.headH ?? 6
+  const cellPadding = options.cellPadding ?? 1.5
   const topY = options.topY ?? DEFAULT_TOP_Y
   const maxY = options.maxY ?? DEFAULT_MAX_Y
   const repeatHeader = options.repeatHeader !== false
@@ -298,7 +298,7 @@ export function addTable(
     doc.setFillColor(...primary)
     doc.rect(x, yy, w, headH, "F")
     doc.setFont("helvetica", "bold")
-    doc.setFontSize(7)
+    doc.setFontSize(6)
     doc.setTextColor(...white)
     let cx = x
     head.forEach((h, i) => {
@@ -320,7 +320,7 @@ export function addTable(
 
   body.forEach((row, ri) => {
     doc.setFont("helvetica", "normal")
-    doc.setFontSize(8)
+    doc.setFontSize(6.5)
     doc.setTextColor(...text)
 
     let maxLines = 1
@@ -331,7 +331,7 @@ export function addTable(
       if (lines.length > maxLines) maxLines = lines.length
     })
 
-    const rowHeight = Math.max(rowH, maxLines * 4.5 + cellPadding * 2)
+    const rowHeight = Math.max(rowH, maxLines * 3.8 + cellPadding * 2)
 
     if (cy + rowHeight > maxY) {
       doc.addPage()
@@ -355,9 +355,9 @@ export function addTable(
     let rx = x
     row.forEach((_, ci) => {
       const lines = cellTexts[ci]
-      const textY = cy + (rowHeight - lines.length * 4.5) / 2 + 3.5
+      const textY = cy + (rowHeight - lines.length * 3.8) / 2 + 3
       lines.forEach((line, li) => {
-        doc.text(line, rx + cellPadding, textY + li * 4.5)
+        doc.text(line, rx + cellPadding, textY + li * 3.8)
       })
       rx += colWidths[ci]
       if (ci < row.length - 1) {
