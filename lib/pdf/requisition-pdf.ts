@@ -72,12 +72,13 @@ export async function generateRequisitionPDF(
     doc.setFont("helvetica", "bold")
   })
 
-  y += 40
+  const infoBoxTopPad = 18
+  y += infoBoxTopPad + infoBoxH + 4
   addSeparator(doc, x0, y, contentW)
   y += 6
 
   const boxW = (contentW - 6) / 2
-  const boxH = 30
+  const boxH = 32
 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
@@ -86,7 +87,7 @@ export async function generateRequisitionPDF(
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
-  let by = y + 13
+  let by = y + 12
   if (costCenterDisplay) {
     by += addWrappedText(doc, costCenterDisplay, x0 + 3, by, boxW - 6, 4, 3)
   } else {
@@ -99,7 +100,7 @@ export async function generateRequisitionPDF(
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.white)
-  by = y + 13
+  by = y + 12
   by += addWrappedText(doc, req.requestedBy || "—", x1 + 3, by, boxW - 6, 4, 3)
 
   y += boxH + 6
@@ -107,7 +108,7 @@ export async function generateRequisitionPDF(
   if (req.description) {
     const descLines = doc.splitTextToSize(req.description, contentW - 6)
     const lineH = 4
-    const descH = Math.max(15, 8 + descLines.length * lineH + 3)
+    const descH = Math.max(16, 8 + descLines.length * lineH + 4)
     doc.setDrawColor(...COLORS.border)
     doc.setFillColor(...COLORS.bgLight)
     doc.roundedRect(x0, y, contentW, descH, 2, 2, "FD")
@@ -115,7 +116,7 @@ export async function generateRequisitionPDF(
     doc.setFont("helvetica", "normal")
     doc.setFontSize(8)
     doc.setTextColor(...COLORS.text)
-    doc.text(descLines, x0 + 3, y + 13)
+    doc.text(descLines, x0 + 3, y + 12)
     y += descH + 6
   }
 
@@ -127,7 +128,7 @@ export async function generateRequisitionPDF(
     doc.setFont("helvetica", "normal")
     doc.setFontSize(7)
     doc.setTextColor(...COLORS.text)
-    let ay = y + 13
+    let ay = y + 12
     if (req.approvedBy) {
       doc.setFont("helvetica", "bold")
       doc.setTextColor(...COLORS.textMuted)

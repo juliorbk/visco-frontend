@@ -85,7 +85,8 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     doc.setFont("helvetica", "bold")
   })
 
-  y += 32 + (infoLines.length > 4 ? 4 : 0)
+  const infoBoxTopPad = 20
+  y += infoBoxTopPad + infoBoxH + 4
   addSeparator(doc, x0, y, contentW)
   y += 6
 
@@ -100,12 +101,12 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   if (supplier?.email) supplierLines.push(supplier.email)
   if (supplier?.phoneNumbers?.length) supplierLines.push("Tel: " + supplier.phoneNumbers.join(", "))
 
-  let supplierH = HEADER_H + 3
+  let supplierH = HEADER_H + 4
   for (const line of supplierLines) {
     const wrapped = doc.splitTextToSize(line, boxW - PAD * 2)
     supplierH += wrapped.length * 4 + 1
   }
-  supplierH = Math.max(supplierH, 34)
+  supplierH = Math.max(supplierH, 36) + 2
 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
@@ -121,10 +122,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(...COLORS.text)
-  let by = y + HEADER_H + 4
+  let by = y + HEADER_H + 5
   for (const line of supplierLines) {
     by += addWrappedText(doc, line, x0 + PAD, by, boxW - PAD * 2, 4)
-    by += 1
+    by += 1.5
   }
 
   const x1 = x0 + boxW + 6
@@ -151,7 +152,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     shipLines.push({ kind: "text", text: warehouse.description })
   }
 
-  let shipH = HEADER_H + 3
+  let shipH = HEADER_H + 4
   for (const ln of shipLines) {
     if (ln.kind === "label") {
       shipH += 3.5
@@ -163,7 +164,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
       shipH += wrapped.length * lineH + 1
     }
   }
-  shipH = Math.max(shipH, 34)
+  shipH = Math.max(shipH, 36) + 2
 
   doc.setFillColor(...COLORS.primary)
   doc.setDrawColor(...COLORS.primary)
@@ -176,27 +177,27 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setLineWidth(0.3)
   doc.line(x1 + PAD, y + HEADER_H + 0.5, x1 + boxW - PAD, y + HEADER_H + 0.5)
 
-  by = y + HEADER_H + 4
+  by = y + HEADER_H + 5
   for (const ln of shipLines) {
     if (ln.kind === "label") {
       doc.setFont("helvetica", "bold")
       doc.setFontSize(6.5)
       doc.setTextColor(...COLORS.white)
       doc.text(ln.text, x1 + PAD, by)
-      by += 3
+      by += 3.5
     } else if (ln.kind === "value") {
       doc.setFont("helvetica", "normal")
       doc.setFontSize(7)
       doc.setTextColor(...COLORS.white)
       doc.text(ln.value ?? "", x1 + PAD, by)
-      by += 3.5
+      by += 4
     } else {
       doc.setFont("helvetica", ln.kind === "name" ? "bold" : "normal")
       doc.setFontSize(ln.kind === "name" ? 8 : 7)
       doc.setTextColor(...COLORS.white)
       by += addWrappedText(doc, ln.text, x1 + PAD, by, boxW - PAD * 2,
         ln.kind === "name" ? 4.5 : 3.5)
-      by += 0.5
+      by += 1
     }
   }
 
