@@ -15,7 +15,7 @@ export interface ExportPDFButtonProps {
 
 export function ExportPDFButton({
   onExport,
-  label = "Export PDF",
+  label = "Exportar PDF",
   variant = "default",
   className,
 }: ExportPDFButtonProps) {

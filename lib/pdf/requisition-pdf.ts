@@ -165,7 +165,7 @@ export async function generateRequisitionPDF(
   y += 10
 
   const colWidths = [7, 18, 18, contentW - 7 - 18 - 18 - 16 - 10 - 16 - 22, 16, 10, 16, 22]
-  const head = ["#", "C.INT", "C.SAP", "DESCRIPCION", "SKU", "UM", "CANT.", "NOTAS"]
+  const head = ["#", "C.INT", "C.SAP", "DESCRIPCIÓN", "SKU", "UM", "CANT.", "NOTAS"]
   const bodyRows = req.items.map((item, i) => [
     String(i + 1),
     item.productInternalCode ?? "—",

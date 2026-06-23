@@ -205,7 +205,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   const terms = [
     ["COMPRADOR", order.createdBy],
-    ["TIEMPO ENTREGA", order.leadTime ? `${order.leadTime} dias` : "—"],
+    ["TIEMPO ENTREGA", order.leadTime ? `${order.leadTime} días` : "—"],
     ["F.O.B.", "—"],
     ["COND. ENVIO", order.shipConditions ?? "—"],
   ]
@@ -247,7 +247,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   const total = taxBaseTotal + (order.shippingCost ?? 0) + (order.otherCost ?? 0)
 
   const colWidths = [7, 18, 18, contentW - 7 - 18 - 18 - 14 - 10 - 18 - 22, 14, 10, 18, 22]
-  const head = ["#", "C.INT", "C.SAP", "DESCRIPCION", "CANT", "UM", "P/UNIT", "TOTAL"]
+  const head = ["#", "C.INT", "C.SAP", "DESCRIPCIÓN", "CANT.", "UM", "P/UNIT", "TOTAL"]
   const bodyRows = order.items.map((item, i) => [
     String(i + 1),
     item.productInternalCode ?? "—",
@@ -304,7 +304,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
 
   if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
     const isRejected = !!order.rejectionReason
-    const sectionLabel = isRejected ? "Info de Rechazo" : "Info de Aprobacion"
+    const sectionLabel = isRejected ? "Info de Rechazo" : "Info de Aprobación"
     addSectionTitle(doc, x0, y, contentW, sectionLabel)
     doc.setFont("helvetica", "normal")
     doc.setFontSize(7)

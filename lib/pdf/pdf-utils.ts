@@ -347,7 +347,7 @@ export function addTable(
       }
     }
 
-    if (ri % 2 === 1) {
+    if (ri % 2 === 0) {
       doc.setFillColor(249, 250, 251)
       doc.rect(x, cy, w, rowHeight, "F")
     }

@@ -202,7 +202,7 @@ export async function generateDispatchNotePDF(
   doc.setFont("helvetica", "normal")
   doc.setFontSize(6.5)
   doc.setTextColor(...COLORS.textMuted)
-  doc.text("Nombre & Firma", obsX + footBoxW / 2, y + 30, { align: "center" })
+  doc.text("Nombre y Firma", obsX + footBoxW / 2, y + 30, { align: "center" })
 
   addPageNumbers(doc)
 

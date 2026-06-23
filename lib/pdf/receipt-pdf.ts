@@ -39,12 +39,12 @@ export async function generateReceiptPDF(receipt: GoodReceiptResponse, summary?:
   doc.setFontSize(16)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.accent)
-  doc.text("NOTA DE RECEPCIÓN", pageW - margin, y + 8, { align: "right" })
+  doc.text("NOTA DE RECEPCIÓN", pageW / 2, y + 8, { align: "center" })
 
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text(`N° ${receipt.receiptNumber}`, pageW - margin, y + 15, { align: "right" })
+  doc.text(`N° ${receipt.receiptNumber}`, pageW / 2, y + 15, { align: "center" })
 
   y += 26
   addSeparator(doc, x0, y, contentW)
