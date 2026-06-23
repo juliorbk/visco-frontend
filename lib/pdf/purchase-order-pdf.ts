@@ -263,7 +263,7 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
     colWidths,
     continuationLabel: `Items de la Orden (${order.items.length})`,
   })
-  y += 5
+  y += 3
 
   const totalX = pageW - margin - 65
   const totalW = 65
@@ -274,13 +274,13 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   ]
   if (order.shippingCost != null) totals.push(["ENVIO", formatCurrency(order.shippingCost)])
   if (order.otherCost != null) totals.push(["OTROS", formatCurrency(order.otherCost)])
-  const totalsBlockH = totals.length * 4.5 + 2 + 5 + 4
+  const totalsBlockH = totals.length * 4.5 + 2 + 4 + 3
 
-  y = ensureSpace(doc, y, totalsBlockH + 5)
+  y = ensureSpace(doc, y, totalsBlockH + 3)
 
   doc.setDrawColor(...COLORS.border)
   doc.setFillColor(...COLORS.bgLight)
-  doc.roundedRect(totalX - 4, y - 2, totalW + 8, totalsBlockH + 2, 2, 2, "FD")
+  doc.roundedRect(totalX - 4, y - 1, totalW + 8, totalsBlockH, 2, 2, "FD")
 
   totals.forEach(([label, value], i) => {
     doc.setFontSize(7)
@@ -297,10 +297,10 @@ export async function generatePurchaseOrderPDF(order: PurchaseOrderResponse): Pr
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(...COLORS.primary)
-  doc.text("TOTAL", totalX, totalY + 5)
-  doc.text(formatCurrency(total), totalX + totalW, totalY + 5, { align: "right" })
+  doc.text("TOTAL", totalX, totalY + 4)
+  doc.text(formatCurrency(total), totalX + totalW, totalY + 4, { align: "right" })
 
-  y = totalY + 11
+  y = totalY + 9
 
   if (order.approvedBy || order.approvalNotes || order.rejectionReason) {
     const isRejected = !!order.rejectionReason
